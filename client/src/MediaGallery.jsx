@@ -1,26 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Box, 
   Typography, 
   TextField, 
-  Grid, 
-  Card, 
-  CardMedia, 
-  CardContent, 
-  CardActions,
   Button,
   CircularProgress,
-  Divider,
   Paper,
   InputAdornment,
   IconButton,
-  Tooltip,
   Dialog,
   DialogContent,
   DialogTitle,
-  DialogActions
+  Grid,
+  Divider
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 
 // Function to fetch all media files
 async function fetchAllMedia() {
@@ -36,6 +30,61 @@ async function fetchAllMedia() {
   }
 }
 
+// Function to fetch media files for a specific conversation
+async function fetchConversationMedia(conversationId) {
+  try {
+    // First get the conversation details to get the folder
+    const convResponse = await fetch(`/api/conversations/${conversationId}`);
+    if (!convResponse.ok) {
+      throw new Error(`Server error: ${convResponse.status}`);
+    }
+    const convData = await convResponse.json();
+    
+    // Then get the media files for this conversation
+    const mediaResponse = await fetch(`/api/media/${convData.folder}`);
+    if (!mediaResponse.ok) {
+      throw new Error(`Server error: ${mediaResponse.status}`);
+    }
+    const fileNames = await mediaResponse.json();
+    
+    // Format the response to match the structure expected by the component
+    const mediaFiles = fileNames.map(fileName => {
+      // Determine file type based on extension
+      const fileExt = fileName.split('.').pop().toLowerCase();
+      let fileType = 'unknown';
+      const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
+      const audioExts = ['mp3', 'wav', 'ogg', 'm4a'];
+      const videoExts = ['mp4', 'webm', 'mov'];
+      
+      if (imageExts.includes(fileExt)) fileType = 'image';
+      else if (audioExts.includes(fileExt)) fileType = 'audio';
+      else if (videoExts.includes(fileExt)) fileType = 'video';
+      
+      // Extract file ID from name
+      const fileId = fileName.includes('.') ? fileName.substring(0, fileName.lastIndexOf('.')) : fileName;
+      
+      return {
+        id: fileId,
+        originalFilename: fileName,
+        conversationId: conversationId,
+        conversationTitle: convData.title || 'Untitled',
+        folder: convData.folder,
+        path: `/api/media/${convData.folder}/${fileName}`,
+        type: fileType
+      };
+    });
+    
+    return {
+      mediaFiles,
+      total: mediaFiles.length,
+      conversationTitle: convData.title
+    };
+  } catch (error) {
+    console.error(`Error fetching media for conversation ${conversationId}:`, error);
+    throw error;
+  }
+}
+
 export default function MediaGallery() {
   const [mediaFiles, setMediaFiles] = useState([]);
   const [filteredFiles, setFilteredFiles] = useState([]);
@@ -44,15 +93,33 @@ export default function MediaGallery() {
   const [search, setSearch] = useState('');
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [conversationTitle, setConversationTitle] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Get the conversation ID from the location state (if coming from a conversation)
+  // or from URL params if navigating directly
+  const { conversationId: urlConversationId } = useParams();
+  const conversationId = urlConversationId || location.state?.conversationId;
 
   useEffect(() => {
     const loadMedia = async () => {
       try {
         setLoading(true);
-        const data = await fetchAllMedia();
-        setMediaFiles(data.mediaFiles || []);
-        setFilteredFiles(data.mediaFiles || []);
+        
+        // If we have a conversation ID, load media for that conversation only
+        if (conversationId) {
+          const data = await fetchConversationMedia(conversationId);
+          setMediaFiles(data.mediaFiles || []);
+          setFilteredFiles(data.mediaFiles || []);
+          setConversationTitle(data.conversationTitle);
+        } else {
+          // Otherwise load all media
+          const data = await fetchAllMedia();
+          setMediaFiles(data.mediaFiles || []);
+          setFilteredFiles(data.mediaFiles || []);
+        }
       } catch (err) {
         setError(`Failed to load media files: ${err.message}`);
       } finally {
@@ -61,7 +128,25 @@ export default function MediaGallery() {
     };
 
     loadMedia();
-  }, []);
+  }, [conversationId]);
+
+  // Add keyboard navigation for dialog
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!dialogOpen) return;
+      
+      if (e.key === 'ArrowLeft') {
+        handlePrevMedia();
+      } else if (e.key === 'ArrowRight') {
+        handleNextMedia();
+      } else if (e.key === 'Escape') {
+        setDialogOpen(false);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [dialogOpen]);
 
   // Update filtered files when search term changes
   useEffect(() => {
@@ -116,10 +201,29 @@ export default function MediaGallery() {
   };
 
   // Handle viewing media details
-  const handleViewMedia = (media) => {
+  const handleViewMedia = (media, index) => {
     setSelectedMedia(media);
+    setCurrentIndex(index);
     setDialogOpen(true);
   };
+  
+  // Navigate to previous media in dialog
+  const handlePrevMedia = useCallback(() => {
+    if (filteredFiles.length <= 1) return;
+    
+    const newIndex = currentIndex > 0 ? currentIndex - 1 : filteredFiles.length - 1;
+    setCurrentIndex(newIndex);
+    setSelectedMedia(filteredFiles[newIndex]);
+  }, [filteredFiles, currentIndex]);
+  
+  // Navigate to next media in dialog
+  const handleNextMedia = useCallback(() => {
+    if (filteredFiles.length <= 1) return;
+    
+    const newIndex = (currentIndex + 1) % filteredFiles.length;
+    setCurrentIndex(newIndex);
+    setSelectedMedia(filteredFiles[newIndex]);
+  }, [filteredFiles, currentIndex]);
 
   // Render media item based on type
   const renderMediaItem = (file) => {
@@ -129,46 +233,76 @@ export default function MediaGallery() {
     
     if (isImage) {
       return (
-        <CardMedia
-          component="img"
-          height="200"
-          image={file.path}
+        <img
+          src={file.path}
           alt={file.id || 'Media file'}
-          sx={{ objectFit: 'contain', bgcolor: '#f5f5f5' }}
+          style={{ 
+            width: '100%',
+            aspectRatio: '1',
+            objectFit: 'cover',
+            backgroundColor: '#f5f5f5' 
+          }}
+          loading="lazy"
         />
       );
     } else if (isAudio) {
       return (
-        <Box sx={{ p: 2, textAlign: 'center', bgcolor: '#f0f7ff', height: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <Typography variant="h6" color="primary" gutterBottom>
-            Audio File
-          </Typography>
-          <audio controls src={file.path} style={{ width: '100%', marginBottom: '10px' }} />
-          <Typography variant="caption" color="text.secondary">
-            {file.originalFilename}
-          </Typography>
+        <Box sx={{ 
+          aspectRatio: '1', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          bgcolor: '#f0f7ff',
+          p: 1
+        }}>
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="subtitle2" color="primary" gutterBottom>
+              Audio
+            </Typography>
+            <Box sx={{ color: '#3f51b5', fontSize: '2rem', mb: 1 }}>
+              ♫
+            </Box>
+          </Box>
         </Box>
       );
     } else if (isVideo) {
       return (
-        <Box sx={{ height: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', bgcolor: '#fdf7ff' }}>
-          <Typography variant="h6" color="primary" gutterBottom>
-            Video File
-          </Typography>
-          <video 
-            controls 
-            src={file.path} 
-            style={{ maxWidth: '100%', maxHeight: '140px' }} 
-            preload="metadata"
-          />
+        <Box sx={{ 
+          aspectRatio: '1', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          bgcolor: '#fdf7ff',
+          p: 1
+        }}>
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="subtitle2" color="primary" gutterBottom>
+              Video
+            </Typography>
+            <Box sx={{ color: '#9c27b0', fontSize: '2rem', mb: 1 }}>
+              ▶
+            </Box>
+          </Box>
         </Box>
       );
     } else {
       return (
-        <Box sx={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#f5f5f5' }}>
-          <Typography variant="body2" color="text.secondary">
-            {file.type || 'Unknown'} file
-          </Typography>
+        <Box sx={{ 
+          aspectRatio: '1', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          bgcolor: '#f5f5f5',
+          p: 1
+        }}>
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+              {file.type || 'Unknown'}
+            </Typography>
+            <Box sx={{ color: '#9e9e9e', fontSize: '2rem', mb: 1 }}>
+              ⤓
+            </Box>
+          </Box>
         </Box>
       );
     }
@@ -219,7 +353,32 @@ export default function MediaGallery() {
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom>
         Media Gallery
+        {conversationTitle && (
+          <Typography 
+            component="span" 
+            variant="h6" 
+            color="text.secondary"
+            sx={{ ml: 2 }}
+          >
+            {conversationTitle}
+          </Typography>
+        )}
       </Typography>
+      
+      {conversationId && (
+        <Box sx={{ mb: 2 }}>
+          <Button variant="outlined" onClick={() => navigate('/media')}>
+            View All Media
+          </Button>
+          <Button 
+            variant="text" 
+            onClick={() => navigate(`/conversations/${conversationId}`)}
+            sx={{ ml: 2 }}
+          >
+            Back to Conversation
+          </Button>
+        </Box>
+      )}
       
       <Paper sx={{ p: 2, mb: 3 }}>
         <TextField
@@ -266,38 +425,50 @@ export default function MediaGallery() {
           No media files found matching your search criteria.
         </Typography>
       ) : (
-        <Grid container spacing={3}>
+        <Box sx={{ 
+          display: 'flex', 
+          flexWrap: 'wrap', 
+          gap: '8px',
+          justifyContent: 'flex-start'
+        }}>
           {filteredFiles.map((file, index) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={`${file.id}-${index}`}>
-              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                {renderMediaItem(file)}
-                <CardContent sx={{ flexGrow: 1 }}>
-                <Typography variant="subtitle1" component="div" noWrap>
+            <Box 
+              key={`${file.id}-${index}`}
+              sx={{
+                position: 'relative',
+                width: { xs: '100%', sm: '48%', md: '32%', lg: '24%', xl: '19%' },
+                '&:hover .media-overlay': {
+                  opacity: 1
+                }
+              }}
+            >
+              {renderMediaItem(file)}
+              
+              {/* Overlay with filename - shows only on hover */}
+              <Box 
+                className="media-overlay"
+                sx={{
+                  position: 'absolute',
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                  color: 'white',
+                  padding: '8px',
+                  opacity: 0,
+                  transition: 'opacity 0.3s',
+                  cursor: 'pointer',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
+                }}
+                onClick={() => handleViewMedia(file, index)}
+              >
                 {file.originalFilename || file.id}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" noWrap>
-                ID: {file.id}
-                </Typography>
-                {file.type && (
-          <Typography variant="body2" color="text.secondary" noWrap>
-            Type: {file.type.charAt(0).toUpperCase() + file.type.slice(1)}
-          </Typography>
-        )}
-        {file.conversationTitle && (
-                    <Typography variant="body2" color="text.secondary" noWrap>
-                      From: {file.conversationTitle}
-                    </Typography>
-                  )}
-                </CardContent>
-                <CardActions>
-                  <Button size="small" onClick={() => handleViewMedia(file)}>
-                    View Details
-                  </Button>
-                </CardActions>
-              </Card>
-            </Grid>
+              </Box>
+            </Box>
           ))}
-        </Grid>
+        </Box>
       )}
 
       {/* Media Details Dialog */}
@@ -305,41 +476,81 @@ export default function MediaGallery() {
         <Dialog 
           open={dialogOpen} 
           onClose={() => setDialogOpen(false)}
-          maxWidth="md"
+          maxWidth="lg"
           fullWidth
         >
-          <DialogTitle>
-            Media Details
+          <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h6" noWrap sx={{ maxWidth: '80%', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {selectedMedia.originalFilename || selectedMedia.id}
+            </Typography>
+            <Box>
+              <Button onClick={() => setDialogOpen(false)}>Close</Button>
+            </Box>
           </DialogTitle>
-          <DialogContent>
-            <Box sx={{ mb: 2 }}>
+          <DialogContent sx={{ position: 'relative', pb: 0 }}>
+            {/* Navigation Arrows */}
+            {filteredFiles.length > 1 && (
+              <>
+                <IconButton 
+                  onClick={handlePrevMedia}
+                  sx={{ 
+                    position: 'absolute', 
+                    left: 10, 
+                    top: '50%', 
+                    transform: 'translateY(-50%)',
+                    backgroundColor: 'rgba(255,255,255,0.5)',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255,255,255,0.8)'
+                    },
+                    zIndex: 10
+                  }}
+                >
+                  &lt;
+                </IconButton>
+                <IconButton 
+                  onClick={handleNextMedia}
+                  sx={{ 
+                    position: 'absolute', 
+                    right: 10, 
+                    top: '50%', 
+                    transform: 'translateY(-50%)',
+                    backgroundColor: 'rgba(255,255,255,0.5)',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255,255,255,0.8)'
+                    },
+                    zIndex: 10 
+                  }}
+                >
+                  &gt;
+                </IconButton>
+              </>
+            )}
+            
+            {/* Media Content */}
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', my: 2 }}>
               {selectedMedia.type === 'image' ? (
-                <Box sx={{ textAlign: 'center', my: 2 }}>
-                  <img 
-                    src={selectedMedia.path} 
-                    alt={selectedMedia.id} 
-                    style={{ maxWidth: '100%', maxHeight: '60vh' }}
-                  />
-                </Box>
+                <img 
+                  src={selectedMedia.path} 
+                  alt={selectedMedia.id} 
+                  style={{ 
+                    maxWidth: '100%', 
+                    maxHeight: '70vh',
+                    objectFit: 'contain'
+                  }}
+                />
               ) : selectedMedia.type === 'audio' ? (
-                <Box sx={{ textAlign: 'center', my: 2, p: 3, bgcolor: '#f0f7ff', borderRadius: 2 }}>
+                <Box sx={{ textAlign: 'center', p: 3, bgcolor: '#f0f7ff', borderRadius: 2, width: '100%' }}>
                   <Typography variant="h6" color="primary" gutterBottom>
                     Audio File
                   </Typography>
                   <audio controls src={selectedMedia.path} style={{ width: '100%' }} />
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-                    {selectedMedia.originalFilename}
-                  </Typography>
                 </Box>
               ) : selectedMedia.type === 'video' ? (
-                <Box sx={{ textAlign: 'center', my: 2, p: 3, bgcolor: '#fdf7ff', borderRadius: 2 }}>
-                  <Typography variant="h6" color="primary" gutterBottom>
-                    Video File
-                  </Typography>
+                <Box sx={{ textAlign: 'center', p: 3, width: '100%' }}>
                   <video 
                     controls 
                     src={selectedMedia.path}
-                    style={{ maxWidth: '100%', maxHeight: '50vh' }} 
+                    style={{ maxWidth: '100%', maxHeight: '70vh' }} 
                   />
                 </Box>
               ) : (
@@ -349,36 +560,46 @@ export default function MediaGallery() {
               )}
             </Box>
             
-            <Divider sx={{ my: 2 }} />
-            
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2">File ID:</Typography>
-                <Typography variant="body1" gutterBottom>{selectedMedia.id}</Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2">Original Filename:</Typography>
-                <Typography variant="body1" gutterBottom>{selectedMedia.originalFilename}</Typography>
-              </Grid>
-              <Grid item xs={12}>
-                <Typography variant="subtitle2">Conversation:</Typography>
-                <Typography variant="body1" gutterBottom>{selectedMedia.conversationTitle}</Typography>
-              </Grid>
-              <Grid item xs={12}>
-                <Typography variant="subtitle2">Full Path:</Typography>
-                <Typography variant="body2" sx={{ wordBreak: 'break-all' }}>{selectedMedia.path}</Typography>
-              </Grid>
-            </Grid>
+            {/* Details Panel */}
+            <Box sx={{ 
+              mt: 2, 
+              p: 2, 
+              backgroundColor: '#f5f5f5',
+              borderTop: '1px solid #e0e0e0',
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 2,
+              fontSize: '0.875rem'
+            }}>
+              <Box sx={{ minWidth: '200px', flex: 1 }}>
+                <Typography variant="subtitle2">File ID</Typography>
+                <Typography variant="body2" sx={{ wordBreak: 'break-all' }}>
+                  {selectedMedia.id}
+                </Typography>
+              </Box>
+              
+              <Box sx={{ minWidth: '200px', flex: 2 }}>
+                <Typography variant="subtitle2">From Conversation</Typography>
+                <Typography variant="body2" noWrap>
+                  {selectedMedia.conversationTitle}
+                  <Button 
+                    size="small" 
+                    sx={{ ml: 1 }} 
+                    onClick={() => navigateToConversation(selectedMedia.conversationId)}
+                  >
+                    View
+                  </Button>
+                </Typography>
+              </Box>
+              
+              <Box sx={{ width: '100%' }}>
+                <Typography variant="subtitle2">Path</Typography>
+                <Typography variant="body2" sx={{ wordBreak: 'break-all', fontSize: '0.75rem' }}>
+                  {selectedMedia.path}
+                </Typography>
+              </Box>
+            </Box>
           </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setDialogOpen(false)}>Close</Button>
-            <Button 
-              variant="contained" 
-              onClick={() => navigateToConversation(selectedMedia.conversationId)}
-            >
-              View Conversation
-            </Button>
-          </DialogActions>
         </Dialog>
       )}
     </Box>

@@ -1,8 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Box, Typography, Paper, Button, LinearProgress } from '@mui/material';
-import { useParams } from 'react-router-dom';
+import { Box, Typography, Paper, Button, LinearProgress, Chip, Collapse } from '@mui/material';
+import { useParams, useNavigate } from 'react-router-dom';
 import Markdown from './Markdown.jsx';
 import ToolMessageRenderer from './ToolMessageRenderer';
+import EnhancedToolMessageRenderer from './EnhancedToolMessageRenderer';
+import CanvasRenderer from './CanvasRenderer';
+import GizmoNameEditor from './GizmoNameEditor';
 import { processLatexInText } from './latexUtils';
 
 function fetchAPI(url) {
@@ -71,13 +74,24 @@ async function findFullFilename(folder, fileId) {
 // Extract text content and media references from a message
 function extractMessageContent(message) {
   if (!message || !message.content) {
-    return { text: '', mediaRefs: [], segments: [] };
+    return { text: '', mediaRefs: [], segments: [], canvasIds: [] };
   }
   
   const content = message.content;
   const mediaRefs = [];
   let textContent = '';
   let segments = [];
+  
+  // Check for canvas IDs in metadata
+  const canvasIds = [];
+  if (message.metadata && message.metadata.canvas_id) {
+    canvasIds.push(message.metadata.canvas_id);
+  }
+  
+  // Check for canvas content
+  if (content.content_type === 'canvas' && content.canvas_id) {
+    canvasIds.push(content.canvas_id);
+  }
 
   if (content.content_type === 'text') {
     // Simple text content
@@ -183,7 +197,8 @@ function extractMessageContent(message) {
   return { 
     text: textContent.trim(),
     mediaRefs,
-    segments
+    segments,
+    canvasIds
   };
 }
 
@@ -195,9 +210,55 @@ function isLikelyToolJson(content) {
 
 export default function ConversationView() {
   const { id } = useParams();
-  const [data, setData] = useState({ messages: [], total_messages: 0, page: 1, per_page: 10, title: '', create_time: '', folder: '' });
+  const navigate = useNavigate();
+  const [data, setData] = useState({ 
+    messages: [], 
+    total_messages: 0, 
+    page: 1, 
+    per_page: 10, 
+    title: '', 
+    create_time: '', 
+    folder: '',
+    canvas_ids: [] 
+  });
   const [mediaFilenames, setMediaFilenames] = useState({});
+  const [expandedCanvasId, setExpandedCanvasId] = useState(null);
+  const [gizmoEditorOpen, setGizmoEditorOpen] = useState(false);
+  const [currentGizmo, setCurrentGizmo] = useState({ id: '', name: '' });
   const scrollRef = useRef();
+
+  // Handler for updating gizmo names
+  const handleGizmoNameChange = (gizmoId, newName) => {
+    // Update the display immediately without requiring a reload
+    setData(prevData => {
+      // Create a copy of the messages array
+      const updatedMessages = prevData.messages.map(msg => {
+        // If this message has the gizmo ID we're updating
+        if (msg.message?.metadata?.gizmo_id === gizmoId) {
+          // Create a copy of the message and add/update the gizmo_name
+          return {
+            ...msg,
+            gizmo_name: newName
+          };
+        }
+        return msg;
+      });
+      
+      return {
+        ...prevData,
+        messages: updatedMessages
+      };
+    });
+  };
+  
+  // Function to open the gizmo editor for a specific gizmo
+  const openGizmoEditor = (gizmoId, currentName) => {
+    setCurrentGizmo({
+      id: gizmoId,
+      name: currentName || gizmoId
+    });
+    setGizmoEditorOpen(true);
+  };
 
   // Load all media files in the conversation to map file IDs to full filenames
   const loadMediaFilenames = async (folder) => {
@@ -286,6 +347,63 @@ export default function ConversationView() {
     }
   }
 
+  // Display unknown message types if any are present
+  const renderUnknownTypesWarning = () => {
+    if (!data.unknown_types) return null;
+    
+    return (
+      <Box sx={{ mb: 2, p: 1, bgcolor: '#fff4e5', borderRadius: 1, border: '1px solid #ffe0b2' }}>
+        <Typography variant="subtitle2" color="warning.main">Archive Parser Notice:</Typography>
+        <Typography variant="body2">
+          This conversation contains message types that may have new or extended formats.
+          {Object.entries(data.unknown_types).map(([type, count]) => (
+            <Chip 
+              key={type}
+              label={`${type}: ${count}`}
+              size="small"
+              sx={{ m: 0.5 }}
+              color="warning"
+              variant="outlined"
+            />
+          ))}
+        </Typography>
+      </Box>
+    );
+  };
+  
+  // Display conversation canvas IDs at the top level
+  const renderCanvasSummary = () => {
+    if (!data.canvas_ids || data.canvas_ids.length === 0) return null;
+    
+    return (
+      <Box sx={{ mb: 2, p: 1, bgcolor: '#f0f7ff', borderRadius: 1 }}>
+        <Typography variant="subtitle2">Canvas Content:</Typography>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+          {data.canvas_ids.map(canvasId => (
+            <Chip 
+              key={canvasId}
+              label={`Canvas: ${canvasId.substring(0, 8)}...`}
+              onClick={() => setExpandedCanvasId(expandedCanvasId === canvasId ? null : canvasId)}
+              color={expandedCanvasId === canvasId ? "primary" : "default"}
+              variant="outlined"
+            />
+          ))}
+        </Box>
+        
+        {expandedCanvasId && (
+          <Collapse in={!!expandedCanvasId}>
+            <Box sx={{ mt: 2 }}>
+              <CanvasRenderer 
+                canvasId={expandedCanvasId}
+                conversationFolder={data.folder}
+              />
+            </Box>
+          </Collapse>
+        )}
+      </Box>
+    );
+  };
+
   if (!data.title) return <div>Loading...</div>;
 
   // Extract unique gizmo IDs and models from messages
@@ -297,13 +415,46 @@ export default function ConversationView() {
   return (
     <Box>
       <Typography variant="h5">{data.title || id}</Typography>
-      <Typography variant="subtitle2" color="text.secondary">{data.create_time}</Typography>
+      <Typography variant="subtitle2" color="text.secondary">
+        {data.create_time ? new Date(data.create_time * 1000).toISOString().split('T')[0] : ''}
+        <span style={{ color: '#777', marginLeft: '10px' }}>
+          ID: {id}
+        </span>
+      </Typography>
       {gizmoIds.length > 0 && (
         <Typography variant="subtitle2" color="text.secondary">Gizmo ID(s): {gizmoIds.join(', ')}</Typography>
       )}
       {modelNames.length > 0 && (
         <Typography variant="subtitle2" color="text.secondary">Model(s): {modelNames.join(', ')}</Typography>
       )}
+      
+      {/* Display warnings about unknown message types */}
+      {renderUnknownTypesWarning()}
+      
+      {/* Display canvas summary */}
+      {renderCanvasSummary()}
+      
+      {/* Display View Media button if the conversation has media */}
+      {data.has_media && (
+        <Box sx={{ mb: 2 }}>
+          <Button 
+            variant="outlined" 
+            onClick={() => navigate('/media', { state: { conversationId: id } })}
+          >
+            View Conversation Media
+          </Button>
+        </Box>
+      )}
+      
+      {/* Gizmo Name Editor Dialog */}
+      <GizmoNameEditor
+        open={gizmoEditorOpen}
+        onClose={() => setGizmoEditorOpen(false)}
+        gizmoId={currentGizmo.id}
+        currentName={currentGizmo.name}
+        onNameChange={handleGizmoNameChange}
+      />
+      
       <Box sx={{ flex: 1, minHeight: 0, height: '100%', overflow: 'auto' }} ref={scrollRef}>
         {filteredMessages.map(msg => {
           // Extract message info from the JSON structure
@@ -321,20 +472,69 @@ export default function ConversationView() {
           const content = extractMessageContent(msg.message);
           
           return (
-            <Paper key={msg.id} sx={{ p: 2, my: 1, backgroundColor: bgColor }}>
+            <Paper key={msg.id} sx={{ p: 2, my: 1, backgroundColor: bgColor, position: 'relative' }}>
+              {/* Add special indicator for parsed messages */}
+              {msg.parsed && (
+                <Box 
+                  sx={{
+                    position: 'absolute',
+                    top: 0,
+                    right: 0,
+                    width: '10px',
+                    height: '10px',
+                    borderRadius: '0 3px 0 3px',
+                    backgroundColor: '#4caf50',
+                  }}
+                  title="Enhanced parsing applied"
+                />
+              )}
               <Typography variant="subtitle2" color="text.secondary">
-                {role} {createTime ? `– ${new Date(createTime * 1000).toLocaleString()}` : ''}
+                {role} {createTime ? `– ${new Date(createTime * 1000).toISOString().replace('T', ' ').substring(0, 19)}` : ''}
                 {msg.message?.metadata?.model_slug ? ` (${msg.message.metadata.model_slug})` : ''}
+                {msg.message?.metadata?.gizmo_id && (
+                  <Box component="span" sx={{ ml: 1 }}>
+                    <Chip 
+                      size="small" 
+                      label={`Custom GPT: ${msg.gizmo_name || msg.message.metadata.gizmo_id}`}
+                      color="primary"
+                      variant="outlined"
+                      sx={{ maxWidth: '250px', textOverflow: 'ellipsis', overflow: 'hidden' }}
+                      onClick={() => openGizmoEditor(
+                        msg.message.metadata.gizmo_id,
+                        msg.gizmo_name
+                      )}
+                    />
+                  </Box>
+                )}
               </Typography>
               
               {/* Render message content */}
               {role === 'tool' ? (
-                <ToolMessageRenderer message={msg.message} />
+                msg.parsed ? (
+                  <EnhancedToolMessageRenderer message={msg.message} parsedData={msg.parsed.data} />
+                ) : (
+                  <ToolMessageRenderer message={msg.message} />
+                )
               ) : (
-                <Markdown 
-                  children={content.text} 
-                  segments={content.segments} 
-                />
+                <>
+                  <Markdown 
+                    children={content.text} 
+                    segments={content.segments} 
+                  />
+                  
+                  {/* Display canvas if available */}
+                  {content.canvasIds && content.canvasIds.length > 0 && (
+                    <Box sx={{ mt: 2 }}>
+                      {content.canvasIds.map(canvasId => (
+                        <CanvasRenderer 
+                          key={canvasId}
+                          canvasId={canvasId}
+                          conversationFolder={data.folder}
+                        />
+                      ))}
+                    </Box>
+                  )}
+                </>
               )}
               
               {/* Render media attachments if any */}

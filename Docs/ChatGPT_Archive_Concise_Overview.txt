@@ -1,0 +1,288 @@
+Below is a concise yet comprehensive blueprint for an AI-powered archive parser—covering past, current, and (as far as possible) future ChatGPT “Export Data” archives. It’s organized into:
+	1.	High-Level Architecture
+	2.	Data Model & JSON Schemas
+	3.	Parser Modules
+	4.	CLI & Reporting
+	5.	Media Handling
+	6.	Database Schema
+	7.	Custom-GPT Resolution
+	8.	Front-End Rendering (React + Vite)
+	9.	Future-Proofing & Extensions
+
+⸻
+
+1. High-Level Architecture
+
+Client (React+Vite)
+  ↕  HTTP/REST
+Server (Node.js + Express)
+  ├─ /api/messages → parsed JSON  
+  ├─ /api/media/:fileId → serve media files  
+  └─ CLI runner (ts-node cli.ts) → CSV/JSONL reports
+
+	•	Modularity: one parser per message “role” (user, assistant, tool, system).
+	•	Dispatcher: parseAnyMessage routes raw messages to the right parser.
+	•	Reports: CSV (for spreadsheets) + JSONL (for programmatic).
+	•	DB: PostgreSQL tables to store raw + parsed entries for querying.
+
+⸻
+
+2. Data Model & JSON Schemas
+
+Message Roles
+	•	user: prompts, uploads, tool_use or search_query.
+	•	assistant: replies, function_call, tool_calls, gizmo_id, canvas_id.
+	•	tool: e.g.
+	•	tether_quote → file snippet
+	•	file_citation
+	•	file_path, file_upload
+	•	code, image
+	•	tool_use → with name + arguments
+	•	tool_result → raw JSON
+	•	search_query / search_results
+	•	system: session init, metadata.attachments (uploaded files), canvas_id, tools list, model, etc.
+
+Tool-Message Meta-Schema (Draft 7, abridged)
+
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "properties":{
+    "author": { "properties": { "role":{ "const":"tool" } }},
+    "content":{
+      "oneOf":[
+        { "$ref":"#\/definitions\/TetherQuote" },
+        { "$ref":"#\/definitions\/Code" },
+        /* … other tool types … */
+        { "$ref":"#\/definitions\/FunctionCall" }
+      ]
+    }
+  },
+  "definitions": {
+    "TetherQuote": {
+      "properties":{
+        "content_type":{"const":"tether_quote"},
+        "url":{"type":"string"},
+        "domain":{"type":"string"},
+        "text":{"type":"string"}
+      },
+      "required":["content_type","url","domain","text"]
+    },
+    "Code": {
+      "properties":{/* … */},
+      "required":["content_type","input","outputs"]
+    }
+    /* … */
+  }
+}
+
+A similar pattern applies to user, assistant, and system schemas.
+
+⸻
+
+3. Parser Modules (parsers/)
+
+Each exports a parseXMessage(msg) returning ParsedXMessage | null.
+
+parseUserMessage.ts
+
+export type ParsedUserMessage = {
+  message_id: string;
+  content_type: string;
+  text?: string;
+  file_ids?: string[];
+  function_call?: {name:string;arguments:any};
+  search_query?: string;
+  has_unknown_fields?: boolean;
+};
+
+export function parseUserMessage(msg:any):ParsedUserMessage|null {
+  if (msg.author?.role!=="user") return null;
+  // extract text, files (content.files + metadata.attachments)
+  // detect function_call, tool_use, search_query
+  // flag unknown fields
+}
+
+parseAssistantMessage.ts
+
+export type ParsedAssistantMessage = { /* ... */ };
+
+export function parseAssistantMessage(msg:any):ParsedAssistantMessage|null {
+  if (msg.author?.role!=="assistant") return null;
+  // extract text, annotations, legacy function_call, modern tool_calls
+  // gizmo_id, canvas_id, model_slug
+  // unknown fields
+}
+
+parseToolMessage.ts
+
+export type ParsedToolMessage = { /* ... */ };
+
+export function parseToolMessage(msg:any):ParsedToolMessage|null {
+  if (msg.author?.role!=="tool") return null;
+  switch(msg.content.content_type) {
+    case "tether_quote": /* url, domain, text */; break;
+    case "file_path": /* path */; break;
+    // …
+    default: return {message_id:msg.id, content_type:msg.content.content_type, has_unknown_fields:true};
+  }
+}
+
+parseSystemMessage.ts
+
+export type ParsedSystemMessage = { /* … */ };
+
+export function parseSystemMessage(msg:any):ParsedSystemMessage|null {
+  if (msg.author?.role!=="system") return null;
+  const meta = msg.content.metadata||{};
+  return {
+    message_id: msg.id,
+    model: meta.model,
+    tools: meta.tools,
+    canvas_id: meta.canvas_id,
+    attachments: meta.attachments?.map(a=>({file_id:a.id,name:a.name,…})) 
+  };
+}
+
+Dispatcher: parseAnyMessage.ts
+
+import { parseUserMessage } from "./parseUserMessage";
+import { parseAssistantMessage } from "./parseAssistantMessage";
+// …
+
+export type ParsedMessage =
+  | {type:"user";data:ParsedUserMessage}
+  | {type:"assistant";data:ParsedAssistantMessage}
+  // …
+
+export function parseAnyMessage(msg:any):ParsedMessage|null {
+  switch(msg.author?.role) {
+    case "user": return {type:"user",data:parseUserMessage(msg)!};
+    case "assistant": return {type:"assistant",data:parseAssistantMessage(msg)!};
+    case "tool": return {type:"tool",data:parseToolMessage(msg)!};
+    case "system": return {type:"system",data:parseSystemMessage(msg)!};
+    default: return null;
+  }
+}
+
+
+
+⸻
+
+4. CLI & Reporting (cli.ts + reports/)
+
+#!/usr/bin/env ts-node
+import * as fs from "fs";
+import * as yargs from "yargs";
+import { parseAnyMessage, ParsedMessage } from "./parsers/parseAnyMessage";
+import { writeCsvReport } from "./reports/writeCsvReport";
+import { writeJsonlReport } from "./reports/writeJsonlReport";
+import { extractUnknownGizmos } from "./utils/extractUnknownGizmos";
+
+const argv = yargs.argv;
+const convs = JSON.parse(fs.readFileSync(argv.input,"utf8"));
+const raw = convs.flatMap(c=>Object.values(c.mapping||{}).map((n:any)=>n.message));
+const parsed = raw.map(parseAnyMessage).filter(Boolean) as ParsedMessage[];
+
+// Optional: load custom_gpts.json into gizmoMap
+extractUnknownGizmos(/* … */);
+
+await writeCsvReport(parsed, `${argv.output}.csv`);
+writeJsonlReport(parsed, `${argv.output}.jsonl`);
+
+	•	writeCsvReport uses [csv-writer] to flatten key fields across all roles.
+	•	writeJsonlReport dumps JSON lines: {type,data…} for each message.
+
+⸻
+
+5. Media Handling
+	1.	Backend (Express)
+
+const mediaMap = new Map<string,string>();
+fs.readdirSync(mediaRoot).forEach(f=>{
+  const [id] = f.split(".");
+  mediaMap.set(id, path.join(mediaRoot,f));
+});
+
+app.get("/media/:fileId",(req,res)=>{
+  const fp = mediaMap.get(req.params.fileId);
+  if (!fp) return res.sendStatus(404);
+  res.sendFile(fp);
+});
+
+
+	2.	Frontend (React+Vite)
+
+export function MediaRenderer({fileId}:{fileId:string}) {
+  const url = `/media/${fileId}`;
+  const ext = fileId.split(".").pop();
+  if (["png","jpg","gif"].includes(ext!))
+    return <img src={url} alt="" style={{maxWidth:"100%"}}/>;
+  if (["mp3","wav"].includes(ext!))
+    return <audio controls src={url}/>;
+  return <a href={url} download>Download</a>;
+}
+
+
+
+⸻
+
+6. Database Schema (PostgreSQL)
+
+CREATE TABLE messages (
+  id UUID PRIMARY KEY,
+  conv_id UUID,
+  role TEXT,
+  create_time TIMESTAMPTZ,
+  content_type TEXT,
+  raw JSONB
+);
+
+CREATE TABLE tool_details (
+  message_id UUID REFERENCES messages(id),
+  file_id TEXT,    -- for tether_quote, file_path…
+  domain TEXT,
+  quote TEXT,
+  output_type TEXT,
+  output_text TEXT,
+  -- …
+);
+
+CREATE TABLE attachments (
+  message_id UUID REFERENCES messages(id),
+  file_id TEXT,
+  name TEXT,
+  size INT,
+  file_type TEXT
+);
+
+Normally, you’d shard by type or keep everything in raw + specialized tables for indexing.
+
+⸻
+
+7. Custom-GPT Resolution
+	•	gizmo_id in assistant.metadata
+	•	custom_gpts.json (if present) maps id→title
+	•	CLI writes *.unknown_gpts.json template for manual fill-in and re-loads it to enrich reports.
+
+⸻
+
+8. Front-End Rendering (React+Vite)
+	•	Message List: map over parsed messages, dispatch to components:
+	•	<UserBubble text=… files=…>
+	•	<AssistantBubble … gizmoTitle=… canvasLink=…>
+	•	<ToolOutput …>
+	•	<SystemNotice …>
+	•	MediaRenderer component for any file references.
+	•	Search & Filter on role, content_type, gizmo, etc.
+
+⸻
+
+9. Future-Proofing & Extensions
+	•	Unknown Fields: each parser flags has_unknown_fields → surface in report
+	•	Schema Validation: integrate Ajv with Draft 7 schemas at ingest time
+	•	Plugin Hooks: easily add new content_type handlers as ChatGPT evolves
+	•	UI Hooks: support audio, video, interactive canvases (via canvas_id)
+
+⸻
+
+With this blueprint—and the stubbed-out code snippets—you (or an AI assistant) have everything needed to implement a robust, extensible archive browser+parser for ChatGPT exports using Node.js/Express and React+Vite.

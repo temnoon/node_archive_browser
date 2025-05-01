@@ -5,6 +5,7 @@ import ConversationView from './ConversationView.jsx';
 import ConversationSearchTable from './ConversationSearchTable.jsx';
 import ArchiveImportWizard from './ArchiveImportWizard.jsx';
 import MediaGallery from './MediaGallery.jsx';
+import ParserInfoPage from './ParserInfoPage.jsx';
 
 export default function App() {
   const [search, setSearch] = useState('');
@@ -33,6 +34,14 @@ export default function App() {
             <Button 
               color="inherit" 
               component={Link} 
+              to="/parser"
+              sx={{ ml: 2 }}
+            >
+              Parser Info
+            </Button>
+            <Button 
+              color="inherit" 
+              component={Link} 
               to="/import"
               sx={{ ml: 2 }}
             >
@@ -43,11 +52,19 @@ export default function App() {
         <Container sx={{ mt: 3, maxWidth: '100%!important', width: '100%' }} disableGutters>
           <Routes>
             <Route
+              path="/parser"
+              element={<ParserInfoPage />}
+            />
+            <Route
               path="/import"
               element={<ArchiveImportWizard />}
             />
             <Route
               path="/media"
+              element={<MediaGallery />}
+            />
+            <Route
+              path="/media/:conversationId"
               element={<MediaGallery />}
             />
             <Route

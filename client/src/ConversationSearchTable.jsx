@@ -55,20 +55,31 @@ export default function ConversationSearchTable({ search, perPage, setPerPage })
     });
   }, []);
 
+  // Format timestamp to ISO8601 date
+  const formatTimestamp = (timestamp) => {
+    if (!timestamp) return '';
+    return new Date(timestamp * 1000).toISOString().split('T')[0];
+  };
+
   const handleFilterChange = (key, value) => setFilters(f => ({ ...f, [key]: value }));
   const handleMediaFilter = e => setFilters(f => ({ ...f, mediaOnly: e.target.checked }));
   const filtered = conversations.filter(c => {
     // Date filter
-    const created = c.create_time ? new Date(c.create_time) : null;
+    const timestamp = c.create_time || 0;
+    const created = new Date(timestamp * 1000); // Convert UNIX timestamp to Date
+    
     if (filters.dateFrom) {
       const from = new Date(filters.dateFrom);
-      if (!created || created < from) return false;
+      // Reset the time to the beginning of the day
+      from.setHours(0, 0, 0, 0);
+      if (created < from) return false;
     }
+    
     if (filters.dateTo) {
       // To-date is inclusive, so add 1 day
       const to = new Date(filters.dateTo);
-      to.setDate(to.getDate() + 1);
-      if (!created || created >= to) return false;
+      to.setHours(23, 59, 59, 999); // End of the day
+      if (created > to) return false;
     }
     // Media filter
     if (filters.mediaOnly) {
@@ -94,7 +105,13 @@ export default function ConversationSearchTable({ search, perPage, setPerPage })
   // Pagination logic
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
   const pageClamped = Math.max(1, Math.min(currentPage, totalPages));
-  const paginated = filtered.slice((pageClamped - 1) * perPage, pageClamped * perPage);
+  
+  // Sort by creation date (newest first)
+  const sortedFiltered = [...filtered].sort((a, b) => {
+    return (b.create_time || 0) - (a.create_time || 0);
+  });
+  
+  const paginated = sortedFiltered.slice((pageClamped - 1) * perPage, pageClamped * perPage);
   return (
     <Box>
       <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -138,7 +155,17 @@ export default function ConversationSearchTable({ search, perPage, setPerPage })
         <List>
           {paginated.map(conv => (
             <ListItem button key={conv.id} onClick={() => navigate(`/conversations/${conv.id}`)}>
-              <ListItemText primary={conv.title || conv.id} secondary={conv.create_time} />
+              <ListItemText 
+                primary={conv.title || conv.id} 
+                secondary={
+                  <>
+                    {conv.create_time ? new Date(conv.create_time * 1000).toISOString().split('T')[0] : 'Unknown date'}
+                    <span style={{ color: '#777', fontSize: '0.85em', marginLeft: '8px' }}>
+                      ID: {conv.id.substring(0, 10)}...
+                    </span>
+                  </>
+                } 
+              />
             </ListItem>
           ))}
         </List>
