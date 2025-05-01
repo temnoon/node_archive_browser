@@ -1,0 +1,78 @@
+// Copied and adapted from the original app
+import React, { useState, useEffect } from 'react';
+import { AppBar, Toolbar, Typography, Container, Box, TextField, GlobalStyles } from '@mui/material';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import ConversationView from './ConversationView.jsx';
+import ConversationSearchTable from './ConversationSearchTable.jsx';
+import ToolMessageRenderer from './ToolMessageRenderer.jsx';
+
+export default function App() {
+  const [search, setSearch] = useState('');
+  const [perPage, setPerPage] = useState(10);
+  
+
+
+
+  return (
+    <>
+      <GlobalStyles styles={{
+        'pre': { whiteSpace: 'pre-wrap', wordBreak: 'break-all', margin: '0 0 1em' },
+        'img': { maxWidth: '100%', maxHeight: '72vh', height: 'auto', display: 'block', margin: '0px auto' }
+      }} />
+      <Router>
+        <AppBar position="static">
+          <Toolbar>
+            <Typography variant="h6" sx={{ flexGrow: 1 }} component={Link} to="/" color="inherit" style={{ textDecoration: 'none' }}>
+              Archive Browser
+            </Typography>
+          </Toolbar>
+        </AppBar>
+        <Container sx={{ mt: 3, maxWidth: '100%!important', width: '100%' }} disableGutters>
+          <Box mb={2} sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+            <TextField label="Search" value={search} onChange={e => setSearch(e.target.value)} sx={{ flex: 1 }} />
+          </Box>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
+                  <Box sx={{ flex: 2 }}>
+                    <ConversationSearchTable
+                      search={search}
+                      perPage={perPage}
+                      setPerPage={setPerPage}
+                      modelList={modelList}
+                      gizmoList={gizmoList}
+                    />
+                  </Box>
+                  <Box sx={{ flex: 3, minWidth: 0, height: '80vh', bgcolor: '#fafafa', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Typography variant="h6" color="text.secondary">Select a conversation to view</Typography>
+                  </Box>
+                </Box>
+              }
+            />
+            <Route
+              path="/conversations/:id"
+              element={
+                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
+                  <Box sx={{ flex: 2 }}>
+                    <ConversationSearchTable
+                      search={search}
+                      perPage={perPage}
+                      setPerPage={setPerPage}
+                      modelList={modelList}
+                      gizmoList={gizmoList}
+                    />
+                  </Box>
+                  <Box sx={{ flex: 3, minWidth: 0, height: '80vh', display: 'flex', flexDirection: 'column' }}>
+                    <ConversationView />
+                  </Box>
+                </Box>
+              }
+            />
+          </Routes>
+        </Container>
+      </Router>
+    </>
+  );
+}
