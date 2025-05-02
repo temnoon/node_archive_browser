@@ -49,7 +49,13 @@ export default function App() {
             </Button>
           </Toolbar>
         </AppBar>
-        <Container sx={{ mt: 3, maxWidth: '100%!important', width: '100%' }} disableGutters>
+        <Container sx={{ 
+          mt: 3, 
+          maxWidth: '100%!important', 
+          width: '100%',
+          px: { xs: 0, lg: 2 },  // Add horizontal padding on larger screens (lg = 1200px+)
+          pb: { xs: 0, lg: 2 },  // Add bottom padding on larger screens
+        }} disableGutters={false}>
           <Routes>
             <Route
               path="/parser"

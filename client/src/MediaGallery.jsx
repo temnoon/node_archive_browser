@@ -12,7 +12,15 @@ import {
   DialogContent,
   DialogTitle,
   Grid,
-  Divider
+  Divider,
+  Pagination,
+  FormGroup,
+  FormControlLabel,
+  Checkbox,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel
 } from '@mui/material';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 
@@ -95,6 +103,23 @@ export default function MediaGallery() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [conversationTitle, setConversationTitle] = useState(null);
+  const [isLimited, setIsLimited] = useState(false);
+  const [totalMediaCount, setTotalMediaCount] = useState(0);
+  const [maxFiles, setMaxFiles] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [paginatedFiles, setPaginatedFiles] = useState([]);
+  const [filesPerPage, setFilesPerPage] = useState(100);
+  
+  // Filter options
+  const [showImages, setShowImages] = useState(true);
+  const [showAudio, setShowAudio] = useState(true);
+  const [showUserUploads, setShowUserUploads] = useState(true);
+  const [showAiGenerated, setShowAiGenerated] = useState(true);
+  
+  // Sorting options
+  const [sortBy, setSortBy] = useState('createTime');
+  const [sortDirection, setSortDirection] = useState('desc');
+  
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -114,11 +139,17 @@ export default function MediaGallery() {
           setMediaFiles(data.mediaFiles || []);
           setFilteredFiles(data.mediaFiles || []);
           setConversationTitle(data.conversationTitle);
+          setIsLimited(false); // Single conversation is unlikely to hit limits
+          setTotalMediaCount(data.mediaFiles?.length || 0);
         } else {
           // Otherwise load all media
           const data = await fetchAllMedia();
           setMediaFiles(data.mediaFiles || []);
           setFilteredFiles(data.mediaFiles || []);
+          // Store info about limits
+          setIsLimited(data.limited || false);
+          setTotalMediaCount(data.total || data.mediaFiles?.length || 0);
+          setMaxFiles(data.maxFiles || 0);
         }
       } catch (err) {
         setError(`Failed to load media files: ${err.message}`);
@@ -148,22 +179,87 @@ export default function MediaGallery() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [dialogOpen]);
 
-  // Update filtered files when search term changes
+  // Apply filters and search term
   useEffect(() => {
-    if (!search.trim()) {
-      setFilteredFiles(mediaFiles);
-      return;
+    let filtered = [...mediaFiles];
+    
+    // Apply type filters
+    if (!showImages || !showAudio) {
+      filtered = filtered.filter(file => {
+        if (!showImages && file.type === 'image') return false;
+        if (!showAudio && file.type === 'audio') return false;
+        return true;
+      });
     }
-
-    const term = search.toLowerCase();
-    const filtered = mediaFiles.filter(file => 
-      file.id.toLowerCase().includes(term) || 
-      file.originalFilename?.toLowerCase().includes(term) ||
-      file.conversationTitle?.toLowerCase().includes(term)
-    );
+    
+    // Apply source filters
+    if (!showUserUploads || !showAiGenerated) {
+      filtered = filtered.filter(file => {
+        if (!showUserUploads && file.sourceType === 'user_upload') return false;
+        if (!showAiGenerated && file.sourceType === 'ai_generated') return false;
+        return true;
+      });
+    }
+    
+    // Apply search filter
+    if (search.trim()) {
+      const term = search.toLowerCase();
+      filtered = filtered.filter(file => 
+        file.id.toLowerCase().includes(term) || 
+        file.originalFilename?.toLowerCase().includes(term) ||
+        file.conversationTitle?.toLowerCase().includes(term) ||
+        file.displayFilename?.toLowerCase().includes(term)
+      );
+    }
+    
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let valueA, valueB;
+      
+      // Get values based on sortBy
+      switch (sortBy) {
+        case 'filename':
+          valueA = a.displayFilename || a.originalFilename || '';
+          valueB = b.displayFilename || b.originalFilename || '';
+          // String comparison
+          return sortDirection === 'asc' ? 
+            valueA.localeCompare(valueB) : 
+            valueB.localeCompare(valueA);
+        
+        case 'createTime':
+          valueA = a.createTime || 0;
+          valueB = b.createTime || 0;
+          break;
+          
+        case 'fileId':
+          valueA = a.id || '';
+          valueB = b.id || '';
+          // String comparison
+          return sortDirection === 'asc' ? 
+            valueA.localeCompare(valueB) : 
+            valueB.localeCompare(valueA);
+          
+        default:
+          valueA = a.createTime || 0;
+          valueB = b.createTime || 0;
+      }
+      
+      // Numeric comparison for non-string cases
+      return sortDirection === 'asc' ? valueA - valueB : valueB - valueA;
+    });
     
     setFilteredFiles(filtered);
-  }, [search, mediaFiles]);
+    
+    // Reset to first page when filters change
+    setCurrentPage(1);
+  }, [mediaFiles, search, showImages, showAudio, showUserUploads, showAiGenerated, sortBy, sortDirection]);
+  
+  // Handle pagination of filtered files
+  useEffect(() => {
+    const startIndex = (currentPage - 1) * filesPerPage;
+    const endIndex = startIndex + filesPerPage;
+    setPaginatedFiles(filteredFiles.slice(startIndex, endIndex));
+  }, [filteredFiles, currentPage, filesPerPage]);
   
   // Handle direct file ID search
   const searchFileById = async () => {
@@ -224,6 +320,43 @@ export default function MediaGallery() {
     setCurrentIndex(newIndex);
     setSelectedMedia(filteredFiles[newIndex]);
   }, [filteredFiles, currentIndex]);
+  
+  // Handle page change
+  const handlePageChange = (event, newPage) => {
+    setCurrentPage(newPage);
+    // Scroll to top of gallery
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  
+  // Handle filter changes
+  const handleFilterChange = (filterName, value) => {
+    switch(filterName) {
+      case 'images':
+        setShowImages(value);
+        break;
+      case 'audio':
+        setShowAudio(value);
+        break;
+      case 'userUploads':
+        setShowUserUploads(value);
+        break;
+      case 'aiGenerated':
+        setShowAiGenerated(value);
+        break;
+      default:
+        break;
+    }
+  };
+  
+  // Handle sort changes
+  const handleSortChange = (event) => {
+    setSortBy(event.target.value);
+  };
+  
+  // Handle sort direction change
+  const handleSortDirectionChange = () => {
+    setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+  };
 
   // Render media item based on type
   const renderMediaItem = (file) => {
@@ -413,10 +546,103 @@ export default function MediaGallery() {
           }}
         />
         
-        <Box sx={{ mt: 2 }}>
+        {/* Filter and Sort Controls */}
+        <Box sx={{ mt: 2, display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
+          {/* Filters */}
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="subtitle2" gutterBottom>Filters</Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+              {/* Type Filters */}
+              <FormGroup row sx={{ mr: 2 }}>
+                <FormControlLabel
+                  control={
+                    <Checkbox 
+                      checked={showImages} 
+                      onChange={(e) => handleFilterChange('images', e.target.checked)} 
+                    />
+                  }
+                  label="Images"
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox 
+                      checked={showAudio} 
+                      onChange={(e) => handleFilterChange('audio', e.target.checked)} 
+                    />
+                  }
+                  label="Audio"
+                />
+              </FormGroup>
+              
+              {/* Source Filters */}
+              <FormGroup row>
+                <FormControlLabel
+                  control={
+                    <Checkbox 
+                      checked={showUserUploads} 
+                      onChange={(e) => handleFilterChange('userUploads', e.target.checked)} 
+                    />
+                  }
+                  label="User Uploads"
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox 
+                      checked={showAiGenerated} 
+                      onChange={(e) => handleFilterChange('aiGenerated', e.target.checked)} 
+                    />
+                  }
+                  label="AI Generated"
+                />
+              </FormGroup>
+            </Box>
+          </Box>
+          
+          {/* Sorting */}
+          <Box>
+            <Typography variant="subtitle2" gutterBottom>Sort by</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <FormControl variant="outlined" size="small" sx={{ minWidth: 150 }}>
+                <Select
+                  value={sortBy}
+                  onChange={handleSortChange}
+                >
+                  <MenuItem value="createTime">Date</MenuItem>
+                  <MenuItem value="filename">Filename</MenuItem>
+                  <MenuItem value="fileId">File ID</MenuItem>
+                </Select>
+              </FormControl>
+              <Button 
+                size="small" 
+                onClick={handleSortDirectionChange}
+                sx={{ ml: 1 }}
+              >
+                {sortDirection === 'asc' ? '↑ Ascending' : '↓ Descending'}
+              </Button>
+            </Box>
+          </Box>
+        </Box>
+        
+        <Box sx={{ mt: 2, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' } }}>
           <Typography variant="body2" color="text.secondary">
-            {filteredFiles.length} of {mediaFiles.length} media files
+            {filteredFiles.length} of {mediaFiles.length} media files {isLimited && `(limited to first ${maxFiles} files)`}
           </Typography>
+          
+          {filteredFiles.length > filesPerPage && (
+            <Box sx={{ mt: { xs: 1, sm: 0 } }}>
+              <Typography variant="body2" color="text.secondary" sx={{ display: 'inline-block', mr: 1 }}>
+                Page {currentPage} of {Math.ceil(filteredFiles.length / filesPerPage)}
+              </Typography>
+              <Button 
+                size="small" 
+                variant="outlined" 
+                sx={{ ml: 1 }}
+                onClick={() => setFilesPerPage(prev => prev === 100 ? 250 : prev === 250 ? 500 : 100)}
+              >
+                {filesPerPage} per page
+              </Button>
+            </Box>
+          )}
         </Box>
       </Paper>
 
@@ -425,50 +651,72 @@ export default function MediaGallery() {
           No media files found matching your search criteria.
         </Typography>
       ) : (
-        <Box sx={{ 
-          display: 'flex', 
-          flexWrap: 'wrap', 
-          gap: '8px',
-          justifyContent: 'flex-start'
-        }}>
-          {filteredFiles.map((file, index) => (
-            <Box 
-              key={`${file.id}-${index}`}
-              sx={{
-                position: 'relative',
-                width: { xs: '100%', sm: '48%', md: '32%', lg: '24%', xl: '19%' },
-                '&:hover .media-overlay': {
-                  opacity: 1
-                }
-              }}
-            >
-              {renderMediaItem(file)}
+        <>
+          <Box sx={{ 
+            display: 'flex', 
+            flexWrap: 'wrap', 
+            gap: '8px',
+            justifyContent: 'flex-start'
+          }}>
+            {paginatedFiles.map((file, index) => {
+              // Calculate the global index in the filteredFiles array
+              const globalIndex = (currentPage - 1) * filesPerPage + index;
               
-              {/* Overlay with filename - shows only on hover */}
-              <Box 
-                className="media-overlay"
-                sx={{
-                  position: 'absolute',
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                  color: 'white',
-                  padding: '8px',
-                  opacity: 0,
-                  transition: 'opacity 0.3s',
-                  cursor: 'pointer',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap'
-                }}
-                onClick={() => handleViewMedia(file, index)}
-              >
-                {file.originalFilename || file.id}
-              </Box>
+              return (
+                <Box 
+                  key={`${file.id}-${globalIndex}`}
+                  sx={{
+                    position: 'relative',
+                    width: { xs: '100%', sm: '48%', md: '32%', lg: '24%', xl: '19%' },
+                    '&:hover .media-overlay': {
+                      opacity: 1
+                    }
+                  }}
+                >
+                  {renderMediaItem(file)}
+                  
+                  {/* Overlay with filename - shows only on hover */}
+                  <Box 
+                    className="media-overlay"
+                    sx={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                      color: 'white',
+                      padding: '8px',
+                      opacity: 0,
+                      transition: 'opacity 0.3s',
+                      cursor: 'pointer',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}
+                    onClick={() => handleViewMedia(file, globalIndex)}
+                  >
+                    {file.originalFilename || file.id}
+                  </Box>
+                </Box>
+              );
+            })}
+          </Box>
+          
+          {/* Pagination Controls */}
+          {filteredFiles.length > filesPerPage && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, mb: 2 }}>
+              <Pagination 
+                count={Math.ceil(filteredFiles.length / filesPerPage)} 
+                page={currentPage} 
+                onChange={handlePageChange} 
+                color="primary" 
+                showFirstButton 
+                showLastButton
+                size="large"
+              />
             </Box>
-          ))}
-        </Box>
+          )}
+        </>
       )}
 
       {/* Media Details Dialog */}
@@ -578,6 +826,24 @@ export default function MediaGallery() {
                 </Typography>
               </Box>
               
+              {selectedMedia.displayFilename && (
+                <Box sx={{ minWidth: '200px', flex: 1 }}>
+                  <Typography variant="subtitle2">Display Filename</Typography>
+                  <Typography variant="body2" sx={{ wordBreak: 'break-all' }}>
+                    {selectedMedia.displayFilename}
+                  </Typography>
+                </Box>
+              )}
+              
+              <Box sx={{ minWidth: '200px', flex: 1 }}>
+                <Typography variant="subtitle2">Source Type</Typography>
+                <Typography variant="body2">
+                  {selectedMedia.sourceType === 'user_upload' ? 'User Upload' : 
+                   selectedMedia.sourceType === 'ai_generated' ? 'AI Generated' : 
+                   selectedMedia.sourceType || 'Unknown'}
+                </Typography>
+              </Box>
+              
               <Box sx={{ minWidth: '200px', flex: 2 }}>
                 <Typography variant="subtitle2">From Conversation</Typography>
                 <Typography variant="body2" noWrap>
@@ -591,6 +857,15 @@ export default function MediaGallery() {
                   </Button>
                 </Typography>
               </Box>
+              
+              {selectedMedia.createDate && (
+                <Box sx={{ minWidth: '200px', flex: 1 }}>
+                  <Typography variant="subtitle2">Date</Typography>
+                  <Typography variant="body2">
+                    {new Date(selectedMedia.createDate).toLocaleString()}
+                  </Typography>
+                </Box>
+              )}
               
               <Box sx={{ width: '100%' }}>
                 <Typography variant="subtitle2">Path</Typography>

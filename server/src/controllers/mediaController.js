@@ -97,8 +97,8 @@ async function getMediaGallery(req, res) {
     // Get media files from these conversations
     const mediaFiles = [];
     
-    // Limit to max 500 files to prevent performance issues
-    const maxFilesToProcess = 500;
+    // Higher limit for media files to show the complete collection
+    const maxFilesToProcess = 10000; // Increased from 500 to 10000 to handle large media collections
     let processedCount = 0;
     
     for (const conv of conversationsWithMedia) {
@@ -124,6 +124,32 @@ async function getMediaGallery(req, res) {
           // Extract the file ID by removing the extension
           let fileId = path.basename(file, fileExtension);
           let fileType = 'unknown';
+          let sourceType = 'unknown';
+          let displayFilename = '';
+          
+          // Determine file source (user upload or AI generated)
+          if (fileId.startsWith('file-')) {
+            // Extract the ID part (first section)
+            fileId = fileId.split('-')[0] + '-' + fileId.split('-')[1];
+            
+            // Look for second dash to extract original filename for user uploads
+            const parts = path.basename(file, fileExtension).split('-');
+            if (parts.length > 2) {
+              // This is likely a user upload with format file-XXX-originalname
+              sourceType = 'user_upload';
+              // Join all parts after the second dash
+              displayFilename = parts.slice(2).join('-');
+            } else {
+              // This is likely an AI generated image
+              sourceType = 'ai_generated';
+              displayFilename = fileId;
+            }
+          } else if (fileId.startsWith('file_')) {
+            // Modern format is file_XXX
+            fileId = fileId; // Keep the full ID
+            sourceType = 'ai_generated';
+            displayFilename = fileId;
+          }
           
           // Determine file type based on extension
           if (['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'].includes(fileExtension)) {
@@ -142,7 +168,11 @@ async function getMediaGallery(req, res) {
             folder: conv.folder,
             path: `/api/media/${conv.folder}/${file}`,
             size: stats.size,
-            type: fileType
+            type: fileType,
+            sourceType: sourceType,
+            displayFilename: displayFilename,
+            createTime: conv.create_time,
+            createDate: new Date(conv.create_time * 1000).toISOString()
           });
         } catch (fileErr) {
           console.error(`Error processing file ${file}:`, fileErr);
@@ -201,11 +231,8 @@ async function searchMediaFiles(req, res) {
           const stats = await fs.stat(filePath);
           const fileExtension = path.extname(match).toLowerCase();
           
-          // Extract the file ID
-          const fileId = path.basename(match, fileExtension);
-          let fileType = 'unknown';
-          
           // Determine file type based on extension
+          let fileType = 'unknown';
           if (['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'].includes(fileExtension)) {
             fileType = 'image';
           } else if (['.mp3', '.wav', '.ogg'].includes(fileExtension)) {
@@ -214,15 +241,39 @@ async function searchMediaFiles(req, res) {
             fileType = 'video';
           }
           
+          // Determine source type and display filename
+          let sourceType = 'unknown';
+          let displayFilename = '';
+          const baseId = path.basename(match, fileExtension);
+          
+          if (baseId.startsWith('file-')) {
+            // Extract ID part and original filename for user uploads
+            const parts = baseId.split('-');
+            if (parts.length > 2) {
+              sourceType = 'user_upload';
+              displayFilename = parts.slice(2).join('-');
+            } else {
+              sourceType = 'ai_generated';
+              displayFilename = baseId;
+            }
+          } else if (baseId.startsWith('file_')) {
+            sourceType = 'ai_generated';
+            displayFilename = baseId;
+          }
+          
           matchingFiles.push({
-            id: fileId,
+            id: baseId,
             originalFilename: match,
             conversationId: conv.id,
             conversationTitle: conv.title || 'Untitled',
             folder: conv.folder,
             path: `/api/media/${conv.folder}/${match}`,
             size: stats.size,
-            type: fileType
+            type: fileType,
+            sourceType: sourceType,
+            displayFilename: displayFilename,
+            createTime: conv.create_time,
+            createDate: new Date(conv.create_time * 1000).toISOString()
           });
         }
       }
@@ -295,6 +346,26 @@ async function findMediaFileById(req, res) {
             fileType = 'video';
           }
           
+          // Determine source type and display filename
+          let sourceType = 'unknown';
+          let displayFilename = '';
+          const baseId = path.basename(match, fileExtension);
+          
+          if (baseId.startsWith('file-')) {
+            // Extract ID part and original filename for user uploads
+            const parts = baseId.split('-');
+            if (parts.length > 2) {
+              sourceType = 'user_upload';
+              displayFilename = parts.slice(2).join('-');
+            } else {
+              sourceType = 'ai_generated';
+              displayFilename = baseId;
+            }
+          } else if (baseId.startsWith('file_')) {
+            sourceType = 'ai_generated';
+            displayFilename = baseId;
+          }
+          
           matchingFiles.push({
             id: path.basename(match, fileExtension),
             originalFilename: match,
@@ -303,7 +374,11 @@ async function findMediaFileById(req, res) {
             folder: conv.folder,
             path: `/api/media/${conv.folder}/${match}`,
             size: stats.size,
-            type: fileType
+            type: fileType,
+            sourceType: sourceType,
+            displayFilename: displayFilename,
+            createTime: conv.create_time,
+            createDate: new Date(conv.create_time * 1000).toISOString()
           });
         }
       }
