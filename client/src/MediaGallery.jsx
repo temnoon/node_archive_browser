@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { 
   Box, 
   Typography, 
@@ -24,14 +24,35 @@ import {
 } from '@mui/material';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 
+// Cache of media files to avoid re-fetching
+const mediaCache = {
+  allMedia: [],
+  byConversation: {},
+  initialized: false
+};
+
 // Function to fetch all media files
 async function fetchAllMedia() {
   try {
+    // If cached data is available and we're fetching all media, use it
+    if (mediaCache.initialized && mediaCache.allMedia.length > 0) {
+      return {
+        mediaFiles: mediaCache.allMedia,
+        total: mediaCache.allMedia.length
+      };
+    }
+    
     const response = await fetch('/api/media-gallery');
     if (!response.ok) {
       throw new Error(`Server error: ${response.status}`);
     }
-    return await response.json();
+    const data = await response.json();
+    
+    // Cache the results
+    mediaCache.allMedia = data.mediaFiles || [];
+    mediaCache.initialized = true;
+    
+    return data;
   } catch (error) {
     console.error('Error fetching media gallery:', error);
     throw error;
@@ -41,6 +62,11 @@ async function fetchAllMedia() {
 // Function to fetch media files for a specific conversation
 async function fetchConversationMedia(conversationId) {
   try {
+    // Check if we already have this conversation's media cached
+    if (mediaCache.byConversation[conversationId]) {
+      return mediaCache.byConversation[conversationId];
+    }
+    
     // First get the conversation details to get the folder
     const convResponse = await fetch(`/api/conversations/${conversationId}`);
     if (!convResponse.ok) {
@@ -82,11 +108,15 @@ async function fetchConversationMedia(conversationId) {
       };
     });
     
-    return {
+    // Cache the results
+    const result = {
       mediaFiles,
       total: mediaFiles.length,
       conversationTitle: convData.title
     };
+    
+    mediaCache.byConversation[conversationId] = result;
+    return result;
   } catch (error) {
     console.error(`Error fetching media for conversation ${conversationId}:`, error);
     throw error;
@@ -109,6 +139,7 @@ export default function MediaGallery() {
   const [currentPage, setCurrentPage] = useState(1);
   const [paginatedFiles, setPaginatedFiles] = useState([]);
   const [filesPerPage, setFilesPerPage] = useState(100);
+  const galleryScrollRef = useRef(null);
   
   // Filter options
   const [showImages, setShowImages] = useState(true);
@@ -179,8 +210,8 @@ export default function MediaGallery() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [dialogOpen]);
 
-  // Apply filters and search term
-  useEffect(() => {
+  // Apply filters and search term - use useMemo to cache results
+  const filtered = useMemo(() => {
     let filtered = [...mediaFiles];
     
     // Apply type filters
@@ -213,7 +244,7 @@ export default function MediaGallery() {
     }
     
     // Apply sorting
-    filtered.sort((a, b) => {
+    return [...filtered].sort((a, b) => {
       let valueA, valueB;
       
       // Get values based on sortBy
@@ -247,19 +278,26 @@ export default function MediaGallery() {
       // Numeric comparison for non-string cases
       return sortDirection === 'asc' ? valueA - valueB : valueB - valueA;
     });
-    
-    setFilteredFiles(filtered);
-    
-    // Reset to first page when filters change
-    setCurrentPage(1);
   }, [mediaFiles, search, showImages, showAudio, showUserUploads, showAiGenerated, sortBy, sortDirection]);
   
-  // Handle pagination of filtered files
+  // Update filteredFiles state when filtered memoized value changes
   useEffect(() => {
+    setFilteredFiles(filtered);
+    // Reset to first page when filters change
+    setCurrentPage(1);
+  }, [filtered]);
+  
+  // Paginate the filtered files - use useMemo for performance
+  const paginated = useMemo(() => {
     const startIndex = (currentPage - 1) * filesPerPage;
     const endIndex = startIndex + filesPerPage;
-    setPaginatedFiles(filteredFiles.slice(startIndex, endIndex));
+    return filteredFiles.slice(startIndex, endIndex);
   }, [filteredFiles, currentPage, filesPerPage]);
+  
+  // Update paginatedFiles when paginated memoized value changes
+  useEffect(() => {
+    setPaginatedFiles(paginated);
+  }, [paginated]);
   
   // Handle direct file ID search
   const searchFileById = async () => {
@@ -321,12 +359,16 @@ export default function MediaGallery() {
     setSelectedMedia(filteredFiles[newIndex]);
   }, [filteredFiles, currentIndex]);
   
-  // Handle page change
-  const handlePageChange = (event, newPage) => {
+  // Handle page change with scroll to top
+  const handlePageChange = useCallback((event, newPage) => {
     setCurrentPage(newPage);
     // Scroll to top of gallery
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+    if (galleryScrollRef.current) {
+      galleryScrollRef.current.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, []);
   
   // Handle filter changes
   const handleFilterChange = (filterName, value) => {
@@ -513,7 +555,7 @@ export default function MediaGallery() {
         </Box>
       )}
       
-      <Paper sx={{ p: 2, mb: 3 }}>
+      <Paper sx={{ p: 2, mb: 3 }} ref={galleryScrollRef}>
         <TextField
           fullWidth
           label="Search by file ID, filename or conversation title"
@@ -652,11 +694,31 @@ export default function MediaGallery() {
         </Typography>
       ) : (
         <>
+          {/* Top pagination controls */}
+          {filteredFiles.length > filesPerPage && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, mb: 2 }}>
+              <Pagination 
+                count={Math.ceil(filteredFiles.length / filesPerPage)} 
+                page={currentPage} 
+                onChange={handlePageChange} 
+                color="primary" 
+                showFirstButton 
+                showLastButton
+                size="medium"
+              />
+            </Box>
+          )}
+          
           <Box sx={{ 
             display: 'flex', 
             flexWrap: 'wrap', 
             gap: '8px',
-            justifyContent: 'flex-start'
+            justifyContent: 'flex-start',
+            // Add padding to account for scrollbar
+            pr: { xs: 1, sm: 2 },
+            // Fixed height with scrolling for media grid
+            height: { xs: 'auto', md: 'calc(100vh - 350px)' },
+            overflow: { xs: 'visible', md: 'auto' }
           }}>
             {paginatedFiles.map((file, index) => {
               // Calculate the global index in the filteredFiles array
@@ -702,9 +764,9 @@ export default function MediaGallery() {
             })}
           </Box>
           
-          {/* Pagination Controls */}
+          {/* Bottom pagination controls - visible on both mobile and desktop */}
           {filteredFiles.length > filesPerPage && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, mb: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, mb: 2, position: 'sticky', bottom: 0, pb: 2, bgcolor: 'background.paper', zIndex: 1, pt: 2, borderTop: '1px solid rgba(0,0,0,0.05)' }}>
               <Pagination 
                 count={Math.ceil(filteredFiles.length / filesPerPage)} 
                 page={currentPage} 

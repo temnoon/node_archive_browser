@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { Box, Typography, Paper, Button, LinearProgress, Chip, Collapse } from '@mui/material';
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import { Box, Typography, Paper, Button, LinearProgress, Chip, Collapse, Pagination, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import Markdown from './Markdown.jsx';
 import ToolMessageRenderer from './ToolMessageRenderer';
@@ -225,7 +225,10 @@ export default function ConversationView() {
   const [expandedCanvasId, setExpandedCanvasId] = useState(null);
   const [gizmoEditorOpen, setGizmoEditorOpen] = useState(false);
   const [currentGizmo, setCurrentGizmo] = useState({ id: '', name: '' });
+  const [initialLoad, setInitialLoad] = useState(true);
+  const [userPerPage, setUserPerPage] = useState(10); // User-controlled page size
   const scrollRef = useRef();
+  const topRef = useRef();
 
   // Handler for updating gizmo names
   const handleGizmoNameChange = (gizmoId, newName) => {
@@ -298,18 +301,45 @@ export default function ConversationView() {
     };
   }, [id, data.folder]);
 
-  const fetchPage = (page) => {
-    fetchAPI(`/api/conversations/${id}?page=${page}&limit=${data.per_page}`)
+  const fetchPage = useCallback((page) => {
+    fetchAPI(`/api/conversations/${id}?page=${page}&limit=${userPerPage}`)
       .then(res => {
         setData(res);
         // Load media filenames when conversation data is fetched
         if (res.folder) {
           loadMediaFilenames(res.folder);
         }
+        
+        // Scroll to top of messages on page change, but not on initial load
+        if (!initialLoad && scrollRef.current) {
+          scrollRef.current.scrollTop = 0;
+          // Also scroll the page to the top pagination controls
+          if (topRef.current) {
+            topRef.current.scrollIntoView({ behavior: 'smooth' });
+          }
+        }
+        setInitialLoad(false);
       });
-  };
+  }, [id, userPerPage, initialLoad]);
+  
+  // Handle page size change
+  const handlePerPageChange = useCallback((event) => {
+    const newPerPage = parseInt(event.target.value);
+    setUserPerPage(newPerPage);
+    // Reset to page 1 when changing page size
+    fetchAPI(`/api/conversations/${id}?page=1&limit=${newPerPage}`)
+      .then(res => {
+        setData(res);
+        if (res.folder) {
+          loadMediaFilenames(res.folder);
+        }
+      });
+  }, [id]);
 
-  useEffect(() => { fetchPage(1); }, [id]);
+  useEffect(() => { 
+    setInitialLoad(true);
+    fetchPage(1); 
+  }, [id, fetchPage]);
   useEffect(() => {
     if (window.MathJax && data.messages && data.messages.length > 0) {
       // Wait a bit for the DOM to settle before trying to render MathJax
@@ -323,9 +353,7 @@ export default function ConversationView() {
       }, 500);
     }
   }, [data.messages]);
-  useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = 0;
-  }, [data.page]);
+  // This is now handled in fetchPage
 
   // Filter out empty system messages after the first user message
   let filteredMessages = [];
@@ -404,7 +432,7 @@ export default function ConversationView() {
     );
   };
 
-  if (!data.title) return <div>Loading...</div>;
+  if (!data.title) return <Box sx={{ p: 3, textAlign: 'center' }}><LinearProgress /><Typography sx={{ mt: 2 }}>Loading conversation...</Typography></Box>;
 
   // Extract unique gizmo IDs and models from messages
   const gizmoIds = Array.from(new Set((data.messages || []).map(m => 
@@ -414,37 +442,63 @@ export default function ConversationView() {
 
   return (
     <Box>
-      <Typography variant="h5">{data.title || id}</Typography>
-      <Typography variant="subtitle2" color="text.secondary">
-        {data.create_time ? new Date(data.create_time * 1000).toISOString().split('T')[0] : ''}
-        <span style={{ color: '#777', marginLeft: '10px' }}>
-          ID: {id}
-        </span>
-      </Typography>
-      {gizmoIds.length > 0 && (
-        <Typography variant="subtitle2" color="text.secondary">Gizmo ID(s): {gizmoIds.join(', ')}</Typography>
-      )}
-      {modelNames.length > 0 && (
-        <Typography variant="subtitle2" color="text.secondary">Model(s): {modelNames.join(', ')}</Typography>
-      )}
-      
-      {/* Display warnings about unknown message types */}
-      {renderUnknownTypesWarning()}
-      
-      {/* Display canvas summary */}
-      {renderCanvasSummary()}
-      
-      {/* Display View Media button if the conversation has media */}
-      {data.has_media && (
-        <Box sx={{ mb: 2 }}>
-          <Button 
-            variant="outlined" 
-            onClick={() => navigate('/media', { state: { conversationId: id } })}
-          >
-            View Conversation Media
-          </Button>
+      <Box sx={{ position: 'sticky', top: 0, bgcolor: 'background.paper', zIndex: 5, pb: 2 }}>
+        <Typography variant="h5">{data.title || id}</Typography>
+        <Typography variant="subtitle2" color="text.secondary">
+          {data.create_time ? new Date(data.create_time * 1000).toISOString().split('T')[0] : ''}
+          <span style={{ color: '#777', marginLeft: '10px' }}>
+            ID: {id}
+          </span>
+        </Typography>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+          {gizmoIds.length > 0 && (
+            <Typography variant="subtitle2" color="text.secondary">Gizmo ID(s): {gizmoIds.join(', ')}</Typography>
+          )}
+          {modelNames.length > 0 && (
+            <Typography variant="subtitle2" color="text.secondary">Model(s): {modelNames.join(', ')}</Typography>
+          )}
         </Box>
-      )}
+        
+        {/* Display warnings about unknown message types */}
+        {renderUnknownTypesWarning()}
+        
+        {/* Display canvas summary */}
+        {renderCanvasSummary()}
+      </Box>
+      
+      {/* Controls and View Media button */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', mb: 2, gap: 2 }}>
+        <Box>
+          {data.has_media && (
+            <Button 
+              variant="outlined" 
+              onClick={() => navigate('/media', { state: { conversationId: id } })}
+              size="small"
+            >
+              View Conversation Media
+            </Button>
+          )}
+        </Box>
+        
+        {/* Page size control */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel id="messages-per-page-label">Messages per page</InputLabel>
+            <Select
+              labelId="messages-per-page-label"
+              value={userPerPage}
+              label="Messages per page"
+              onChange={handlePerPageChange}
+            >
+              <MenuItem value={5}>5</MenuItem>
+              <MenuItem value={10}>10</MenuItem>
+              <MenuItem value={25}>25</MenuItem>
+              <MenuItem value={50}>50</MenuItem>
+              <MenuItem value={100}>100</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+      </Box>
       
       {/* Gizmo Name Editor Dialog */}
       <GizmoNameEditor
@@ -455,7 +509,39 @@ export default function ConversationView() {
         onNameChange={handleGizmoNameChange}
       />
       
-      <Box sx={{ flex: 1, minHeight: 0, height: '100%', overflow: 'auto' }} ref={scrollRef}>
+      {/* Top pagination controls */}
+      {data.total_messages > userPerPage && (
+        <Box 
+          sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}
+          ref={topRef}
+        >
+          <Pagination 
+            count={Math.ceil(data.total_messages / userPerPage)} 
+            page={data.page} 
+            onChange={(e, page) => fetchPage(page)}
+            showFirstButton
+            showLastButton
+          />
+        </Box>
+      )}
+      
+      {/* Message list in scrollable container */}
+      <Paper 
+        sx={{ 
+          flex: 1, 
+          minHeight: 0, 
+          height: { xs: 'calc(100vh - 400px)', md: 'calc(100vh - 350px)' }, 
+          overflow: 'auto',
+          // Add space for scrollbar to prevent layout shift
+          pr: { xs: 1, sm: 2 },
+          pl: { xs: 1, sm: 2 },
+          py: 1,
+          mb: 2,
+          bgcolor: '#f9f9f9' 
+        }} 
+        ref={scrollRef}
+        elevation={0}
+      >
         {filteredMessages.map(msg => {
           // Extract message info from the JSON structure
           const role = msg.message?.author?.role || 'unknown';
@@ -585,12 +671,19 @@ export default function ConversationView() {
             </Paper>
           );
         })}
-      </Box>
-      {data.total_messages > data.per_page && (
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-          <Button disabled={data.page <= 1} onClick={() => fetchPage(data.page - 1)}>Previous</Button>
-          <Typography sx={{ alignSelf: 'center' }}>Page {data.page} / {Math.ceil(data.total_messages / data.per_page)}</Typography>
-          <Button disabled={data.page >= Math.ceil(data.total_messages / data.per_page)} onClick={() => fetchPage(data.page + 1)}>Next</Button>
+      </Paper>
+      
+      {/* Bottom pagination controls */}
+      {data.total_messages > userPerPage && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, mb: 3 }}>
+          <Pagination 
+            count={Math.ceil(data.total_messages / userPerPage)} 
+            page={data.page} 
+            onChange={(e, page) => fetchPage(page)}
+            size="large"
+            showFirstButton
+            showLastButton
+          />
         </Box>
       )}
     </Box>
