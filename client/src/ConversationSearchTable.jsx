@@ -17,7 +17,10 @@ export default function ConversationSearchTable({ search, perPage, setPerPage })
   const [messagesByConv, setMessagesByConv] = useState(cachedData.messagesByConv); // {convId: [messages]}
   const [loading, setLoading] = useState(!cachedData.initialized);
   const [error, setError] = useState(null);
-  const [filters, setFilters] = useState({ dateFrom: '', dateTo: '', mediaOnly: false });
+  // States for date ranges
+  const today = new Date().toISOString().split('T')[0];
+  const [earliestDate, setEarliestDate] = useState('');
+  const [filters, setFilters] = useState({ dateFrom: '', dateTo: today });
   const [currentPage, setCurrentPage] = useState(1);
   const navigate = useNavigate();
   const listContainerRef = useRef(null);
@@ -44,24 +47,56 @@ export default function ConversationSearchTable({ search, perPage, setPerPage })
         pageNum++;
       } while (all.length < total && total > 0);
       
+      // Find the earliest date in the conversations
+      let earliest = new Date();
+      all.forEach(c => {
+        if (c.create_time) {
+          const createDate = new Date(c.create_time * 1000);
+          if (createDate < earliest) {
+            earliest = createDate;
+          }
+        }
+      });
+      
+      // Format and set the earliest date
+      const formattedEarliestDate = earliest.toISOString().split('T')[0];
+      setEarliestDate(formattedEarliestDate);
+      
+      // Set the dateFrom filter with the earliest date
+      setFilters(prev => ({ ...prev, dateFrom: formattedEarliestDate }));
+      
       setConversations(all);
       cachedData.conversations = all;
       
-      // Fetch all messages for each conversation for full-content search
+      // Fetch all messages for each conversation for full-content search - with rate limiting
       const allMessages = {};
-      await Promise.all(all.map(async c => {
-        try {
-          const res = await fetch(`/api/conversations/${c.id}`);
-          if (res.ok) {
-            const d = await res.json();
-            allMessages[c.id] = d.messages || [];
-          } else {
+      
+      // Process in smaller batches to avoid resource exhaustion
+      const batchSize = 10;
+      const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+      
+      for (let i = 0; i < all.length; i += batchSize) {
+        const batch = all.slice(i, i + batchSize);
+        
+        await Promise.all(batch.map(async c => {
+          try {
+            const res = await fetch(`/api/conversations/${c.id}`);
+            if (res.ok) {
+              const d = await res.json();
+              allMessages[c.id] = d.messages || [];
+            } else {
+              allMessages[c.id] = [];
+            }
+          } catch {
             allMessages[c.id] = [];
           }
-        } catch {
-          allMessages[c.id] = [];
+        }));
+        
+        // Add a small delay between batches to allow browser to breathe
+        if (i + batchSize < all.length) {
+          await delay(100);
         }
-      }));
+      }
       
       setMessagesByConv(allMessages);
       cachedData.messagesByConv = allMessages;
@@ -81,7 +116,7 @@ export default function ConversationSearchTable({ search, perPage, setPerPage })
   };
 
   const handleFilterChange = (key, value) => setFilters(f => ({ ...f, [key]: value }));
-  const handleMediaFilter = e => setFilters(f => ({ ...f, mediaOnly: e.target.checked }));
+
   // Use useMemo to cache filtered results when search or filters change
   const filtered = useMemo(() => conversations.filter(c => {
     // Date filter
@@ -101,15 +136,7 @@ export default function ConversationSearchTable({ search, perPage, setPerPage })
       to.setHours(23, 59, 59, 999); // End of the day
       if (created > to) return false;
     }
-    // Media filter
-    if (filters.mediaOnly) {
-      const hasMedia = (messagesByConv[c.id] || []).some(m => {
-        // crude check: look for '![', '<img', 'data:image', or 'file://' or 'attachment' in content
-        const content = m.content || '';
-        return /!\[.*\]\(.*\)|<img|data:image|file:\/\/|attachment/i.test(content);
-      });
-      if (!hasMedia) return false;
-    }
+    // Media filter removed
     // Search filter: match title/id or any message content
     if (search) {
       const s = search.toLowerCase();
@@ -118,7 +145,7 @@ export default function ConversationSearchTable({ search, perPage, setPerPage })
       return titleMatch || msgMatch;
     }
     return true;
-  }), [conversations, search, filters.dateFrom, filters.dateTo, filters.mediaOnly, messagesByConv]);
+  }), [conversations, search, filters.dateFrom, filters.dateTo, messagesByConv]);
 
   // Pagination logic - calculate these values unconditionally for React Hooks consistency
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
@@ -149,37 +176,46 @@ export default function ConversationSearchTable({ search, perPage, setPerPage })
   return (
     <Box>
       {/* Filters and Controls */}
-      <Paper sx={{ p: 2, mb: 2 }}>
-        <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-            <Typography variant="body2" sx={{ mb: 0.5 }}>Start Date</Typography>
+      <Paper sx={{ p: 1, mb: 1 }}>
+        <Box sx={{ mb: 1 }}>
+          {/* Date fields in a single row */}
+          <Box sx={{ display: 'flex', mb: 1, gap: 2, alignItems: 'flex-start' }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', flexShrink: 1 }}>
+            <Typography variant="body2" sx={{ mb: 0.25 }}>Start Date</Typography>
             <TextField
               type="date"
               size="small"
               InputLabelProps={{ shrink: true }}
               value={filters.dateFrom}
               onChange={e => handleFilterChange('dateFrom', e.target.value)}
-              sx={{ minWidth: '160px' }}
+              sx={{ width: '140px' }}
+
             />
           </Box>
-          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-            <Typography variant="body2" sx={{ mb: 0.5 }}>End Date</Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', flexShrink: 1 }}>
+            <Typography variant="body2" sx={{ mb: 0.25 }}>End Date</Typography>
             <TextField
               type="date"
               size="small"
               InputLabelProps={{ shrink: true }}
               value={filters.dateTo}
               onChange={e => handleFilterChange('dateTo', e.target.value)}
-              sx={{ minWidth: '160px' }}
+              sx={{ width: '140px' }}
             />
           </Box>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <input type="checkbox" checked={filters.mediaOnly} onChange={handleMediaFilter} style={{ marginRight: 4 }} />
-            Media only
-          </label>
-          <Button size="small" onClick={() => setFilters({ dateFrom: '', dateTo: '', mediaOnly: false })}>Clear</Button>
-          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-            <Typography variant="body2" sx={{ mb: 0.5 }}>Items per page</Typography>
+          </Box>
+          
+          {/* Other controls */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Button variant="contained" size="small" onClick={() => {
+              if (earliestDate) {
+                setFilters({ dateFrom: earliestDate, dateTo: today });
+              } else {
+                setFilters({ dateFrom: '', dateTo: today });
+              }
+            }}>Clear</Button>
+            <Box sx={{ display: 'flex', flexDirection: 'column', ml: 'auto' }}>
+            <Typography variant="body2" sx={{ mb: 0.25 }}>Items per page</Typography>
             <TextField
               type="number"
               size="small"
@@ -188,6 +224,7 @@ export default function ConversationSearchTable({ search, perPage, setPerPage })
               sx={{ width: 90 }}
               inputProps={{ min: 1 }}
             />
+            </Box>
           </Box>
         </Box>
         
@@ -196,14 +233,14 @@ export default function ConversationSearchTable({ search, perPage, setPerPage })
           <Box sx={{ 
             display: 'flex', 
             justifyContent: 'center', 
-            mb: 1,
+            mb: 0.5,
             overflow: 'hidden',
             position: 'sticky',
             top: '0',
             zIndex: 5,
             backgroundColor: 'white',
             borderBottom: '1px solid #eee',
-            pb: 1,
+            pb: 0.5,
             '& .MuiPagination-ul': {
               display: 'flex',
               width: '100%',
@@ -230,7 +267,7 @@ export default function ConversationSearchTable({ search, perPage, setPerPage })
       {/* Scrollable conversation list */}
       <Paper 
         sx={{ 
-          height: { xs: 'calc(100vh - 260px)', md: 'calc(100vh - 240px)' }, 
+          height: { xs: 'calc(100vh - 200px)', md: 'calc(100vh - 180px)' }, 
           overflow: 'auto',
           mb: 2,
           // Add space for scrollbar to prevent layout shift
@@ -247,8 +284,18 @@ export default function ConversationSearchTable({ search, perPage, setPerPage })
         ) : (
           <List disablePadding>
             {paginated.map(conv => (
-              <ListItem button key={conv.id} onClick={() => navigate(`/conversations/${conv.id}`)} sx={{ mb: 1 }}>
-                <ListItemText 
+              <ListItem 
+                key={conv.id} 
+                onClick={() => navigate(`/conversations/${conv.id}`)} 
+                sx={{ 
+                  mb: 1, 
+                  cursor: 'pointer', 
+                  '&:hover': { 
+                    backgroundColor: 'rgba(0, 0, 0, 0.04)' 
+                  } 
+                }} 
+                component="div"
+              ><ListItemText 
                   primary={conv.title || conv.id} 
                   secondary={
                     <>
