@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import './App.css';
 import { AppBar, Toolbar, Typography, Container, Box, TextField, GlobalStyles, Button, CssBaseline, useMediaQuery, IconButton, Drawer, List, ListItem, ListItemText, ListItemIcon, Divider } from '@mui/material';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import ConversationView from './ConversationView.jsx';
@@ -26,11 +27,23 @@ export default function App() {
       <GlobalStyles styles={{
         'pre': { whiteSpace: 'pre-wrap', wordBreak: 'break-all', margin: '0 0 1em' },
         'img': { maxWidth: '100%', maxHeight: '72vh', height: 'auto', display: 'block', margin: '0px auto' },
-        // Add buffer space for scroll bars
-        'body': { overflowY: 'scroll' },
+        // Prevent body scroll, allow only container scrolling
+        'body': { 
+          overflow: 'hidden', 
+          height: '100vh',
+          margin: 0,
+          padding: 0,
+        },
+        'html': { overflow: 'hidden' },
+        // Better scrollbars
         '::-webkit-scrollbar': { width: '8px', height: '8px' },
         '::-webkit-scrollbar-thumb': { backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: '4px' },
-        '::-webkit-scrollbar-track': { backgroundColor: 'rgba(0,0,0,0.05)' }
+        '::-webkit-scrollbar-track': { backgroundColor: 'rgba(0,0,0,0.05)' },
+        // Make sure divs with overflow scroll have momentum scrolling on iOS
+        '.scroll-container': {
+          WebkitOverflowScrolling: 'touch',
+          scrollbarWidth: 'thin'
+        }
       }} />
       <Router>
         <AppBar position="sticky">
@@ -45,7 +58,20 @@ export default function App() {
                 ≡
               </IconButton>
             )}
-            <Typography variant="h6" sx={{ flexGrow: 1 }} component={Link} to="/" color="inherit" style={{ textDecoration: 'none' }}>
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                flexGrow: 1,
+                textDecoration: 'none',
+                transition: 'color 0.4s ease',
+                '&:hover': {
+                  color: 'rgba(255, 255, 240, 0.85)' // Soft off-white with slight yellow tint
+                }
+              }} 
+              component={Link} 
+              to="/" 
+              color="inherit"
+            >
               Archive Browser
             </Typography>
             
@@ -56,7 +82,14 @@ export default function App() {
                   color="inherit" 
                   component={Link} 
                   to="/media"
-                  sx={{ ml: 2 }}
+                  sx={{ 
+                    ml: 2, 
+                    transition: 'color 0.4s ease',
+                    '&:hover': {
+                      color: 'rgba(255, 255, 240, 0.85)', // Soft off-white with slight yellow tint
+                      backgroundColor: 'transparent'
+                    }
+                  }}
                   onClick={handleNavigation}
                 >
                   Media Gallery
@@ -65,7 +98,14 @@ export default function App() {
                   color="inherit" 
                   component={Link} 
                   to="/parser"
-                  sx={{ ml: 2 }}
+                  sx={{ 
+                    ml: 2, 
+                    transition: 'color 0.4s ease',
+                    '&:hover': {
+                      color: 'rgba(255, 255, 240, 0.85)', // Soft off-white with slight yellow tint
+                      backgroundColor: 'transparent'
+                    }
+                  }}
                   onClick={handleNavigation}
                 >
                   Parser Info
@@ -74,7 +114,14 @@ export default function App() {
                   color="inherit" 
                   component={Link} 
                   to="/import"
-                  sx={{ ml: 2 }}
+                  sx={{ 
+                    ml: 2, 
+                    transition: 'color 0.4s ease',
+                    '&:hover': {
+                      color: 'rgba(255, 255, 240, 0.85)', // Soft off-white with slight yellow tint
+                      backgroundColor: 'transparent'
+                    }
+                  }}
                   onClick={handleNavigation}
                 >
                   Import Archive
@@ -92,31 +139,74 @@ export default function App() {
         >
           <Box sx={{ width: 250 }} role="presentation">
             <List>
-              <ListItem button component={Link} to="/" onClick={handleNavigation}>
+              <ListItem 
+                component={Link} 
+                to="/" 
+                onClick={handleNavigation}
+                sx={{
+                  transition: 'background-color 0.4s ease',
+                  '&:hover': {
+                    backgroundColor: 'rgba(25, 118, 210, 0.12)',
+                  }
+                }}
+              >
                 <ListItemText primary="Conversations" />
               </ListItem>
-              <ListItem button component={Link} to="/media" onClick={handleNavigation}>
+              <ListItem 
+                component={Link} 
+                to="/media" 
+                onClick={handleNavigation}
+                sx={{
+                  transition: 'background-color 0.4s ease',
+                  '&:hover': {
+                    backgroundColor: 'rgba(25, 118, 210, 0.12)',
+                  }
+                }}
+              >
                 <ListItemText primary="Media Gallery" />
               </ListItem>
-              <ListItem button component={Link} to="/parser" onClick={handleNavigation}>
+              <ListItem 
+                component={Link} 
+                to="/parser" 
+                onClick={handleNavigation}
+                sx={{
+                  transition: 'background-color 0.4s ease',
+                  '&:hover': {
+                    backgroundColor: 'rgba(25, 118, 210, 0.12)',
+                  }
+                }}
+              >
                 <ListItemText primary="Parser Info" />
               </ListItem>
-              <ListItem button component={Link} to="/import" onClick={handleNavigation}>
+              <ListItem 
+                component={Link} 
+                to="/import" 
+                onClick={handleNavigation}
+                sx={{
+                  transition: 'background-color 0.4s ease',
+                  '&:hover': {
+                    backgroundColor: 'rgba(25, 118, 210, 0.12)',
+                  }
+                }}
+              >
                 <ListItemText primary="Import Archive" />
               </ListItem>
             </List>
           </Box>
         </Drawer>
         <Container sx={{ 
-          mt: { xs: 1, md: 3 }, 
+          mt: { xs: 1, md: 1 }, 
           maxWidth: '100%!important', 
           width: '100%',
-          px: { xs: 1, sm: 2, lg: 3 },  // Responsive horizontal padding
-          pb: { xs: 1, sm: 2, lg: 3 },  // Responsive bottom padding 
-          // Allow space for scrollbars
-          pr: { xs: 2, sm: 3, lg: 4 },  // Extra right padding for scrollbar
+          height: 'calc(100vh - 64px)', // 64px is the AppBar height
+          maxHeight: 'calc(100vh - 64px)',
+          overflow: 'hidden',
+          px: { xs: 1, sm: 2, lg: 2 },  // Reduced horizontal padding
+          pb: 0,  // No bottom padding 
+          display: 'flex',
+          flexDirection: 'column',
         }} disableGutters={false}>
-          <Routes>
+          <Routes style={{ flex: '1 1 auto', display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
             <Route
               path="/parser"
               element={<ParserInfoPage />}
@@ -140,11 +230,19 @@ export default function App() {
                   <Box mb={2} sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                     <TextField label="Search" value={search} onChange={e => setSearch(e.target.value)} sx={{ flex: 1 }} />
                   </Box>
-                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      flexDirection: { xs: 'column', md: 'row' }, 
+                      gap: 2, 
+                      height: 'calc(100vh - 150px)',
+                      maxHeight: 'calc(100vh - 150px)',
+                      overflow: 'hidden'
+                    }}>
                       <Box sx={{ 
-                        flex: 2, 
-                        minWidth: { xs: '100%', md: '300px' }, 
-                        maxWidth: { md: '400px' }
+                        flex: { md: '0 0 360px' }, // Fixed width for sidebar on desktop
+                        minWidth: { xs: '100%', md: '360px' }, 
+                        maxWidth: { xs: '100%', md: '360px' },
+                        height: { xs: 'auto', md: '100%' }
                       }}>
                         <Box sx={{ mb: 2 }}>
                           <Typography variant="h6" sx={{ mb: 0.5 }}>Conversations</Typography>
@@ -159,9 +257,9 @@ export default function App() {
                         />
                       </Box>
                       <Box sx={{ 
-                        flex: 3, 
+                        flex: 1, 
                         minWidth: { xs: '100%', md: '0' }, 
-                        height: { xs: 'calc(100vh - 400px)', md: 'calc(100vh - 350px)' }, 
+                        height: '100%', 
                         bgcolor: '#fafafa', 
                         display: 'flex', 
                         alignItems: 'center', 
@@ -182,11 +280,19 @@ export default function App() {
                   <Box mb={2} sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                     <TextField label="Search" value={search} onChange={e => setSearch(e.target.value)} sx={{ flex: 1 }} />
                   </Box>
-                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      flexDirection: { xs: 'column', md: 'row' }, 
+                      gap: 2, 
+                      height: 'calc(100vh - 150px)',
+                      maxHeight: 'calc(100vh - 150px)',
+                      overflow: 'hidden'
+                    }}>
                       <Box sx={{ 
-                        flex: 2, 
-                        minWidth: { xs: '100%', md: '300px' }, 
-                        maxWidth: { md: '400px' }
+                        flex: { md: '0 0 360px' }, // Fixed width for sidebar on desktop
+                        minWidth: { xs: '100%', md: '360px' }, 
+                        maxWidth: { xs: '100%', md: '360px' },
+                        height: { xs: 'auto', md: '100%' }
                       }}>
                         <Box sx={{ mb: 2 }}>
                           <Typography variant="h6" sx={{ mb: 0.5 }}>Conversations</Typography>
@@ -201,10 +307,12 @@ export default function App() {
                         />
                       </Box>
                       <Box sx={{ 
-                        flex: 3, 
+                        flex: 1, 
                         minWidth: { xs: '100%', md: '0' },
-                        display: 'flex', 
-                        flexDirection: 'column' 
+                        display: 'flex',
+                        flexDirection: 'column',
+                        height: '100%',
+                        overflow: 'hidden'
                       }}>
                         <ConversationView />
                       </Box>

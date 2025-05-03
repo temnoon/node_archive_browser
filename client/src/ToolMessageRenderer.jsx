@@ -140,12 +140,12 @@ function WebSearchRenderer({ message }) {
             </Typography>
             
             <Button
-              size="small"
-              variant="text"
-              onClick={() => setExpandedResult(expandedResult === index ? null : index)}
-              sx={{ minWidth: 'auto', p: 0.5 }}
+            size="small"
+            variant="text"
+            onClick={() => setExpandedResult(expandedResult === index ? null : index)}
+            sx={{ minWidth: 'auto', p: 0.5 }}
             >
-              {expandedResult === index ? 'Less' : 'More'}
+            {expandedResult === index ? 'Less' : 'More'}
             </Button>
           </Box>
           

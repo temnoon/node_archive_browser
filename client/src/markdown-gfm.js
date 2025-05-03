@@ -67,13 +67,31 @@ export function parseMarkdownGFM(md) {
     return `<a href="${url}"${t}>${text}</a>`;
   });
   
+  // Enhanced table parsing with better structure and accessibility
   md = md.replace(/^[ \t]*\|(.+)\|[ \t]*\n[ \t]*\|([ \t:|-]+)\|[ \t]*\n((?:[ \t]*\|.*\|[ \t]*\n?)+)/gm, (m, header, sep, rows) => {
+    // Process header cells
     const ths = header.split('|').map(h => `<th>${h.trim()}</th>`).join('');
+    
+    // Process alignment from separator row
+    const aligns = sep.split('|').map(s => {
+      s = s.trim();
+      if (s.startsWith(':') && s.endsWith(':')) return 'center';
+      if (s.endsWith(':')) return 'right';
+      return 'left';
+    });
+    
+    // Process data rows with proper alignment
     const trs = rows.trim().split('\n').filter(Boolean).map(row => {
-      const cells = row.replace(/^\s*\|/, '').replace(/\|\s*$/, '').split('|').map(cell => `<td>${cell.trim()}</td>`).join('');
+      const cells = row.replace(/^\s*\|/, '').replace(/\|\s*$/, '').split('|')
+        .map((cell, i) => {
+          const align = aligns[i] || 'left';
+          return `<td style="text-align:${align}">${cell.trim()}</td>`;
+        }).join('');
       return `<tr>${cells}</tr>`;
     }).join('');
-    return `<table><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>`;
+    
+    // Return responsive table without extra whitespace
+    return `<div class="table-responsive"><table><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table></div>`;
   });
   return md.replace(/\n/g, '<br/>');
 }

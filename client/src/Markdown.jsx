@@ -59,5 +59,5 @@ export default function Markdown({ children, segments: propSegments }) {
     }
   }, [html, segments, conversationId]);
   
-  return <span ref={ref} dangerouslySetInnerHTML={{ __html: html }} />;
+  return <span className="markdown-content" ref={ref} dangerouslySetInnerHTML={{ __html: html }} />;
 }

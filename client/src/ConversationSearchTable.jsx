@@ -120,19 +120,16 @@ export default function ConversationSearchTable({ search, perPage, setPerPage })
     return true;
   }), [conversations, search, filters.dateFrom, filters.dateTo, filters.mediaOnly, messagesByConv]);
 
-  if (loading) return <Box sx={{ p: 2, textAlign: 'center' }}><CircularProgress size={28} /></Box>;
-  if (error) return <Box sx={{ p: 2, color: 'red' }}>{error}</Box>;
-  
-  // Pagination logic
+  // Pagination logic - calculate these values unconditionally for React Hooks consistency
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
   const pageClamped = Math.max(1, Math.min(currentPage, totalPages));
   
-  // Sort by creation date (newest first) - memoize this operation
+  // Sort by creation date (newest first) - always call useMemo
   const sortedFiltered = useMemo(() => [...filtered].sort((a, b) => {
     return (b.create_time || 0) - (a.create_time || 0);
   }), [filtered]);
   
-  // Memoize the paginated results to prevent unnecessary recalculations
+  // Paginate the results - always call useMemo
   const paginated = useMemo(() => 
     sortedFiltered.slice((pageClamped - 1) * perPage, pageClamped * perPage), 
     [sortedFiltered, pageClamped, perPage]
@@ -145,6 +142,10 @@ export default function ConversationSearchTable({ search, perPage, setPerPage })
       listContainerRef.current.scrollTop = 0;
     }
   }, []);
+
+  // Early rendering for loading/error states
+  if (loading) return <Box sx={{ p: 2, textAlign: 'center' }}><CircularProgress size={28} /></Box>;
+  if (error) return <Box sx={{ p: 2, color: 'red' }}>{error}</Box>;
   return (
     <Box>
       {/* Filters and Controls */}
@@ -184,12 +185,33 @@ export default function ConversationSearchTable({ search, perPage, setPerPage })
         
         {/* Top pagination controls */}
         {filtered.length > 0 && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            mb: 1,
+            overflow: 'hidden',
+            position: 'sticky',
+            top: '0',
+            zIndex: 5,
+            backgroundColor: 'white',
+            borderBottom: '1px solid #eee',
+            pb: 1,
+            '& .MuiPagination-ul': {
+              display: 'flex',
+              width: '100%',
+              justifyContent: 'center',
+              '& .MuiPaginationItem-root': {
+                margin: '0 2px' // Reduce margins between pagination items
+              }
+            }
+          }}>
             <Pagination 
               count={totalPages} 
               page={pageClamped} 
               onChange={handlePageChange}
               size="small"
+              siblingCount={1}           // Reduce sibling count to save space
+              boundaryCount={1}          // Reduce boundary count to save space
               showFirstButton
               showLastButton
             />
@@ -200,11 +222,15 @@ export default function ConversationSearchTable({ search, perPage, setPerPage })
       {/* Scrollable conversation list */}
       <Paper 
         sx={{ 
-          height: { xs: 'calc(100vh - 400px)', md: 'calc(100vh - 350px)' }, 
+          height: { xs: 'calc(100vh - 260px)', md: 'calc(100vh - 240px)' }, 
           overflow: 'auto',
           mb: 2,
           // Add space for scrollbar to prevent layout shift
-          pr: { xs: 1, sm: 2 }
+          pr: { xs: 1, sm: 2 },
+          // Always show scrollbar to prevent layout shifts
+          overflowY: 'scroll',
+          // Give a bit more space for the bottom item
+          pb: 2
         }}
         ref={listContainerRef}
       >
@@ -213,7 +239,7 @@ export default function ConversationSearchTable({ search, perPage, setPerPage })
         ) : (
           <List disablePadding>
             {paginated.map(conv => (
-              <ListItem button key={conv.id} onClick={() => navigate(`/conversations/${conv.id}`)}>
+              <ListItem button key={conv.id} onClick={() => navigate(`/conversations/${conv.id}`)} sx={{ mb: 1 }}>
                 <ListItemText 
                   primary={conv.title || conv.id} 
                   secondary={
@@ -231,19 +257,7 @@ export default function ConversationSearchTable({ search, perPage, setPerPage })
         )}
       </Paper>
       
-      {/* Bottom pagination controls */}
-      {filtered.length > 0 && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-          <Pagination 
-            count={totalPages} 
-            page={pageClamped} 
-            onChange={handlePageChange}
-            size="medium"
-            showFirstButton
-            showLastButton
-          />
-        </Box>
-      )}
+      {/* Remove bottom pagination controls, only keep the top ones */}
       
       <Box sx={{ fontSize: 12, color: 'gray', mt: 1 }}>
         Note: Conversations and messages are cached for fast search. If your archive is very large, initial load may take some time.

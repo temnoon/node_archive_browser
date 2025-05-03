@@ -1,8 +1,62 @@
-// Conversation Controller - Handles conversation-related API endpoints
+/**
+ * Load conversation messages with retry functionality
+ * @param {string} folder - Conversation folder
+ * @param {string} archiveRoot - Archive root path
+ * @param {number} retries - Number of retries (default: 2)
+ * @returns {Promise<Object>} Conversation messages
+ */
+async function loadConversationWithRetry(folder, archiveRoot, retries = 2) {
+  let lastError = null;
+  
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await archiveService.loadConversationMessages(folder, archiveRoot);
+    } catch (err) {
+      lastError = err;
+      console.error(`Error loading conversation (attempt ${attempt}):`, err);
+      
+      // If this isn't the last attempt, wait before retrying
+      if (attempt < retries) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+  }
+  
+  // If we get here, all retries failed
+  throw lastError;
+}// Conversation Controller - Handles conversation-related API endpoints
 const path = require('path');
 const fs = require('fs-extra');
 const archiveService = require('../services/archiveService');
 const gizmoResolver = require('../models/gizmo-resolver');
+
+/**
+ * Load conversation messages with retry functionality
+ * @param {string} folder - Conversation folder
+ * @param {string} archiveRoot - Archive root path
+ * @param {number} retries - Number of retries (default: 2)
+ * @returns {Promise<Object>} Conversation messages
+ */
+async function loadConversationWithRetry(folder, archiveRoot, retries = 2) {
+  let lastError = null;
+  
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await archiveService.loadConversationMessages(folder, archiveRoot);
+    } catch (err) {
+      lastError = err;
+      console.error(`Error loading conversation (attempt ${attempt}):`, err);
+      
+      // If this isn't the last attempt, wait before retrying
+      if (attempt < retries) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+  }
+  
+  // If we get here, all retries failed
+  throw lastError;
+}
 
 // Get archive root from environment or config - will be injected in main server file
 let ARCHIVE_ROOT = '';
@@ -147,6 +201,67 @@ function getConversationsMeta(req, res) {
   }
 }
 
+// Simple in-memory cache for conversation data
+const messageCache = {
+  cache: new Map(),
+  maxSize: 100, // Increased from 50 to 100 maximum cached conversations
+  maxAge: 10 * 60 * 1000, // Increased from 5 to 10 minutes in milliseconds
+  
+  getCacheKey(id, page, perPage) {
+    return `${id}_${page}_${perPage}`;
+  },
+  
+  get(id, page, perPage) {
+    const key = this.getCacheKey(id, page, perPage);
+    const cached = this.cache.get(key);
+    
+    if (!cached) return null;
+    
+    // Check if cache entry has expired
+    if (Date.now() - cached.timestamp > this.maxAge) {
+      this.cache.delete(key);
+      return null;
+    }
+    
+    return cached.data;
+  },
+  
+  set(id, page, perPage, data) {
+    const key = this.getCacheKey(id, page, perPage);
+    
+    // If cache is at max size, remove oldest entry
+    if (this.cache.size >= this.maxSize) {
+      let oldestKey = null;
+      let oldestTime = Infinity;
+      
+      for (const [k, v] of this.cache.entries()) {
+        if (v.timestamp < oldestTime) {
+          oldestTime = v.timestamp;
+          oldestKey = k;
+        }
+      }
+      
+      if (oldestKey) {
+        this.cache.delete(oldestKey);
+      }
+    }
+    
+    this.cache.set(key, {
+      data,
+      timestamp: Date.now()
+    });
+  },
+  
+  invalidate(id) {
+    // Remove all cache entries for this conversation ID
+    for (const key of this.cache.keys()) {
+      if (key.startsWith(`${id}_`)) {
+        this.cache.delete(key);
+      }
+    }
+  }
+};
+
 /**
  * Get detailed conversation with messages
  * @param {Object} req - Express request object
@@ -160,8 +275,27 @@ async function getConversationById(req, res) {
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const per_page = Math.max(1, parseInt(req.query.limit) || 20);
     
+    // Check cache first
+    const cachedData = messageCache.get(req.params.id, page, per_page);
+    if (cachedData) {
+      // Add cache header for client-side caching
+      res.set('Cache-Control', 'private, max-age=600'); // 10 minutes
+      res.set('X-Cache', 'HIT');
+      return res.json(cachedData);
+    }
+    
     // Load message details for this conversation
-    const result = await archiveService.loadConversationMessages(conv.folder, ARCHIVE_ROOT);
+    let result;
+    try {
+      // Use the retry function instead of direct call
+      result = await loadConversationWithRetry(conv.folder, ARCHIVE_ROOT, 3);
+    } catch (err) {
+      console.error(`Failed to load conversation ${req.params.id} after retries:`, err);
+      return res.status(500).json({ 
+        error: 'Failed to load conversation. Please try again.',
+        id: req.params.id
+      });
+    }
     const messages = result.messages;
     const total_messages = messages.length;
     
@@ -216,8 +350,8 @@ async function getConversationById(req, res) {
       unknownTypes._estimated = true;
     }
     
-    // Return conversation data with paginated messages
-    res.json({
+    // Create the response object
+    const responseData = {
       id: conv.id,
       title: conv.title,
       create_time: conv.create_time,
@@ -233,7 +367,17 @@ async function getConversationById(req, res) {
       per_page,
       messages: pageMessages,
       unknown_types: Object.keys(unknownTypes).length > 0 ? unknownTypes : null
-    });
+    };
+    
+    // Store in cache for future requests
+    messageCache.set(req.params.id, page, per_page, responseData);
+    
+    // Add cache header for client-side caching
+    res.set('Cache-Control', 'private, max-age=600'); // 10 minutes
+    res.set('X-Cache', 'MISS');
+    
+    // Return conversation data with paginated messages
+    res.json(responseData);
   } catch (err) {
     console.error(`Error fetching conversation ${req.params.id}:`, err);
     res.status(500).json({ error: 'Failed to fetch conversation details' });

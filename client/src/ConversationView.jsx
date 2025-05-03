@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
-import { Box, Typography, Paper, Button, LinearProgress, Chip, Collapse, Pagination, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { Box, Typography, Paper, Button, LinearProgress, Chip, Collapse, Pagination, FormControl, InputLabel, Select, MenuItem, Dialog, DialogContent, DialogTitle, IconButton } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import Markdown from './Markdown.jsx';
 import ToolMessageRenderer from './ToolMessageRenderer';
@@ -8,11 +8,64 @@ import CanvasRenderer from './CanvasRenderer';
 import GizmoNameEditor from './GizmoNameEditor';
 import { processLatexInText } from './latexUtils';
 
-function fetchAPI(url) {
-  return fetch(url)
+// Enhanced fetch API with proper error handling, timeouts, and auto-retry for 429 errors
+function fetchAPI(url, options = {}) {
+  // Apply default timeout of 30 seconds
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
+  
+  // Default retry options
+  const retryOptions = {
+    maxRetries: options.maxRetries || 3,
+    retryDelay: options.retryDelay || 1000,
+    retryOn: options.retryOn || [429], // Retry on 429 Too Many Requests by default
+    currentRetry: options.currentRetry || 0
+  };
+  
+  // Merge provided options with defaults
+  const fetchOptions = {
+    ...options,
+    signal: controller.signal,
+    headers: {
+      ...options.headers,
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache'
+    }
+  };
+  
+  return fetch(url, fetchOptions)
     .then(res => {
-      if (!res.ok) throw new Error('API error');
+      clearTimeout(timeoutId);
+      
+      // Handle 429 Too Many Requests with exponential backoff
+      if (retryOptions.retryOn.includes(res.status) && retryOptions.currentRetry < retryOptions.maxRetries) {
+        // Get retry delay from header or use exponential backoff
+        const retryAfter = res.headers.get('Retry-After');
+        const delay = retryAfter ? parseInt(retryAfter) * 1000 : 
+                    retryOptions.retryDelay * Math.pow(2, retryOptions.currentRetry);
+        
+        console.log(`Rate limited (${res.status}). Retrying in ${delay}ms (attempt ${retryOptions.currentRetry + 1}/${retryOptions.maxRetries})`);
+        
+        // Retry with incremented retry count after delay
+        return new Promise(resolve => setTimeout(resolve, delay))
+          .then(() => fetchAPI(url, {
+            ...options,
+            maxRetries: retryOptions.maxRetries,
+            retryDelay: retryOptions.retryDelay,
+            retryOn: retryOptions.retryOn,
+            currentRetry: retryOptions.currentRetry + 1
+          }));
+      }
+      
+      if (!res.ok) throw new Error(`API error: ${res.status}`);
       return res.json();
+    })
+    .catch(err => {
+      clearTimeout(timeoutId);
+      if (err.name === 'AbortError') {
+        throw new Error('Request timed out or was aborted');
+      }
+      throw err;
     });
 }
 
@@ -227,6 +280,13 @@ export default function ConversationView() {
   const [currentGizmo, setCurrentGizmo] = useState({ id: '', name: '' });
   const [initialLoad, setInitialLoad] = useState(true);
   const [userPerPage, setUserPerPage] = useState(10); // User-controlled page size
+  
+  // State for media modal
+  const [selectedMedia, setSelectedMedia] = useState(null);
+  const [mediaModalOpen, setMediaModalOpen] = useState(false);
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+  const [allMediaInConversation, setAllMediaInConversation] = useState([]);
+  
   const scrollRef = useRef();
   const topRef = useRef();
 
@@ -263,30 +323,66 @@ export default function ConversationView() {
     setGizmoEditorOpen(true);
   };
 
-  // Load all media files in the conversation to map file IDs to full filenames
-  const loadMediaFilenames = async (folder) => {
-    try {
-      const response = await fetch(`/api/media/${folder}`);
-      if (response.ok) {
-        const files = await response.json();
-        if (files && Array.isArray(files)) {
-          // Create a map of partial file IDs to full filenames
-          const filenameMap = {};
-          files.forEach(file => {
-            // Extract the file ID from the filename
-            const fileIdMatch = file.match(/file-[\w\d]+/);
-            if (fileIdMatch) {
-              const fileId = fileIdMatch[0];
-              filenameMap[fileId] = file;
-            }
+  // Function to open media modal
+  const handleOpenMediaModal = (media, mediaRefs) => {
+    // Find all media in this conversation if not already loaded
+    if (allMediaInConversation.length === 0) {
+      // Collect all media references from all messages
+      const allMedia = [];
+      filteredMessages.forEach(msg => {
+        const content = extractMessageContent(msg.message);
+        if (content.mediaRefs && content.mediaRefs.length > 0) {
+          content.mediaRefs.forEach(ref => {
+            allMedia.push({
+              ...ref,
+              path: `/api/media/${data.folder}/${mediaFilenames[ref.filename] || ref.filename}`,
+              conversationId: id,
+              conversationTitle: data.title || 'Untitled'
+            });
           });
-          setMediaFilenames(filenameMap);
         }
-      }
-    } catch (error) {
-      console.error('Error loading media filenames:', error);
+      });
+      setAllMediaInConversation(allMedia);
     }
+
+    // Find the index of the selected media
+    const index = mediaRefs.findIndex(ref => ref.filename === media.filename);
+    setSelectedMedia({
+      ...media,
+      path: `/api/media/${data.folder}/${mediaFilenames[media.filename] || media.filename}`,
+      conversationId: id,
+      conversationTitle: data.title || 'Untitled'
+    });
+    setCurrentMediaIndex(index);
+    setMediaModalOpen(true);
   };
+
+  // Navigate to next media in modal
+  const handleNextMedia = () => {
+    if (allMediaInConversation.length <= 1) return;
+    
+    const newIndex = (currentMediaIndex + 1) % allMediaInConversation.length;
+    setCurrentMediaIndex(newIndex);
+    setSelectedMedia(allMediaInConversation[newIndex]);
+  };
+  
+  // Navigate to previous media in modal
+  const handlePrevMedia = () => {
+    if (allMediaInConversation.length <= 1) return;
+    
+    const newIndex = currentMediaIndex > 0 ? currentMediaIndex - 1 : allMediaInConversation.length - 1;
+    setCurrentMediaIndex(newIndex);
+    setSelectedMedia(allMediaInConversation[newIndex]);
+  };
+
+  // Close the media modal
+  const handleCloseMediaModal = () => {
+    setMediaModalOpen(false);
+    setSelectedMedia(null);
+  };
+
+  // Load all media files in the conversation to map file IDs to full filenames
+  // Function definition moved to useCallback above
   
   // Set the current conversation ID in a global variable for markdown processing
   useEffect(() => {
@@ -300,59 +396,250 @@ export default function ConversationView() {
       window.currentConversationFolder = undefined;
     };
   }, [id, data.folder]);
+  
+  // Ensure we don't trigger unnecessary re-renders when the folder changes
+  const stableFolder = useMemo(() => data.folder, [data.folder]);
 
+  // Optimized fetch with caching, error handling, and retry
   const fetchPage = useCallback((page) => {
-    fetchAPI(`/api/conversations/${id}?page=${page}&limit=${userPerPage}`)
-      .then(res => {
-        setData(res);
-        // Load media filenames when conversation data is fetched
-        if (res.folder) {
-          loadMediaFilenames(res.folder);
-        }
-        
-        // Scroll to top of messages on page change, but not on initial load
-        if (!initialLoad && scrollRef.current) {
-          scrollRef.current.scrollTop = 0;
-          // Also scroll the page to the top pagination controls
-          if (topRef.current) {
-            topRef.current.scrollIntoView({ behavior: 'smooth' });
-          }
-        }
-        setInitialLoad(false);
+    // Create an AbortController to cancel requests if component unmounts or new fetch starts
+    const controller = new AbortController();
+    const signal = controller.signal;
+    
+    // Store the controller so we can abort it if needed
+    const prevController = fetchPage.controller;
+    if (prevController) {
+      prevController.abort(); // Cancel any in-flight request
+    }
+    fetchPage.controller = controller;
+    
+    // Show loading indicator if not initial load
+    if (!initialLoad) {
+      setData(prev => ({ ...prev, isLoading: true }));
+    }
+    
+    // Use our enhanced fetchAPI with auto-retry
+    fetchAPI(`/api/conversations/${id}?page=${page}&limit=${userPerPage}`, {
+      signal,
+      maxRetries: 3,
+      retryDelay: 1000 // Start with 1 second, will increase exponentially
+    })
+    .then(res => {
+      // Preserve title and metadata when changing pages
+      const preservedData = {
+        title: data.title || res.title,
+        create_time: data.create_time || res.create_time,
+        folder: data.folder || res.folder,
+        canvas_ids: data.canvas_ids || res.canvas_ids,
+      };
+      
+      // Merge the preserved data with the new page data
+      setData({ 
+        ...res, 
+        ...preservedData,
+        isLoading: false 
       });
+      
+      // Load media filenames when conversation data is fetched
+      if (res.folder) {
+        // Call without argument so it uses stableFolder after data is updated
+        setTimeout(() => loadMediaFilenames(res.folder), 0);
+      }
+      
+      // Scroll to top of messages on page change, but not on initial load
+      if (!initialLoad && scrollRef.current) {
+        scrollRef.current.scrollTop = 0;
+        // Also scroll the page to the top pagination controls
+        if (topRef.current) {
+          topRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+      setInitialLoad(false);
+    })
+    .catch(err => {
+      // Only show error if not aborted
+      if (err.name !== 'AbortError') {
+        console.error('Error fetching conversation:', err);
+        setData(prev => ({ ...prev, isLoading: false, error: err.message }));
+      }
+    });
+    
+    // Cleanup function to cancel request if component unmounts
+    return () => {
+      controller.abort();
+    };
   }, [id, userPerPage, initialLoad]);
   
-  // Handle page size change
+  // Use stable folder to prevent unnecessary re-renders and infinite loops
+  const loadMediaFilenames = useCallback(async (folder) => {
+    // Use stableFolder from the component state if no folder is provided
+    const folderToUse = folder || stableFolder;
+    if (!folderToUse) return; // Guard against empty folder
+    
+    try {
+      const data = await fetchAPI(`/api/media/${folderToUse}`, {
+        maxRetries: 2, // Fewer retries for media filenames
+        retryDelay: 500 // Start with half a second
+      });
+      
+      if (data && Array.isArray(data)) {
+        // Create a map of partial file IDs to full filenames
+        const filenameMap = {};
+        data.forEach(file => {
+          // Extract the file ID from the filename
+          const fileIdMatch = file.match(/file-[\w\d]+/);
+          if (fileIdMatch) {
+            const fileId = fileIdMatch[0];
+            filenameMap[fileId] = file;
+          }
+        });
+        setMediaFilenames(filenameMap);
+      }
+    } catch (error) {
+      console.error('Error loading media filenames:', error);
+      // Non-critical error, just log it
+    }
+  }, [stableFolder]);
+  
+  // Handle page size change with improved error handling and retry
   const handlePerPageChange = useCallback((event) => {
     const newPerPage = parseInt(event.target.value);
     setUserPerPage(newPerPage);
+    
+    // Show loading indicator
+    setData(prev => ({ ...prev, isLoading: true }));
+    
+    // Create an AbortController to cancel requests if component unmounts or new fetch starts
+    const controller = new AbortController();
+    const signal = controller.signal;
+    
+    // Store the controller so we can abort it if needed
+    const prevController = handlePerPageChange.controller;
+    if (prevController) {
+      prevController.abort(); // Cancel any in-flight request
+    }
+    handlePerPageChange.controller = controller;
+    
     // Reset to page 1 when changing page size
-    fetchAPI(`/api/conversations/${id}?page=1&limit=${newPerPage}`)
-      .then(res => {
-        setData(res);
-        if (res.folder) {
-          loadMediaFilenames(res.folder);
-        }
+    fetchAPI(`/api/conversations/${id}?page=1&limit=${newPerPage}`, {
+      signal,
+      maxRetries: 3,
+      retryDelay: 1000 // Start with 1 second, will increase exponentially
+    })
+    .then(res => {
+      // Preserve title and metadata when changing page size
+      const preservedData = {
+        title: data.title || res.title,
+        create_time: data.create_time || res.create_time,
+        folder: data.folder || res.folder,
+        canvas_ids: data.canvas_ids || res.canvas_ids,
+      };
+      
+      // Merge the preserved data with the new page data
+      setData({ 
+        ...res, 
+        ...preservedData,
+        isLoading: false 
       });
+      if (res.folder) {
+        // Use setTimeout to avoid state updates during rendering
+        setTimeout(() => loadMediaFilenames(res.folder), 0);
+      }
+      // Ensure we reset the scroll position
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = 0;
+      }
+    })
+    .catch(err => {
+      // Only show error if not aborted
+      if (err.name !== 'AbortError') {
+        console.error('Error changing page size:', err);
+        setData(prev => ({ ...prev, isLoading: false, error: err.message }));
+      }
+    });
+    
+    return () => {
+      controller.abort();
+    };
   }, [id]);
 
   useEffect(() => { 
     setInitialLoad(true);
+    setData(prev => ({ ...prev, title: null, isLoading: true, error: null }));
     fetchPage(1); 
-  }, [id, fetchPage]);
+  }, [id]); // Remove fetchPage from dependencies to avoid unnecessary re-renders
+  
+  // Add stability and handle scroll initialization issues
   useEffect(() => {
-    if (window.MathJax && data.messages && data.messages.length > 0) {
-      // Wait a bit for the DOM to settle before trying to render MathJax
-      setTimeout(() => {
+    const currentScrollRef = scrollRef.current;
+    if (currentScrollRef) {
+      // Create a proper scroll handler to stop propagation and fix chattering
+      const preventDefault = (e) => {
+        // Prevent any default handling that might cause issues
+        if (e.target === currentScrollRef) {
+          e.stopPropagation();
+        }
+      };
+
+      // Handle touch events separately to prevent chattering
+      const handleTouchStart = (e) => {
+        currentScrollRef.dataset.scrolling = 'true';
+      };
+
+      const handleTouchEnd = (e) => {
+        delete currentScrollRef.dataset.scrolling;
+      };
+      
+      // Force scroll initialization on mount
+      currentScrollRef.scrollTop = 0;
+      
+      // Add all event listeners
+      currentScrollRef.addEventListener('mousedown', preventDefault, { passive: false });
+      currentScrollRef.addEventListener('touchstart', handleTouchStart, { passive: true });
+      currentScrollRef.addEventListener('touchend', handleTouchEnd, { passive: true });
+      
+      // Set pointer events to fix any touch/mouse interaction issues
+      currentScrollRef.style.touchAction = 'pan-y';
+      currentScrollRef.style.WebkitOverflowScrolling = 'touch'; // Add momentum scrolling for iOS
+      
+      return () => {
+        // Use the captured reference in cleanup to avoid accessing a possibly null ref
+        currentScrollRef.removeEventListener('mousedown', preventDefault);
+        currentScrollRef.removeEventListener('touchstart', handleTouchStart);
+        currentScrollRef.removeEventListener('touchend', handleTouchEnd);
+      };
+    }
+  }, []);
+
+  // Fixed MathJax rendering to avoid infinite loops
+  useEffect(() => {
+    // Use a stable reference to the message length to avoid unnecessary renders
+    const messagesLength = data.messages?.length || 0;
+    const messagesRendered = !!messagesLength;
+    
+    if (window.MathJax && messagesRendered) {
+      // Create a stable timeout that won't cause re-renders
+      let timeoutId = null;
+      
+      const renderMathJax = () => {
         try {
-          window.MathJax.typesetPromise()
-            .catch(err => console.error('MathJax typesetting error:', err));
+          if (window.MathJax.typesetPromise) {
+            window.MathJax.typesetPromise()
+              .catch(err => console.error('MathJax typesetting error:', err));
+          }
         } catch (e) {
           console.error('MathJax error:', e);
         }
-      }, 500);
+      };
+      
+      // Wait for DOM to settle before rendering
+      timeoutId = setTimeout(renderMathJax, 500);
+      
+      return () => {
+        if (timeoutId) clearTimeout(timeoutId);
+      };
     }
-  }, [data.messages]);
+  }, [data.messages ? data.messages.length : 0]); // Only depend on length, not the entire messages array
   // This is now handled in fetchPage
 
   // Filter out empty system messages after the first user message
@@ -375,28 +662,12 @@ export default function ConversationView() {
     }
   }
 
-  // Display unknown message types if any are present
-  const renderUnknownTypesWarning = () => {
-    if (!data.unknown_types) return null;
-    
-    return (
-      <Box sx={{ mb: 2, p: 1, bgcolor: '#fff4e5', borderRadius: 1, border: '1px solid #ffe0b2' }}>
-        <Typography variant="subtitle2" color="warning.main">Archive Parser Notice:</Typography>
-        <Typography variant="body2">
-          This conversation contains message types that may have new or extended formats.
-          {Object.entries(data.unknown_types).map(([type, count]) => (
-            <Chip 
-              key={type}
-              label={`${type}: ${count}`}
-              size="small"
-              sx={{ m: 0.5 }}
-              color="warning"
-              variant="outlined"
-            />
-          ))}
-        </Typography>
-      </Box>
-    );
+  // Display warnings about unknown message types (only in console)
+  const logUnknownTypesWarning = () => {
+    if (data.unknown_types) {
+      // Log to console instead of displaying in UI
+      console.info('Archive Parser Notice: This conversation contains message types that may have new or extended formats:', data.unknown_types);
+    }
   };
   
   // Display conversation canvas IDs at the top level
@@ -432,7 +703,33 @@ export default function ConversationView() {
     );
   };
 
-  if (!data.title) return <Box sx={{ p: 3, textAlign: 'center' }}><LinearProgress /><Typography sx={{ mt: 2 }}>Loading conversation...</Typography></Box>;
+  if (!data.title && data.error) {
+    return (
+      <Box sx={{ p: 3, textAlign: 'center' }}>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {data.error}
+        </Alert>
+        <Button variant="contained" onClick={() => fetchPage(1)}>
+          Retry
+        </Button>
+      </Box>
+    );
+  }
+
+  if (!data.title) {
+    return (
+      <Box sx={{ p: 3, textAlign: 'center' }}>
+        <LinearProgress sx={{ mb: 2 }} />
+        <Typography sx={{ mt: 2 }} variant="body1">
+          Loading conversation...
+        </Typography>
+        <Typography color="text.secondary" variant="body2" sx={{ mt: 1 }}>
+          If loading takes too long, try refreshing the page.
+          The server may be rate-limited due to high traffic.
+        </Typography>
+      </Box>
+    );
+  }
 
   // Extract unique gizmo IDs and models from messages
   const gizmoIds = Array.from(new Set((data.messages || []).map(m => 
@@ -441,8 +738,21 @@ export default function ConversationView() {
     m.message?.metadata?.model_slug).filter(Boolean)));
 
   return (
-    <Box>
-      <Box sx={{ position: 'sticky', top: 0, bgcolor: 'background.paper', zIndex: 5, pb: 2 }}>
+    <Box sx={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      height: '100%',
+      overflow: 'hidden'
+    }}>
+      <Box sx={{ 
+        position: 'sticky', 
+        top: 0, 
+        bgcolor: 'background.paper', 
+        zIndex: 6, /* Higher than pagination */
+        pb: 1,
+        mb: 1, 
+        borderBottom: '1px solid #eee'
+      }}>
         <Typography variant="h5">{data.title || id}</Typography>
         <Typography variant="subtitle2" color="text.secondary">
           {data.create_time ? new Date(data.create_time * 1000).toISOString().split('T')[0] : ''}
@@ -450,6 +760,7 @@ export default function ConversationView() {
             ID: {id}
           </span>
         </Typography>
+        {/* Gizmo IDs and Models */}
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
           {gizmoIds.length > 0 && (
             <Typography variant="subtitle2" color="text.secondary">Gizmo ID(s): {gizmoIds.join(', ')}</Typography>
@@ -459,15 +770,22 @@ export default function ConversationView() {
           )}
         </Box>
         
-        {/* Display warnings about unknown message types */}
-        {renderUnknownTypesWarning()}
+        {/* Log unknown types to console instead of showing in UI */}
+        {data.unknown_types && logUnknownTypesWarning()}
         
         {/* Display canvas summary */}
         {renderCanvasSummary()}
       </Box>
       
       {/* Controls and View Media button */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', mb: 2, gap: 2 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        flexWrap: 'wrap', 
+        mb: 1, 
+        gap: 1,
+        mt: 0
+      }}>
         <Box>
           {data.has_media && (
             <Button 
@@ -481,8 +799,8 @@ export default function ConversationView() {
         </Box>
         
         {/* Page size control */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <FormControl size="small" sx={{ minWidth: 120 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, zIndex: 2 }}>
+          <FormControl size="small" sx={{ minWidth: 150 }}>
             <InputLabel id="messages-per-page-label">Messages per page</InputLabel>
             <Select
               labelId="messages-per-page-label"
@@ -512,13 +830,35 @@ export default function ConversationView() {
       {/* Top pagination controls */}
       {data.total_messages > userPerPage && (
         <Box 
-          sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}
+          sx={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            mb: 1,
+            overflow: 'hidden',
+            position: 'sticky',
+            top: '0',
+            zIndex: 5,
+            backgroundColor: 'white',
+            borderBottom: '1px solid #eee',
+            pb: 1,
+            '& .MuiPagination-ul': {
+              display: 'flex',
+              width: '100%',
+              justifyContent: 'center',
+              '& .MuiPaginationItem-root': {
+                margin: '0 2px' // Reduce margins between pagination items
+              }
+            }
+          }}
           ref={topRef}
         >
           <Pagination 
             count={Math.ceil(data.total_messages / userPerPage)} 
             page={data.page} 
             onChange={(e, page) => fetchPage(page)}
+            size="small"
+            siblingCount={1}           // Reduce sibling count to save space
+            boundaryCount={1}          // Reduce boundary count to save space
             showFirstButton
             showLastButton
           />
@@ -526,22 +866,51 @@ export default function ConversationView() {
       )}
       
       {/* Message list in scrollable container */}
-      <Paper 
-        sx={{ 
-          flex: 1, 
-          minHeight: 0, 
-          height: { xs: 'calc(100vh - 400px)', md: 'calc(100vh - 350px)' }, 
-          overflow: 'auto',
-          // Add space for scrollbar to prevent layout shift
-          pr: { xs: 1, sm: 2 },
-          pl: { xs: 1, sm: 2 },
-          py: 1,
-          mb: 2,
-          bgcolor: '#f9f9f9' 
-        }} 
+      <div
         ref={scrollRef}
-        elevation={0}
+        className="scroll-container"
+        style={{
+          flex: 1,
+          minHeight: 0,
+          height: 'calc(100vh - 260px)', // Make container slightly smaller to ensure all content is visible
+          maxHeight: 'calc(100vh - 260px)',
+          overflow: 'auto',
+          overflowY: 'scroll', // Always show scrollbar for consistency
+          overscrollBehavior: 'contain',
+          paddingRight: '16px',
+          paddingLeft: '16px',
+          paddingTop: '8px',
+          paddingBottom: '24px', // Extra bottom padding to ensure last item is fully visible
+          marginBottom: '8px', // Reduced margin
+          backgroundColor: '#f9f9f9',
+          borderRadius: '4px',
+          border: '1px solid #e0e0e0',
+          WebkitOverflowScrolling: 'touch',
+          position: 'relative' // For absolute positioning of loading indicator
+        }}
+        onTouchStart={() => {
+          if (scrollRef.current) {
+            scrollRef.current.classList.add('no-select-during-scroll');
+          }
+        }}
+        onTouchEnd={() => {
+          if (scrollRef.current) {
+            scrollRef.current.classList.remove('no-select-during-scroll');
+          }
+        }}
       >
+        {/* Loading indicator */}
+        {data.isLoading && (
+          <Box sx={{ 
+            position: 'absolute', 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            zIndex: 10 
+          }}>
+            <LinearProgress />
+          </Box>
+        )}
         {filteredMessages.map(msg => {
           // Extract message info from the JSON structure
           const role = msg.message?.author?.role || 'unknown';
@@ -558,7 +927,7 @@ export default function ConversationView() {
           const content = extractMessageContent(msg.message);
           
           return (
-            <Paper key={msg.id} sx={{ p: 2, my: 1, backgroundColor: bgColor, position: 'relative' }}>
+            <Paper key={msg.id} sx={{ p: 2, my: 1, backgroundColor: bgColor, position: 'relative', textAlign: 'left' }}>
               {/* Add special indicator for parsed messages */}
               {msg.parsed && (
                 <Box 
@@ -627,13 +996,25 @@ export default function ConversationView() {
               {content.mediaRefs.length > 0 && (
                 <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 2 }}>
                   {content.mediaRefs.map((media, index) => (
-                    <Box key={index} sx={{ maxWidth: '100%', maxHeight: '300px' }}>
-                          {media.type === 'image' ? (
-                            <img 
-                              src={`/api/media/${data.folder}/${mediaFilenames[media.filename] || media.filename}`} 
-                              alt="Attachment" 
-                              style={{ maxWidth: '100%', maxHeight: '300px' }}
-                            />
+                    <Box 
+                      key={index} 
+                      sx={{ 
+                        maxWidth: '100%', 
+                        maxHeight: '300px',
+                        cursor: 'pointer', // Add cursor pointer to indicate clickable
+                        '&:hover': {
+                          opacity: 0.9,
+                          boxShadow: '0 0 5px rgba(0,0,0,0.2)'
+                        },
+                      }}
+                      onClick={() => handleOpenMediaModal(media, content.mediaRefs)}
+                    >
+                      {media.type === 'image' ? (
+                        <img 
+                          src={`/api/media/${data.folder}/${mediaFilenames[media.filename] || media.filename}`} 
+                          alt="Attachment" 
+                          style={{ maxWidth: '100%', maxHeight: '300px' }}
+                        />
                       ) : media.type === 'audio' ? (
                         <Box sx={{ p: 2, textAlign: 'center', bgcolor: '#f0f7ff', borderRadius: 1, minWidth: 250 }}>
                           <Typography variant="subtitle2" color="primary" gutterBottom>
@@ -643,6 +1024,7 @@ export default function ConversationView() {
                             controls 
                             src={`/api/media/${data.folder}/${mediaFilenames[media.filename] || media.filename}`} 
                             style={{ width: '100%' }} 
+                            onClick={(e) => e.stopPropagation()} // Prevent modal open when clicking the audio controls
                           />
                           <Typography variant="caption" color="text.secondary">
                             {media.filename}
@@ -657,6 +1039,7 @@ export default function ConversationView() {
                             controls 
                             src={`/api/media/${data.folder}/${mediaFilenames[media.filename] || media.filename}`}
                             style={{ maxWidth: '100%', maxHeight: '200px' }} 
+                            onClick={(e) => e.stopPropagation()} // Prevent modal open when clicking the video controls
                           />
                         </Box>
                       ) : (
@@ -671,20 +1054,149 @@ export default function ConversationView() {
             </Paper>
           );
         })}
-      </Paper>
+      </div>
       
-      {/* Bottom pagination controls */}
-      {data.total_messages > userPerPage && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, mb: 3 }}>
-          <Pagination 
-            count={Math.ceil(data.total_messages / userPerPage)} 
-            page={data.page} 
-            onChange={(e, page) => fetchPage(page)}
-            size="large"
-            showFirstButton
-            showLastButton
-          />
-        </Box>
+      {/* Remove bottom pagination controls, only keep the top ones */}
+      
+      {/* Media Details Dialog */}
+      {selectedMedia && (
+        <Dialog 
+          open={mediaModalOpen} 
+          onClose={handleCloseMediaModal}
+          maxWidth="lg"
+          fullWidth
+        >
+          <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h6" noWrap sx={{ maxWidth: '80%', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {selectedMedia.originalName || selectedMedia.filename}
+            </Typography>
+            <Box>
+              <Button onClick={handleCloseMediaModal}>Close</Button>
+            </Box>
+          </DialogTitle>
+          <DialogContent sx={{ position: 'relative', pb: 0 }}>
+            {/* Navigation Arrows */}
+            {allMediaInConversation.length > 1 && (
+              <>
+                <IconButton 
+                  onClick={handlePrevMedia}
+                  sx={{ 
+                    position: 'absolute', 
+                    left: 10, 
+                    top: '50%', 
+                    transform: 'translateY(-50%)',
+                    backgroundColor: 'rgba(255,255,255,0.5)',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255,255,255,0.8)'
+                    },
+                    zIndex: 10
+                  }}
+                >
+                  &lt;
+                </IconButton>
+                <IconButton 
+                  onClick={handleNextMedia}
+                  sx={{ 
+                    position: 'absolute', 
+                    right: 10, 
+                    top: '50%', 
+                    transform: 'translateY(-50%)',
+                    backgroundColor: 'rgba(255,255,255,0.5)',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255,255,255,0.8)'
+                    },
+                    zIndex: 10 
+                  }}
+                >
+                  &gt;
+                </IconButton>
+              </>
+            )}
+            
+            {/* Media Content */}
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', my: 2 }}>
+              {selectedMedia.type === 'image' ? (
+                <img 
+                  src={selectedMedia.path} 
+                  alt={selectedMedia.filename} 
+                  style={{ 
+                    maxWidth: '100%', 
+                    maxHeight: '70vh',
+                    objectFit: 'contain'
+                  }}
+                />
+              ) : selectedMedia.type === 'audio' ? (
+                <Box sx={{ textAlign: 'center', p: 3, bgcolor: '#f0f7ff', borderRadius: 2, width: '100%' }}>
+                  <Typography variant="h6" color="primary" gutterBottom>
+                    Audio File
+                  </Typography>
+                  <audio controls src={selectedMedia.path} style={{ width: '100%' }} />
+                </Box>
+              ) : selectedMedia.type === 'video' ? (
+                <Box sx={{ textAlign: 'center', p: 3, width: '100%' }}>
+                  <video 
+                    controls 
+                    src={selectedMedia.path}
+                    style={{ maxWidth: '100%', maxHeight: '70vh' }} 
+                  />
+                </Box>
+              ) : (
+                <Typography variant="body1">
+                  {selectedMedia.type || 'Unknown'} File
+                </Typography>
+              )}
+            </Box>
+            
+            {/* Details Panel */}
+            <Box sx={{ 
+              mt: 2, 
+              p: 2, 
+              backgroundColor: '#f5f5f5',
+              borderTop: '1px solid #e0e0e0',
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 2,
+              fontSize: '0.875rem'
+            }}>
+              <Box sx={{ minWidth: '200px', flex: 1 }}>
+                <Typography variant="subtitle2">File ID</Typography>
+                <Typography variant="body2" sx={{ wordBreak: 'break-all' }}>
+                  {selectedMedia.filename}
+                </Typography>
+              </Box>
+              
+              {selectedMedia.originalName && (
+                <Box sx={{ minWidth: '200px', flex: 1 }}>
+                  <Typography variant="subtitle2">Original Filename</Typography>
+                  <Typography variant="body2" sx={{ wordBreak: 'break-all' }}>
+                    {selectedMedia.originalName}
+                  </Typography>
+                </Box>
+              )}
+              
+              <Box sx={{ minWidth: '200px', flex: 2 }}>
+                <Typography variant="subtitle2">From Conversation</Typography>
+                <Box 
+                  component={Button}
+                  onClick={() => {
+                    handleCloseMediaModal();
+                    navigate(`/conversations/${selectedMedia.conversationId}`);
+                  }}
+                  sx={{ 
+                    textAlign: 'left',
+                    p: 0,
+                    textTransform: 'none',
+                    justifyContent: 'flex-start',
+                    fontWeight: 'normal',
+                    textDecoration: 'underline',
+                    color: 'primary.main'
+                  }}>
+                  {selectedMedia.conversationTitle || 'Untitled'}
+                </Box>
+              </Box>
+            </Box>
+          </DialogContent>
+        </Dialog>
       )}
     </Box>
   );

@@ -709,7 +709,9 @@ export default function MediaGallery() {
             </Box>
           )}
           
-          <Box sx={{ 
+          <Box 
+            className="media-gallery-container"
+            sx={{ 
             display: 'flex', 
             flexWrap: 'wrap', 
             gap: '8px',
@@ -718,7 +720,12 @@ export default function MediaGallery() {
             pr: { xs: 1, sm: 2 },
             // Fixed height with scrolling for media grid
             height: { xs: 'auto', md: 'calc(100vh - 350px)' },
-            overflow: { xs: 'visible', md: 'auto' }
+            maxHeight: { xs: 'auto', md: 'calc(100vh - 350px)' },
+            overflow: { xs: 'visible', md: 'scroll' },
+            // Always force scrolling to be visible
+            overflowY: { md: 'scroll' },
+            // Add bottom padding to ensure last row is fully visible
+            pb: 4
           }}>
             {paginatedFiles.map((file, index) => {
               // Calculate the global index in the filteredFiles array
@@ -727,9 +734,15 @@ export default function MediaGallery() {
               return (
                 <Box 
                   key={`${file.id}-${globalIndex}`}
+                  onClick={() => handleViewMedia(file, globalIndex)}
                   sx={{
                     position: 'relative',
                     width: { xs: '100%', sm: '48%', md: '32%', lg: '24%', xl: '19%' },
+                    cursor: 'pointer',
+                    '&:hover': {
+                      opacity: 0.9,
+                      boxShadow: '0 0 10px rgba(0,0,0,0.2)'
+                    },
                     '&:hover .media-overlay': {
                       opacity: 1
                     }
@@ -750,12 +763,11 @@ export default function MediaGallery() {
                       padding: '8px',
                       opacity: 0,
                       transition: 'opacity 0.3s',
-                      cursor: 'pointer',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap'
                     }}
-                    onClick={() => handleViewMedia(file, globalIndex)}
+                    onClick={(e) => e.stopPropagation()} // Prevent duplicate events
                   >
                     {file.originalFilename || file.id}
                   </Box>
@@ -908,16 +920,23 @@ export default function MediaGallery() {
               
               <Box sx={{ minWidth: '200px', flex: 2 }}>
                 <Typography variant="subtitle2">From Conversation</Typography>
-                <Typography variant="body2" noWrap>
+                <Box 
+                  component={Button}
+                  onClick={() => navigateToConversation(selectedMedia.conversationId)}
+                  sx={{ 
+                    textAlign: 'left',
+                    p: 0,
+                    textTransform: 'none',
+                    justifyContent: 'flex-start',
+                    fontWeight: 'normal',
+                    textDecoration: 'underline',
+                    color: 'primary.main',
+                    whiteSpace: 'normal',
+                    lineHeight: 1.2,
+                    wordBreak: 'break-word'
+                  }}>
                   {selectedMedia.conversationTitle}
-                  <Button 
-                    size="small" 
-                    sx={{ ml: 1 }} 
-                    onClick={() => navigateToConversation(selectedMedia.conversationId)}
-                  >
-                    View
-                  </Button>
-                </Typography>
+                </Box>
               </Box>
               
               {selectedMedia.createDate && (

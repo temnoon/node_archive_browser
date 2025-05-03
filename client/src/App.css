@@ -1,3 +1,24 @@
+/* Fix text alignment in message content */
+.markdown-content p, 
+.markdown-content h1, 
+.markdown-content h2, 
+.markdown-content h3, 
+.markdown-content h4, 
+.markdown-content h5, 
+.markdown-content h6, 
+.markdown-content ul, 
+.markdown-content ol,
+.markdown-content pre,
+.markdown-content blockquote,
+.markdown-content table {
+  text-align: left !important;
+}
+
+/* Fix for code blocks to ensure they're left-aligned */
+.markdown-content pre code {
+  text-align: left !important;
+  display: block;
+}
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -39,4 +60,95 @@
 
 .read-the-docs {
   color: #888;
+}
+
+/* Prevent text selection during scrolling on mobile */
+.no-select-during-scroll {
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
+}
+
+/* Improve scrolling container styles */
+.scroll-container {
+  scrollbar-width: thin;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  position: relative;
+}
+
+/* Fix for Safari momentum scrolling */
+@supports (-webkit-overflow-scrolling: touch) {
+  .scroll-container {
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Navigation styles */
+.MuiAppBar-root a, 
+.MuiAppBar-root button {
+  transition: color 0.4s ease, background-color 0.4s ease !important;
+}
+
+.MuiAppBar-root a:hover, 
+.MuiAppBar-root button:hover {
+  color: rgba(255, 255, 240, 0.85) !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Pagination controls */
+.MuiPagination-root {
+  display: flex;
+  justify-content: center;
+}
+
+.MuiPagination-ul {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  width: 100%;
+  max-width: 500px;
+  justify-content: center;
+}
+
+.MuiPaginationItem-root {
+  margin: 0 1px !important;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 !important;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 600px) {
+  .MuiPaginationItem-root {
+    min-width: 28px;
+    height: 28px;
+    font-size: 0.75rem;
+  }
+}
+
+/* Enhanced scrolling container styles */
+.scroll-container, .MuiPaper-root, [role="presentation"], .MuiBox-root {
+  scrollbar-width: thin;
+  overflow-y: auto;
+  /* Add a small amount of padding to ensure last items are visible */
+  padding-bottom: 16px !important;
+}
+
+/* Force vertical scrollbars to be visible on containers to prevent layout shift */
+.MuiPaper-root {
+  overflow-y: scroll !important;
+}
+
+/* Fix for last items in lists being cut off */
+.MuiListItem-root:last-child {
+  margin-bottom: 8px !important;
+}
+
+/* Adjust media gallery container for better scrolling */
+.media-gallery-container {
+  overflow-y: scroll !important; 
+  padding-bottom: 64px !important;
 }
