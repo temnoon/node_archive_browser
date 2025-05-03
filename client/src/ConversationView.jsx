@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
-import { Box, Typography, Paper, Button, LinearProgress, Chip, Collapse, Pagination, FormControl, InputLabel, Select, MenuItem, Dialog, DialogContent, DialogTitle, IconButton } from '@mui/material';
+import { Box, Typography, Paper, Button, LinearProgress, Chip, Collapse, Pagination, FormControl, InputLabel, Select, MenuItem, Dialog, DialogContent, DialogTitle, IconButton, Alert } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import Markdown from './Markdown.jsx';
 import ToolMessageRenderer from './ToolMessageRenderer';
@@ -280,6 +280,7 @@ export default function ConversationView() {
   const [currentGizmo, setCurrentGizmo] = useState({ id: '', name: '' });
   const [initialLoad, setInitialLoad] = useState(true);
   const [userPerPage, setUserPerPage] = useState(10); // User-controlled page size
+  const [hideToolMessages, setHideToolMessages] = useState(false); // Toggle for tool and system messages
   
   // State for media modal
   const [selectedMedia, setSelectedMedia] = useState(null);
@@ -326,30 +327,27 @@ export default function ConversationView() {
   // Function to open media modal
   const handleOpenMediaModal = (media, mediaRefs) => {
     // Find all media in this conversation if not already loaded
-    if (allMediaInConversation.length === 0) {
-      // Collect all media references from all messages
-      const allMedia = [];
-      filteredMessages.forEach(msg => {
-        const content = extractMessageContent(msg.message);
-        if (content.mediaRefs && content.mediaRefs.length > 0) {
-          content.mediaRefs.forEach(ref => {
-            allMedia.push({
-              ...ref,
-              path: `/api/media/${data.folder}/${mediaFilenames[ref.filename] || ref.filename}`,
-              conversationId: id,
-              conversationTitle: data.title || 'Untitled'
-            });
+    const allMedia = [];
+    filteredMessages.forEach(msg => {
+      const content = extractMessageContent(msg.message);
+      if (content.mediaRefs && content.mediaRefs.length > 0) {
+        content.mediaRefs.forEach(ref => {
+          allMedia.push({
+            ...ref,
+            path: getMediaPath(ref.filename),
+            conversationId: id,
+            conversationTitle: data.title || 'Untitled'
           });
-        }
-      });
-      setAllMediaInConversation(allMedia);
-    }
+        });
+      }
+    });
+    setAllMediaInConversation(allMedia);
 
     // Find the index of the selected media
     const index = mediaRefs.findIndex(ref => ref.filename === media.filename);
     setSelectedMedia({
       ...media,
-      path: `/api/media/${data.folder}/${mediaFilenames[media.filename] || media.filename}`,
+      path: getMediaPath(media.filename),
       conversationId: id,
       conversationTitle: data.title || 'Untitled'
     });
@@ -383,6 +381,15 @@ export default function ConversationView() {
 
   // Load all media files in the conversation to map file IDs to full filenames
   // Function definition moved to useCallback above
+  
+  // Function to get the complete media path with fallbacks
+  const getMediaPath = useCallback((filename) => {
+    if (!data.folder) return '';
+    
+    // Try the mapped filename first, then fallback to the original
+    const mappedFilename = mediaFilenames[filename] || filename;
+    return `/api/media/${data.folder}/${mappedFilename}`;
+  }, [data.folder, mediaFilenames]);
   
   // Set the current conversation ID in a global variable for markdown processing
   useEffect(() => {
@@ -425,25 +432,26 @@ export default function ConversationView() {
       retryDelay: 1000 // Start with 1 second, will increase exponentially
     })
     .then(res => {
-      // Preserve title and metadata when changing pages
-      const preservedData = {
-        title: data.title || res.title,
-        create_time: data.create_time || res.create_time,
-        folder: data.folder || res.folder,
-        canvas_ids: data.canvas_ids || res.canvas_ids,
-      };
-      
-      // Merge the preserved data with the new page data
-      setData({ 
-        ...res, 
-        ...preservedData,
-        isLoading: false 
+      console.log('Received conversation data:', {
+        title: res.title,
+        folder: res.folder,
+        hasMedia: res.has_media,
+        messageCount: res.messages?.length || 0,
+        initialLoad
       });
       
-      // Load media filenames when conversation data is fetched
+      // Always reset and use the data from the server directly
+      // Never preserve metadata between conversations
+      setData({ ...res, isLoading: false });
+      window.currentConversationId = id;
+      window.currentConversationFolder = res.folder;
+      
+      // After data is set, load media filenames
       if (res.folder) {
-        // Call without argument so it uses stableFolder after data is updated
-        setTimeout(() => loadMediaFilenames(res.folder), 0);
+        console.log('Loading media for folder:', res.folder);
+        // Use setTimeout to avoid state updates during rendering
+        setMediaFilenames({}); // Clear existing filenames first
+        setTimeout(() => loadMediaFilenames(res.folder), 100);
       }
       
       // Scroll to top of messages on page change, but not on initial load
@@ -477,6 +485,7 @@ export default function ConversationView() {
     if (!folderToUse) return; // Guard against empty folder
     
     try {
+      console.log('Loading media filenames for folder:', folderToUse);
       const data = await fetchAPI(`/api/media/${folderToUse}`, {
         maxRetries: 2, // Fewer retries for media filenames
         retryDelay: 500 // Start with half a second
@@ -487,13 +496,16 @@ export default function ConversationView() {
         const filenameMap = {};
         data.forEach(file => {
           // Extract the file ID from the filename
-          const fileIdMatch = file.match(/file-[\w\d]+/);
+          const fileIdMatch = file.match(/file[-_][\w\d]+/);
           if (fileIdMatch) {
             const fileId = fileIdMatch[0];
             filenameMap[fileId] = file;
           }
+          // Also add the full filename as a key
+          filenameMap[file] = file;
         });
         setMediaFilenames(filenameMap);
+        console.log('Media filenames loaded:', Object.keys(filenameMap).length);
       }
     } catch (error) {
       console.error('Error loading media filenames:', error);
@@ -527,23 +539,15 @@ export default function ConversationView() {
       retryDelay: 1000 // Start with 1 second, will increase exponentially
     })
     .then(res => {
-      // Preserve title and metadata when changing page size
-      const preservedData = {
-        title: data.title || res.title,
-        create_time: data.create_time || res.create_time,
-        folder: data.folder || res.folder,
-        canvas_ids: data.canvas_ids || res.canvas_ids,
-      };
+      // Always use the data from the response directly when changing page size
+      setData({ ...res, isLoading: false });
+      window.currentConversationId = id;
+      window.currentConversationFolder = res.folder;
       
-      // Merge the preserved data with the new page data
-      setData({ 
-        ...res, 
-        ...preservedData,
-        isLoading: false 
-      });
       if (res.folder) {
         // Use setTimeout to avoid state updates during rendering
-        setTimeout(() => loadMediaFilenames(res.folder), 0);
+        setMediaFilenames({}); // Clear existing filenames first
+        setTimeout(() => loadMediaFilenames(res.folder), 100);
       }
       // Ensure we reset the scroll position
       if (scrollRef.current) {
@@ -563,11 +567,37 @@ export default function ConversationView() {
     };
   }, [id]);
 
-  useEffect(() => { 
+  // Restart the component when conversation changes
+  useEffect(() => {
+    // This is a key component reset effect that runs when the ID changes
+    console.log('Conversation ID changed to:', id);
+    
+    // Reset all state completely
     setInitialLoad(true);
-    setData(prev => ({ ...prev, title: null, isLoading: true, error: null }));
-    fetchPage(1); 
-  }, [id]); // Remove fetchPage from dependencies to avoid unnecessary re-renders
+    setData({
+      messages: [], 
+      total_messages: 0, 
+      page: 1, 
+      per_page: 10, 
+      title: null,
+      create_time: null, 
+      folder: null,
+      canvas_ids: [],
+      isLoading: true,
+      error: null
+    });
+    setMediaFilenames({});
+    setAllMediaInConversation([]);
+    setExpandedCanvasId(null);
+    
+    // Fetch the first page of the new conversation
+    // Wait a short moment to ensure all state is reset
+    const timeoutId = setTimeout(() => {
+      fetchPage(1);
+    }, 50);
+    
+    return () => clearTimeout(timeoutId);
+  }, [id]); // Only depend on conversation ID
   
   // Add stability and handle scroll initialization issues
   useEffect(() => {
@@ -642,7 +672,7 @@ export default function ConversationView() {
   }, [data.messages ? data.messages.length : 0]); // Only depend on length, not the entire messages array
   // This is now handled in fetchPage
 
-  // Filter out empty system messages after the first user message
+  // Filter out empty system messages and optionally tool messages
   let filteredMessages = [];
   if (Array.isArray(data.messages)) {
     let firstUserIdx = data.messages.findIndex(msg => 
@@ -650,16 +680,78 @@ export default function ConversationView() {
     );
     if (firstUserIdx !== -1) {
       filteredMessages = data.messages.slice(firstUserIdx);
+      
+      // Always filter out empty system messages
       filteredMessages = [filteredMessages[0]].concat(
-        filteredMessages.slice(1).filter(msg => 
-          !(msg.message && msg.message.author && msg.message.author.role === 'system' && 
-          (!msg.message.content || !msg.message.content.parts || msg.message.content.parts.length === 0))
-        )
+        filteredMessages.slice(1).filter(msg => {
+          // Skip empty system messages
+          if (msg.message?.author?.role === 'system' && 
+              (!msg.message.content || !msg.message.content.parts || msg.message.content.parts.length === 0)) {
+            return false;
+          }
+          
+          // Hide tool or system messages if enabled
+          if (hideToolMessages) {
+            if (msg.message?.author?.role === 'tool' || msg.message?.author?.role === 'system') {
+              return false;
+            }
+          }
+          
+          return true;
+        })
       );
     } else {
       // If no user message found, just use all messages
       filteredMessages = data.messages;
+      
+      // If hiding tool/system messages, filter those out
+      if (hideToolMessages) {
+        filteredMessages = filteredMessages.filter(msg => 
+          msg.message?.author?.role !== 'tool' && msg.message?.author?.role !== 'system'
+        );
+      }
     }
+  }
+  
+  // If hiding tool/system messages, we need to check for references in assistant messages
+  // and ensure their media gets displayed in the assistant message
+  if (hideToolMessages) {
+    // Create a map of media references from hidden messages
+    const mediaByAssistantMsg = {};
+    
+    // First pass: find all tool messages with media and map them to the preceding assistant message
+    let lastAssistantId = null;
+    data.messages?.forEach(msg => {
+      if (msg.message?.author?.role === 'assistant') {
+        lastAssistantId = msg.id;
+      } else if ((msg.message?.author?.role === 'tool' || msg.message?.author?.role === 'system') && lastAssistantId) {
+        // Extract any media from tool messages
+        const content = extractMessageContent(msg.message);
+        if (content.mediaRefs && content.mediaRefs.length > 0) {
+          if (!mediaByAssistantMsg[lastAssistantId]) {
+            mediaByAssistantMsg[lastAssistantId] = [];
+          }
+          mediaByAssistantMsg[lastAssistantId].push(...content.mediaRefs);
+        }
+      }
+    });
+    
+    // Second pass: add tool media to assistant messages
+    filteredMessages = filteredMessages.map(msg => {
+      if (msg.message?.author?.role === 'assistant' && mediaByAssistantMsg[msg.id]) {
+        // Clone the message to avoid mutating the original
+        const msgClone = {...msg};
+        
+        // Get the current content with media refs
+        const content = extractMessageContent(msgClone.message);
+        
+        // Add the media from hidden messages to the assistant message
+        msgClone.toolMedia = mediaByAssistantMsg[msg.id];
+        
+        return msgClone;
+      }
+      return msg;
+    });
   }
 
   // Display warnings about unknown message types (only in console)
@@ -786,7 +878,7 @@ export default function ConversationView() {
         gap: 1,
         mt: 0
       }}>
-        <Box>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
           {data.has_media && (
             <Button 
               variant="outlined" 
@@ -796,17 +888,49 @@ export default function ConversationView() {
               View Conversation Media
             </Button>
           )}
+          
+          {/* Tool and system message toggle */}
+          <Box sx={{ display: 'flex', alignItems: 'center' }} title="Hides technical tool output and system messages while preserving any media they contain">
+            <Typography variant="body2" sx={{ mr: 1 }}>Hide tool & system messages</Typography>
+            <label style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
+              <input 
+                type="checkbox" 
+                checked={hideToolMessages} 
+                onChange={() => setHideToolMessages(!hideToolMessages)}
+                style={{ 
+                  width: '36px', 
+                  height: '18px', 
+                  appearance: 'none',
+                  backgroundColor: hideToolMessages ? '#1976d2' : '#e0e0e0',
+                  borderRadius: '9px',
+                  transition: 'background-color 0.3s',
+                  position: 'relative',
+                  cursor: 'pointer'
+                }}
+              />
+              <span style={{
+                position: 'absolute',
+                left: hideToolMessages ? '22px' : '4px',
+                width: '14px',
+                height: '14px',
+                backgroundColor: 'white',
+                borderRadius: '50%',
+                transition: 'left 0.3s',
+                pointerEvents: 'none'
+              }} />
+            </label>
+          </Box>
         </Box>
         
         {/* Page size control */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, zIndex: 2 }}>
-          <FormControl size="small" sx={{ minWidth: 150 }}>
-            <InputLabel id="messages-per-page-label">Messages per page</InputLabel>
+        <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 2, zIndex: 2 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+            <Typography variant="body2" sx={{ mb: 0.5 }}>Messages per page</Typography>
             <Select
-              labelId="messages-per-page-label"
+              size="small" 
               value={userPerPage}
-              label="Messages per page"
               onChange={handlePerPageChange}
+              sx={{ minWidth: 100 }}
             >
               <MenuItem value={5}>5</MenuItem>
               <MenuItem value={10}>10</MenuItem>
@@ -814,7 +938,7 @@ export default function ConversationView() {
               <MenuItem value={50}>50</MenuItem>
               <MenuItem value={100}>100</MenuItem>
             </Select>
-          </FormControl>
+          </Box>
         </Box>
       </Box>
       
@@ -993,8 +1117,9 @@ export default function ConversationView() {
               )}
               
               {/* Render media attachments if any */}
-              {content.mediaRefs.length > 0 && (
+              {(content.mediaRefs.length > 0 || msg.toolMedia) && (
                 <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                  {/* Render regular media refs */}
                   {content.mediaRefs.map((media, index) => (
                     <Box 
                       key={index} 
@@ -1011,9 +1136,14 @@ export default function ConversationView() {
                     >
                       {media.type === 'image' ? (
                         <img 
-                          src={`/api/media/${data.folder}/${mediaFilenames[media.filename] || media.filename}`} 
+                          src={getMediaPath(media.filename)} 
                           alt="Attachment" 
                           style={{ maxWidth: '100%', maxHeight: '300px' }}
+                          onError={(e) => {
+                            console.log('Image error, trying direct path:', media.filename);
+                            // Try a fallback if the image fails to load
+                            e.target.src = `/api/media/${data.folder}/${media.filename}`;
+                          }}
                         />
                       ) : media.type === 'audio' ? (
                         <Box sx={{ p: 2, textAlign: 'center', bgcolor: '#f0f7ff', borderRadius: 1, minWidth: 250 }}>
@@ -1022,9 +1152,14 @@ export default function ConversationView() {
                           </Typography>
                           <audio 
                             controls 
-                            src={`/api/media/${data.folder}/${mediaFilenames[media.filename] || media.filename}`} 
+                            src={getMediaPath(media.filename)} 
                             style={{ width: '100%' }} 
                             onClick={(e) => e.stopPropagation()} // Prevent modal open when clicking the audio controls
+                            onError={(e) => {
+                              console.log('Audio error, trying direct path:', media.filename);
+                              // Try a fallback if the audio fails to load
+                              e.target.src = `/api/media/${data.folder}/${media.filename}`;
+                            }}
                           />
                           <Typography variant="caption" color="text.secondary">
                             {media.filename}
@@ -1037,14 +1172,105 @@ export default function ConversationView() {
                           </Typography>
                           <video 
                             controls 
-                            src={`/api/media/${data.folder}/${mediaFilenames[media.filename] || media.filename}`}
+                            src={getMediaPath(media.filename)}
                             style={{ maxWidth: '100%', maxHeight: '200px' }} 
                             onClick={(e) => e.stopPropagation()} // Prevent modal open when clicking the video controls
+                            onError={(e) => {
+                              console.log('Video error, trying direct path:', media.filename);
+                              // Try a fallback if the video fails to load
+                              e.target.src = `/api/media/${data.folder}/${media.filename}`;
+                            }}
                           />
                         </Box>
                       ) : (
                         <Box sx={{ p: 1, border: '1px solid #eee', borderRadius: 1 }}>
                           <Typography variant="caption">{media.filename}</Typography>
+                        </Box>
+                      )}
+                    </Box>
+                  ))}
+                  
+                  {/* Render tool media if we're hiding tool messages but displaying their media */}
+                  {msg.toolMedia && msg.toolMedia.map((media, index) => (
+                    <Box 
+                      key={`tool-media-${index}`} 
+                      sx={{ 
+                        maxWidth: '100%', 
+                        maxHeight: '300px',
+                        cursor: 'pointer',
+                        '&:hover': {
+                          opacity: 0.9,
+                          boxShadow: '0 0 5px rgba(0,0,0,0.2)'
+                        },
+                        position: 'relative'
+                      }}
+                      onClick={() => handleOpenMediaModal(media, msg.toolMedia)}
+                    >
+                      {/* Add a small indicator that this is from a tool */}
+                      <Box 
+                        sx={{
+                          position: 'absolute',
+                          top: 0,
+                          right: 0,
+                          bgcolor: 'rgba(76, 175, 80, 0.9)',
+                          color: 'white',
+                          fontSize: '10px',
+                          padding: '2px 4px',
+                          borderRadius: '0 0 0 4px',
+                          zIndex: 5
+                        }}
+                      >
+                        From Hidden Message
+                      </Box>
+                      
+                      {media.type === 'image' ? (
+                        <img 
+                          src={getMediaPath(media.filename)} 
+                          alt="Tool Attachment" 
+                          style={{ maxWidth: '100%', maxHeight: '300px' }}
+                          onError={(e) => {
+                            console.log('Tool image error, trying direct path:', media.filename);
+                            e.target.src = `/api/media/${data.folder}/${media.filename}`;
+                          }}
+                        />
+                      ) : media.type === 'audio' ? (
+                        <Box sx={{ p: 2, textAlign: 'center', bgcolor: '#f0f7ff', borderRadius: 1, minWidth: 250 }}>
+                          <Typography variant="subtitle2" color="primary" gutterBottom>
+                            Audio File (from Hidden Message)
+                          </Typography>
+                          <audio 
+                            controls 
+                            src={getMediaPath(media.filename)} 
+                            style={{ width: '100%' }} 
+                            onClick={(e) => e.stopPropagation()}
+                            onError={(e) => {
+                              console.log('Tool audio error, trying direct path:', media.filename);
+                              e.target.src = `/api/media/${data.folder}/${media.filename}`;
+                            }}
+                          />
+                          <Typography variant="caption" color="text.secondary">
+                            {media.filename}
+                          </Typography>
+                        </Box>
+                      ) : media.type === 'video' ? (
+                        <Box sx={{ p: 2, textAlign: 'center', bgcolor: '#fdf7ff', borderRadius: 1, minWidth: 250 }}>
+                          <Typography variant="subtitle2" color="primary" gutterBottom>
+                            Video File (from Hidden Message)
+                          </Typography>
+                          <video 
+                            controls 
+                            src={getMediaPath(media.filename)}
+                            style={{ maxWidth: '100%', maxHeight: '200px' }} 
+                            onClick={(e) => e.stopPropagation()}
+                            onError={(e) => {
+                              console.log('Tool video error, trying direct path:', media.filename);
+                              e.target.src = `/api/media/${data.folder}/${media.filename}`;
+                            }}
+                          />
+                        </Box>
+                      ) : (
+                        <Box sx={{ p: 1, border: '1px solid #eee', borderRadius: 1 }}>
+                          <Typography variant="caption">{media.filename} (from Hidden Message)</Typography>
                         </Box>
                       )}
                     </Box>
@@ -1124,20 +1350,39 @@ export default function ConversationView() {
                     maxHeight: '70vh',
                     objectFit: 'contain'
                   }}
+                  onError={(e) => {
+                    console.log('Modal image error, trying direct path:', selectedMedia.filename);
+                    // Try a fallback if the image fails to load
+                    e.target.src = `/api/media/${data.folder}/${selectedMedia.filename}`;
+                  }}
                 />
               ) : selectedMedia.type === 'audio' ? (
                 <Box sx={{ textAlign: 'center', p: 3, bgcolor: '#f0f7ff', borderRadius: 2, width: '100%' }}>
                   <Typography variant="h6" color="primary" gutterBottom>
                     Audio File
                   </Typography>
-                  <audio controls src={selectedMedia.path} style={{ width: '100%' }} />
+                  <audio 
+                    controls 
+                    src={selectedMedia.path} 
+                    style={{ width: '100%' }}
+                    onError={(e) => {
+                      console.log('Modal audio error, trying direct path:', selectedMedia.filename);
+                      // Try a fallback if the audio fails to load
+                      e.target.src = `/api/media/${data.folder}/${selectedMedia.filename}`;
+                    }}
+                  />
                 </Box>
               ) : selectedMedia.type === 'video' ? (
                 <Box sx={{ textAlign: 'center', p: 3, width: '100%' }}>
                   <video 
                     controls 
                     src={selectedMedia.path}
-                    style={{ maxWidth: '100%', maxHeight: '70vh' }} 
+                    style={{ maxWidth: '100%', maxHeight: '70vh' }}
+                    onError={(e) => {
+                      console.log('Modal video error, trying direct path:', selectedMedia.filename);
+                      // Try a fallback if the video fails to load
+                      e.target.src = `/api/media/${data.folder}/${selectedMedia.filename}`;
+                    }}
                   />
                 </Box>
               ) : (

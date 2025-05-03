@@ -1,7 +1,7 @@
 // Copied from original, adapt as needed for Vite/React
 import * as React from 'react';
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
-import { List, ListItem, ListItemText, CircularProgress, Box, TextField, MenuItem, Button, Paper, Pagination } from '@mui/material';
+import { List, ListItem, ListItemText, CircularProgress, Box, TextField, MenuItem, Button, Paper, Pagination, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
 // NOTE: For full-content search, this demo fetches all messages for each conversation on mount (can be slow for large archives)
@@ -151,36 +151,44 @@ export default function ConversationSearchTable({ search, perPage, setPerPage })
       {/* Filters and Controls */}
       <Paper sx={{ p: 2, mb: 2 }}>
         <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-          <TextField
-            label="Date From"
-            type="date"
-            size="small"
-            InputLabelProps={{ shrink: true }}
-            value={filters.dateFrom}
-            onChange={e => handleFilterChange('dateFrom', e.target.value)}
-          />
-          <TextField
-            label="Date To"
-            type="date"
-            size="small"
-            InputLabelProps={{ shrink: true }}
-            value={filters.dateTo}
-            onChange={e => handleFilterChange('dateTo', e.target.value)}
-          />
+          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+            <Typography variant="body2" sx={{ mb: 0.5 }}>Start Date</Typography>
+            <TextField
+              type="date"
+              size="small"
+              InputLabelProps={{ shrink: true }}
+              value={filters.dateFrom}
+              onChange={e => handleFilterChange('dateFrom', e.target.value)}
+              sx={{ minWidth: '160px' }}
+            />
+          </Box>
+          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+            <Typography variant="body2" sx={{ mb: 0.5 }}>End Date</Typography>
+            <TextField
+              type="date"
+              size="small"
+              InputLabelProps={{ shrink: true }}
+              value={filters.dateTo}
+              onChange={e => handleFilterChange('dateTo', e.target.value)}
+              sx={{ minWidth: '160px' }}
+            />
+          </Box>
           <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <input type="checkbox" checked={filters.mediaOnly} onChange={handleMediaFilter} style={{ marginRight: 4 }} />
             Media only
           </label>
           <Button size="small" onClick={() => setFilters({ dateFrom: '', dateTo: '', mediaOnly: false })}>Clear</Button>
-          <TextField
-            label="Per page"
-            type="number"
-            size="small"
-            value={perPage}
-            onChange={e => setPerPage(Math.max(1, parseInt(e.target.value) || 10))}
-            sx={{ width: 90 }}
-            inputProps={{ min: 1 }}
-          />
+          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+            <Typography variant="body2" sx={{ mb: 0.5 }}>Items per page</Typography>
+            <TextField
+              type="number"
+              size="small"
+              value={perPage}
+              onChange={e => setPerPage(Math.max(1, parseInt(e.target.value) || 10))}
+              sx={{ width: 90 }}
+              inputProps={{ min: 1 }}
+            />
+          </Box>
         </Box>
         
         {/* Top pagination controls */}
