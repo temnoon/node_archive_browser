@@ -7,6 +7,7 @@ import ConversationSearchTable from './ConversationSearchTable.jsx';
 import ArchiveImportWizard from './ArchiveImportWizard.jsx';
 import MediaGallery from './MediaGallery.jsx';
 import ParserInfoPage from './ParserInfoPage.jsx';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
 
 export default function App() {
   const [search, setSearch] = useState('');
@@ -314,7 +315,9 @@ export default function App() {
                         height: '100%',
                         overflow: 'hidden'
                       }}>
-                        <ConversationView />
+                        <ErrorBoundary>
+                          <ConversationView />
+                        </ErrorBoundary>
                       </Box>
                     </Box>
                 </>

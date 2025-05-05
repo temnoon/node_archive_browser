@@ -272,16 +272,34 @@ async function getConversationById(req, res) {
     const conv = archiveService.findConversationById(req.params.id);
     if (!conv) return res.status(404).json({ error: 'Conversation not found' });
     
-    const page = Math.max(1, parseInt(req.query.page) || 1);
-    const per_page = Math.max(1, parseInt(req.query.limit) || 20);
+    // Support both pagination styles: page-based and offset-based
+    let offset = 0;
+    let limit = 25; // Default batch size
+    
+    if (req.query.offset !== undefined) {
+      // Offset-based pagination (for infinite scroll)
+      offset = Math.max(0, parseInt(req.query.offset) || 0);
+      limit = Math.max(1, parseInt(req.query.limit) || 25);
+    } else {
+      // Legacy page-based pagination (for backward compatibility)
+      const page = Math.max(1, parseInt(req.query.page) || 1);
+      const per_page = Math.max(1, parseInt(req.query.limit) || 20);
+      offset = (page - 1) * per_page;
+      limit = per_page;
+    }
+    
+    // Build cache key based on pagination style
+    const cacheKey = req.query.offset !== undefined ? 
+      `${req.params.id}_offset_${offset}_${limit}` : 
+      `${req.params.id}_page_${req.query.page || 1}_${limit}`;
     
     // Check cache first
-    const cachedData = messageCache.get(req.params.id, page, per_page);
-    if (cachedData) {
+    const cachedData = messageCache.cache.get(cacheKey);
+    if (cachedData && Date.now() - cachedData.timestamp <= messageCache.maxAge) {
       // Add cache header for client-side caching
       res.set('Cache-Control', 'private, max-age=600'); // 10 minutes
       res.set('X-Cache', 'HIT');
-      return res.json(cachedData);
+      return res.json(cachedData.data);
     }
     
     // Load message details for this conversation
@@ -300,8 +318,7 @@ async function getConversationById(req, res) {
     const total_messages = messages.length;
     
     // Apply pagination
-    const start = (page - 1) * per_page;
-    const pageMessages = messages.slice(start, start + per_page);
+    const pageMessages = messages.slice(offset, offset + limit);
     
     // Extract gizmo IDs and resolve names
     if (conv.has_gizmo) {
@@ -363,14 +380,31 @@ async function getConversationById(req, res) {
       canvas_ids: result.canvas_ids || [],
       models: conv.models,
       total_messages,
-      page,
-      per_page,
       messages: pageMessages,
       unknown_types: Object.keys(unknownTypes).length > 0 ? unknownTypes : null
     };
     
-    // Store in cache for future requests
-    messageCache.set(req.params.id, page, per_page, responseData);
+    // Store in cache
+    if (messageCache.cache.size >= messageCache.maxSize) {
+      let oldestKey = null;
+      let oldestTime = Infinity;
+      
+      for (const [k, v] of messageCache.cache.entries()) {
+        if (v.timestamp < oldestTime) {
+          oldestTime = v.timestamp;
+          oldestKey = k;
+        }
+      }
+      
+      if (oldestKey) {
+        messageCache.cache.delete(oldestKey);
+      }
+    }
+    
+    messageCache.cache.set(cacheKey, {
+      data: responseData,
+      timestamp: Date.now()
+    });
     
     // Add cache header for client-side caching
     res.set('Cache-Control', 'private, max-age=600'); // 10 minutes
