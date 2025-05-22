@@ -54,6 +54,7 @@ const mediaController = require('./src/controllers/mediaController');
 const canvasController = require('./src/controllers/canvasController');
 const gizmoController = require('./src/controllers/gizmoController');
 const parserController = require('./src/controllers/parserController');
+const archiveController = require('./src/controllers/archiveController');
 
 // Import services
 const archiveService = require('./src/services/archiveService');
@@ -69,16 +70,34 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Get archive root from environment or use default
-const ARCHIVE_ROOT = process.env.ARCHIVE_ROOT 
-  ? path.resolve(__dirname, process.env.ARCHIVE_ROOT)
-  : path.resolve(__dirname, '../../exploded_archive_node');
+const getArchiveRoot = () => {
+  return process.env.ARCHIVE_ROOT 
+    ? path.resolve(__dirname, process.env.ARCHIVE_ROOT)
+    : path.resolve(__dirname, '../../exploded_archive_node');
+};
+
+// Function to update archive root for all controllers
+const updateArchiveRoot = (newRoot) => {
+  conversationController.setArchiveRoot(newRoot);
+  mediaController.setArchiveRoot(newRoot);
+  canvasController.setArchiveRoot(newRoot);
+  gizmoController.setArchiveRoot(newRoot);
+  parserController.setArchiveRoot(newRoot);
+  console.log(`Updated all controllers to use archive root: ${newRoot}`);
+};
+
+let ARCHIVE_ROOT = getArchiveRoot();
 
 // Set archive root for all controllers
-conversationController.setArchiveRoot(ARCHIVE_ROOT);
-mediaController.setArchiveRoot(ARCHIVE_ROOT);
-canvasController.setArchiveRoot(ARCHIVE_ROOT);
-gizmoController.setArchiveRoot(ARCHIVE_ROOT);
-parserController.setArchiveRoot(ARCHIVE_ROOT);
+updateArchiveRoot(ARCHIVE_ROOT);
+
+// Set up the callback for archive root changes
+archiveController.setArchiveRootChangeCallback((newRoot) => {
+  ARCHIVE_ROOT = newRoot;
+  updateArchiveRoot(newRoot);
+  // Refresh the archive index with the new location
+  archiveService.refreshIndex(newRoot);
+});
 
 app.use(cors());
 app.use(express.json());
@@ -122,6 +141,11 @@ app.post('/api/gizmos/:id/name', gizmoController.updateGizmoName);
 
 // Parser API routes
 app.get('/api/parser/stats', parserController.getParserStats);
+
+// Archive Management routes
+app.get('/api/archive-info', archiveController.getArchiveInfo);
+app.post('/api/set-archive-root', archiveController.setArchiveRoot);
+app.post('/api/open-folder-dialog', archiveController.openFolderDialog);
 
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, '../client/dist')));

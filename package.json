@@ -1,0 +1,41 @@
+{
+  "name": "node-archive-browser",
+  "version": "1.0.0",
+  "description": "A flexible browser for AI conversation archives with import/explode functionality",
+  "main": "server/index.js",
+  "scripts": {
+    "install-all": "npm install && cd server && npm install && cd ../client && npm install",
+    "start": "concurrently \"npm run start:server\" \"npm run start:client\"",
+    "start:server": "cd server && npm start",
+    "start:client": "cd client && npm run dev",
+    "dev": "npm run start",
+    "build": "cd client && npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "chatgpt",
+    "openai",
+    "conversation",
+    "archive",
+    "browser",
+    "import",
+    "node",
+    "react"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/node-archive-browser.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/node-archive-browser/issues"
+  },
+  "homepage": "https://github.com/yourusername/node-archive-browser#readme"
+}

@@ -61,6 +61,8 @@ const MIME_TYPES = {
 let dalleGenerationCache = null;
 let filesDirectoryCache = null;
 let allFilesCache = null;
+let audioFilesCache = null;
+let userGenerationsCache = null;
 
 // Extract file ID from an asset pointer string
 function extractFileId(assetPointer) {
@@ -178,19 +180,19 @@ function extractMediaReferences(obj) {
       
       // Check if this is an asset pointer
       if (obj.asset_pointer && typeof obj.asset_pointer === 'string') {
-      // First try the specialized file-service handler
-      const fileServiceId = handleFileServiceUrl(obj.asset_pointer);
-      if (fileServiceId) {
-        console.log(`File service URL detected and processed: ${fileServiceId}`);
+        // First try the specialized file-service handler
+        const fileServiceId = handleFileServiceUrl(obj.asset_pointer);
+        if (fileServiceId) {
+          console.log(`File service URL detected and processed: ${fileServiceId}`);
           references.add(fileServiceId);
-      } else {
-        // Fallback to regular extraction
-        const fileId = extractFileId(obj.asset_pointer);
-        if (fileId) {
-          references.add(fileId);
+        } else {
+          // Fallback to regular extraction
+          const fileId = extractFileId(obj.asset_pointer);
+          if (fileId) {
+            references.add(fileId);
+          }
         }
       }
-    }
       
       // Check attachments in metadata
       if (obj.metadata && obj.metadata.attachments && Array.isArray(obj.metadata.attachments)) {
@@ -380,6 +382,125 @@ async function detectFileType(filePath) {
   }
 }
 
+// Initialize audio files cache by scanning UUID folders for audio subdirectories
+async function initAudioFilesCache(sourceDir) {
+  if (audioFilesCache !== null) {
+    return audioFilesCache;
+  }
+  
+  const cache = new Map();
+  
+  try {
+    // Check if source directory exists
+    if (!await fs.pathExists(sourceDir)) {
+      console.log(`Source directory does not exist: ${sourceDir}`);
+      audioFilesCache = cache;
+      return cache;
+    }
+    
+    // Read all items in the source directory
+    const items = await fs.readdir(sourceDir);
+    
+    // Look for UUID-named folders
+    for (const item of items) {
+      const itemPath = path.join(sourceDir, item);
+      const stats = await fs.stat(itemPath);
+      
+      // Check if it's a directory and looks like a UUID
+      if (stats.isDirectory() && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item)) {
+        // Look for audio subdirectory
+        const audioDir = path.join(itemPath, 'audio');
+        if (await fs.pathExists(audioDir)) {
+          const audioFiles = await fs.readdir(audioDir);
+          console.log(`Found ${audioFiles.length} audio files in ${item}/audio/`);
+          
+          // Cache audio files
+          for (const file of audioFiles) {
+            if (file.startsWith('file_') && file.endsWith('.wav')) {
+              // Extract the file ID part (file_<hex>-<uuid>)
+              const match = file.match(/file_([\w\d]+)-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
+              if (match && match[1]) {
+                const fileId = `file_${match[1]}`;
+                cache.set(fileId, {
+                  filename: file,
+                  path: path.join(audioDir, file)
+                });
+                console.log(`Cached audio file: ${fileId} -> ${file}`);
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    console.log(`Cached ${cache.size} audio files`);
+    audioFilesCache = cache;
+    return cache;
+  } catch (err) {
+    console.error('Error initializing audio files cache:', err);
+    audioFilesCache = cache;
+    return cache;
+  }
+}
+
+// Initialize user generations cache by scanning user-* folders
+async function initUserGenerationsCache(sourceDir) {
+  if (userGenerationsCache !== null) {
+    return userGenerationsCache;
+  }
+  
+  const cache = new Map();
+  
+  try {
+    // Check if source directory exists
+    if (!await fs.pathExists(sourceDir)) {
+      console.log(`Source directory does not exist: ${sourceDir}`);
+      userGenerationsCache = cache;
+      return cache;
+    }
+    
+    // Read all items in the source directory
+    const items = await fs.readdir(sourceDir);
+    
+    // Look for user-* folders
+    for (const item of items) {
+      if (item.startsWith('user-')) {
+        const userDir = path.join(sourceDir, item);
+        const stats = await fs.stat(userDir);
+        
+        if (stats.isDirectory()) {
+          const files = await fs.readdir(userDir);
+          console.log(`Found ${files.length} files in ${item}/`);
+          
+          // Cache user generation files
+          for (const file of files) {
+            if (file.startsWith('file_') && file.endsWith('.png')) {
+              // Extract the file ID part (file_<hex>-<uuid>)
+              const match = file.match(/file_([\w\d]+)-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
+              if (match && match[1]) {
+                const fileId = `file_${match[1]}`;
+                cache.set(fileId, {
+                  filename: file,
+                  path: path.join(userDir, file)
+                });
+                console.log(`Cached user generation: ${fileId} -> ${file}`);
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    console.log(`Cached ${cache.size} user generations`);
+    userGenerationsCache = cache;
+    return cache;
+  } catch (err) {
+    console.error('Error initializing user generations cache:', err);
+    userGenerationsCache = cache;
+    return cache;
+  }
+}
+
 // Initialize DALL-E generation cache by scanning the dalle-generations folder once
 async function initDalleGenerationsCache(sourceDir) {
   if (dalleGenerationCache !== null) {
@@ -390,27 +511,29 @@ async function initDalleGenerationsCache(sourceDir) {
   const dalleDir = path.join(sourceDir, 'dalle-generations');
   
   try {
-    if (!await fs.pathExists(dalleDir)) {
-      console.log(`No dalle-generations folder found at: ${dalleDir}`);
-      dalleGenerationCache = cache;
-      return cache;
-    }
-    
-    // Read all files in the dalle-generations folder
-    const files = await fs.readdir(dalleDir);
-    console.log(`Found ${files.length} files in dalle-generations folder`);
-    
-    // Populate cache with file_id -> full_filename mapping
-    for (const file of files) {
-      if (file.startsWith('file-')) {
-        // Extract the file ID part (everything before the first dash after 'file-')
-        const match = file.match(/file-([\w\d]+)/);
-        if (match && match[1]) {
-          const fileId = `file-${match[1]}`;
-          cache.set(fileId, file);
-          console.log(`Cached DALL-E generation: ${fileId} -> ${file}`);
+    // Check traditional dalle-generations folder
+    if (await fs.pathExists(dalleDir)) {
+      // Read all files in the dalle-generations folder
+      const files = await fs.readdir(dalleDir);
+      console.log(`Found ${files.length} files in dalle-generations folder`);
+      
+      // Populate cache with file_id -> full_filename mapping
+      for (const file of files) {
+        if (file.startsWith('file-')) {
+          // Extract the file ID part (everything before the first dash after 'file-')
+          const match = file.match(/file-([\w\d]+)/);
+          if (match && match[1]) {
+            const fileId = `file-${match[1]}`;
+            cache.set(fileId, {
+              filename: file,
+              path: path.join(dalleDir, file)
+            });
+            console.log(`Cached DALL-E generation: ${fileId} -> ${file}`);
+          }
         }
       }
+    } else {
+      console.log(`No dalle-generations folder found at: ${dalleDir}`);
     }
     
     console.log(`Cached ${cache.size} DALL-E generations`);
@@ -494,6 +617,41 @@ async function initAllFilesCache(sourceDir) {
           path: itemPath,
           name: item
         });
+      } else if (stats.isDirectory()) {
+        // Check for UUID folders with audio subdirectories
+        if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item)) {
+          const audioDir = path.join(itemPath, 'audio');
+          if (await fs.pathExists(audioDir)) {
+            const audioFiles = await fs.readdir(audioDir);
+            for (const audioFile of audioFiles) {
+              const audioFilePath = path.join(audioDir, audioFile);
+              const audioStats = await fs.stat(audioFilePath);
+              
+              if (audioStats.isFile()) {
+                scannedFiles.add({
+                  path: audioFilePath,
+                  name: audioFile
+                });
+              }
+            }
+          }
+        }
+        
+        // Check for user-* folders
+        if (item.startsWith('user-')) {
+          const userFiles = await fs.readdir(itemPath);
+          for (const userFile of userFiles) {
+            const userFilePath = path.join(itemPath, userFile);
+            const userStats = await fs.stat(userFilePath);
+            
+            if (userStats.isFile()) {
+              scannedFiles.add({
+                path: userFilePath,
+                name: userFile
+              });
+            }
+          }
+        }
       }
     }
     
@@ -575,23 +733,48 @@ async function findFileByIdOrName(sourceDir, fileId) {
     await Promise.all([
       initDalleGenerationsCache(sourceDir),
       initFilesDirectoryCache(sourceDir),
-      initAllFilesCache(sourceDir)
+      initAllFilesCache(sourceDir),
+      initAudioFilesCache(sourceDir),
+      initUserGenerationsCache(sourceDir)
     ]);
     
-    // 1. First, check if it's a DALL-E generation
-    if (fileId.startsWith('file-') && dalleGenerationCache.has(fileId)) {
-      const filename = dalleGenerationCache.get(fileId);
-      const filePath = path.join(sourceDir, 'dalle-generations', filename);
-      if (await fs.pathExists(filePath)) {
-        console.log(`Found as DALL-E generation: ${filename}`);
+    // 1. Check audio files cache (new UUID folders)
+    if (fileId.startsWith('file_') && audioFilesCache.has(fileId)) {
+      const audioFile = audioFilesCache.get(fileId);
+      if (await fs.pathExists(audioFile.path)) {
+        console.log(`Found as audio file: ${audioFile.filename}`);
         return {
-          path: filePath,
-          originalFilename: filename
+          path: audioFile.path,
+          originalFilename: audioFile.filename
         };
       }
     }
     
-    // 2. Check the files directory cache
+    // 2. Check user generations cache (new user-* folders)
+    if (fileId.startsWith('file_') && userGenerationsCache.has(fileId)) {
+      const userGenFile = userGenerationsCache.get(fileId);
+      if (await fs.pathExists(userGenFile.path)) {
+        console.log(`Found as user generation: ${userGenFile.filename}`);
+        return {
+          path: userGenFile.path,
+          originalFilename: userGenFile.filename
+        };
+      }
+    }
+    
+    // 3. Check if it's a DALL-E generation (traditional)
+    if (fileId.startsWith('file-') && dalleGenerationCache.has(fileId)) {
+      const dalleFile = dalleGenerationCache.get(fileId);
+      if (await fs.pathExists(dalleFile.path)) {
+        console.log(`Found as DALL-E generation: ${dalleFile.filename}`);
+        return {
+          path: dalleFile.path,
+          originalFilename: dalleFile.filename
+        };
+      }
+    }
+    
+    // 4. Check the files directory cache
     if (filesDirectoryCache.has(fileId)) {
       const filename = filesDirectoryCache.get(fileId);
       const filePath = path.join(sourceDir, 'files', filename);
@@ -604,9 +787,9 @@ async function findFileByIdOrName(sourceDir, fileId) {
       }
     }
     
-    // 3. Try common extensions for files directory
+    // 5. Try common extensions for files directory
     if (fileId.startsWith('file-') || fileId.startsWith('file_')) {
-      for (const ext of ['dat', 'png', 'jpg', 'jpeg', 'webp', 'gif', 'mp3', 'mp4', 'pdf']) {
+      for (const ext of ['dat', 'png', 'jpg', 'jpeg', 'webp', 'gif', 'mp3', 'wav', 'mp4', 'pdf']) {
         const filename = `${fileId}.${ext}`;
         const filePath = path.join(sourceDir, 'files', filename);
         if (await fs.pathExists(filePath)) {
@@ -619,7 +802,7 @@ async function findFileByIdOrName(sourceDir, fileId) {
       }
     }
     
-    // 4. Check full file cache (all directories)
+    // 6. Check full file cache (all directories)
     if (allFilesCache.has(fileId)) {
       const filePath = allFilesCache.get(fileId);
       if (await fs.pathExists(filePath)) {
@@ -631,7 +814,7 @@ async function findFileByIdOrName(sourceDir, fileId) {
       }
     }
     
-    // 5. Special case for file-service: and sediment: URLs
+    // 7. Special case for file-service: and sediment: URLs
     if (fileId.includes('://')) {
       // Try to extract file ID from the URL
       let extractedId = null;
@@ -661,35 +844,12 @@ async function findFileByIdOrName(sourceDir, fileId) {
       if (extractedId) {
         console.log(`Extracted ID ${extractedId} from URL ${fileId}`);
         
-        // Try to find the file with the extracted ID
-        // Check all files cache
-        if (allFilesCache.has(extractedId)) {
-          const filePath = allFilesCache.get(extractedId);
-          if (await fs.pathExists(filePath)) {
-            console.log(`Found by extracted ID: ${path.basename(filePath)}`);
-            return {
-              path: filePath,
-              originalFilename: path.basename(filePath)
-            };
-          }
-        }
-        
-        // Try common extensions
-        for (const ext of ['dat', 'png', 'jpg', 'jpeg', 'webp', 'gif', 'mp3', 'mp4', 'pdf']) {
-          const filename = `${extractedId}.${ext}`;
-          const filePath = path.join(sourceDir, 'files', filename);
-          if (await fs.pathExists(filePath)) {
-            console.log(`Found with extension .${ext}: ${filename}`);
-            return {
-              path: filePath,
-              originalFilename: filename
-            };
-          }
-        }
+        // Try to find the file with the extracted ID by recursively calling this function
+        return await findFileByIdOrName(sourceDir, extractedId);
       }
     }
     
-    // 6. For file_XYZ pattern, check .dat file and metadata
+    // 8. For file_XYZ pattern, check .dat file and metadata
     if (fileId.startsWith('file_')) {
       const datPath = path.join(sourceDir, 'files', `${fileId}.dat`);
       if (await fs.pathExists(datPath)) {
@@ -727,7 +887,7 @@ async function findFileByIdOrName(sourceDir, fileId) {
       }
     }
     
-    // 7. Check the top level directory for files containing the file ID (for user uploaded files)
+    // 9. Check the top level directory for files containing the file ID (for user uploaded files)
     const topLevelFile = await findFileInTopLevelByPartialId(sourceDir, fileId);
     if (topLevelFile) {
       console.log(`Found in top level directory: ${topLevelFile.originalFilename}`);
@@ -801,7 +961,9 @@ async function processConversationMedia(sourceDir, mediaDir, conversation) {
     await Promise.all([
       initDalleGenerationsCache(sourceDir),
       initFilesDirectoryCache(sourceDir),
-      initAllFilesCache(sourceDir)
+      initAllFilesCache(sourceDir),
+      initAudioFilesCache(sourceDir),
+      initUserGenerationsCache(sourceDir)
     ]);
     
     // Extract all media references
@@ -945,6 +1107,8 @@ module.exports = {
   initDalleGenerationsCache,
   initFilesDirectoryCache,
   initAllFilesCache,
+  initAudioFilesCache,
+  initUserGenerationsCache,
   findFileInTopLevelByPartialId,
   extractMarkdown
 };

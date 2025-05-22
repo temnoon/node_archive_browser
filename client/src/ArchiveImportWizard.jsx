@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ArchiveLocationSelector from './components/ArchiveLocationSelector';
 import {
   Box,
   Typography,
@@ -326,6 +327,7 @@ export default function ArchiveImportWizard() {
 
   return (
     <Box sx={{ maxWidth: 800, mx: 'auto', my: 4 }}>
+      <ArchiveLocationSelector />
       <Paper sx={{ p: 3 }}>
         <Typography variant="h4" gutterBottom>
           Archive Import Wizard

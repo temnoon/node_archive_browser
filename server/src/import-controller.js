@@ -5,6 +5,8 @@ const os = require('os');
 const { Transform, pipeline } = require('stream');
 const JSONStream = require('JSONStream');
 const mediaProcessor = require('./media-processor');
+const archiveController = require('./controllers/archiveController');
+const archiveService = require('./services/archiveService');
 
 // Store current import status
 let importStatus = {
@@ -124,8 +126,10 @@ async function generatePreview(config) {
       throw new Error('conversations.json not found in source directory');
     }
     
-    // Pre-cache DALL-E generations for faster preview
+    // Pre-cache DALL-E generations and new format files for faster preview
     await mediaProcessor.initDalleGenerationsCache(sourceDir);
+    await mediaProcessor.initAudioFilesCache(sourceDir);
+    await mediaProcessor.initUserGenerationsCache(sourceDir);
     
     // Sample up to 5 conversations for a more realistic preview
     let sampleConvos;
@@ -442,6 +446,8 @@ async function importOpenAIArchive(config) {
     
     // Initialize DALL-E generation cache for better performance
     await mediaProcessor.initDalleGenerationsCache(sourceDir);
+    await mediaProcessor.initAudioFilesCache(sourceDir);
+    await mediaProcessor.initUserGenerationsCache(sourceDir);
     
     // Update status to in_progress
     importStatus = {
@@ -608,6 +614,47 @@ async function importOpenAIArchive(config) {
               );
               
               console.warn(`Import completed with ${failedConversations.length} failed conversations. See import_errors.json for details.`);
+            }
+            
+            // Automatically update the archive root to point to the newly imported archive
+            try {
+              console.log(`Updating archive root to: ${outputBasePath}`);
+              
+              // Update the environment variable and .env file
+              const dotenv = require('dotenv');
+              const envFilePath = path.resolve(__dirname, '../.env');
+              
+              // Read existing .env file if it exists
+              let envContent = '';
+              if (await fs.pathExists(envFilePath)) {
+                envContent = await fs.readFile(envFilePath, 'utf8');
+              }
+              
+              // Parse existing .env content
+              const envConfig = dotenv.parse(envContent);
+              
+              // Update ARCHIVE_ROOT
+              envConfig.ARCHIVE_ROOT = outputBasePath;
+              
+              // Convert back to .env format
+              const newEnvContent = Object.entries(envConfig)
+                .map(([key, value]) => `${key}=${value}`)
+                .join('\n');
+              
+              // Write back to .env file
+              await fs.writeFile(envFilePath, newEnvContent);
+              
+              // Update process.env
+              process.env.ARCHIVE_ROOT = outputBasePath;
+              
+              // Refresh the archive index with the new location
+              console.log('Refreshing archive index with new location...');
+              await archiveService.refreshIndex(outputBasePath);
+              
+              console.log('Successfully updated archive root and refreshed index');
+            } catch (archiveUpdateError) {
+              console.error('Failed to update archive root automatically:', archiveUpdateError);
+              // Don't fail the import because of this
             }
             
             resolve(outputBasePath);

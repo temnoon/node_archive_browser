@@ -1,28 +1,47 @@
 # Dependencies
 node_modules/
-npm-debug.log
-yarn-debug.log
-yarn-error.log
+*/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
 
-# Environment variables
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Environment variables and local config
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+server/.env
 
-# Build files
+# Build files and artifacts
 /build
 /dist
 /out
 /.next
+client/build/
+client/dist/
+server/build/
+server/dist/
 
 # IDE and editors
 .idea/
 .vscode/
 *.swp
 *.swo
-.DS_Store
 *.sublime-project
 *.sublime-workspace
 
@@ -35,5 +54,48 @@ yarn-error.log
 ehthumbs.db
 Thumbs.db
 
-# Archive data
+# Logs
+logs
+*.log
+
+# Archive data and user content
+exploded_archive_node/
 /server/Users/
+chat*.zip
+chat*/
+*.zip
+
+# Temporary files
+*.tmp
+*.temp
+
+# Cache directories
+.cache
+.parcel-cache
+
+# ESLint cache
+.eslintcache
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env.test
+
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
+
+# Electron build outputs
+release-builds/
+
+# Local configuration
+config/local.json
