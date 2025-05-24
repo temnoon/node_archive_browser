@@ -639,40 +639,29 @@ class EnhancedPdfController {
                 await this.pdfService.addElement(document.id, document.pages[0].id, {
                   type: 'text',
                   content: roleText,
-                  position: { x: margins.left, y: yPosition },
+                  bounds: { x: margins.left, y: yPosition, width: contentWidth, height: 20 },
                   style: {
                     fontFamily: 'Helvetica',
                     fontSize: 14,
                     fontWeight: 'bold',
                     color: message.author?.role === 'user' ? '#2E7D32' : '#1976D2'
-                  },
-                  bounds: {
-                    x: margins.left,
-                    y: yPosition,
-                    width: contentWidth,
-                    height: 20
                   }
                 });
                 yPosition += 25;
                 
                 // Add message content
+                const messageHeight = Math.max(50, part.length / 80 * 15);
                 await this.pdfService.addElement(document.id, document.pages[0].id, {
                   type: 'text',
                   content: part.trim(),
-                  position: { x: margins.left, y: yPosition },
+                  bounds: { x: margins.left, y: yPosition, width: contentWidth, height: messageHeight },
                   style: {
                     fontFamily: 'Helvetica',
                     fontSize: 11,
                     color: '#000000'
-                  },
-                  bounds: {
-                    x: margins.left,
-                    y: yPosition,
-                    width: contentWidth,
-                    height: Math.max(50, part.length / 80 * 15) // Estimate height based on content
                   }
                 });
-                yPosition += Math.max(60, part.length / 80 * 15 + 20);
+                yPosition += messageHeight + 20;
                 
                 // Add some spacing between messages
                 yPosition += 15;
@@ -688,8 +677,11 @@ class EnhancedPdfController {
         }
       }
       
+      // Save document after adding all elements
+      await this.pdfService.saveDocument(document);
+      
       // Get the updated document
-      const updatedDocument = await this.pdfService.getDocument(document.id);
+      const updatedDocument = await this.pdfService.loadDocument(document.id);
       
       res.status(201).json({
         success: true,

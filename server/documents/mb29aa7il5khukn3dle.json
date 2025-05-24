@@ -1,0 +1,71 @@
+{
+  "id": "mb29aa7il5khukn3dle",
+  "version": "1.0",
+  "created": "2025-05-24T13:19:04.494Z",
+  "modified": "2025-05-24T13:19:04.506Z",
+  "metadata": {
+    "title": "Collected Messages Document (1 conversations)",
+    "author": "Archive Browser",
+    "subject": "",
+    "keywords": []
+  },
+  "settings": {
+    "size": "A4",
+    "orientation": "portrait",
+    "margins": {
+      "top": 72,
+      "right": 72,
+      "bottom": 72,
+      "left": 72
+    },
+    "units": "points"
+  },
+  "pages": [
+    {
+      "id": "mb29aa7i18aswjy8lc5",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "top": 72,
+        "right": 72,
+        "bottom": 72,
+        "left": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb29aa7u19qll0n8otp",
+          "type": "text",
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 16,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Meta Philosophy Inquiry",
+          "created": "2025-05-24T13:19:04.506Z",
+          "modified": "2025-05-24T13:19:04.506Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    }
+  ],
+  "styles": {
+    "fonts": [],
+    "colors": [],
+    "gradients": [],
+    "themes": []
+  },
+  "collaborators": []
+}

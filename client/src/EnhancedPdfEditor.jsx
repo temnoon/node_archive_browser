@@ -236,7 +236,7 @@ const EnhancedPdfEditor = () => {
           body: JSON.stringify({
             type: 'text',
             content: convData.title,
-            position: { x: margins.left, y: yPosition },
+            bounds: { x: margins.left, y: yPosition, width: contentWidth, height: 25 },
             style: {
               fontFamily: 'Helvetica',
               fontSize: 16,
@@ -259,7 +259,7 @@ const EnhancedPdfEditor = () => {
                   body: JSON.stringify({
                     type: 'text',
                     content: roleText,
-                    position: { x: margins.left, y: yPosition },
+                    bounds: { x: margins.left, y: yPosition, width: contentWidth, height: 20 },
                     style: {
                       fontFamily: 'Helvetica',
                       fontSize: 12,
@@ -271,12 +271,13 @@ const EnhancedPdfEditor = () => {
                 yPosition += 20;
 
                 // Add message content
+                const messageHeight = Math.max(40, part.length / 100 * 12);
                 await apiCall(`/documents/${response.document.id}/pages/${response.document.pages[0].id}/elements`, {
                   method: 'POST',
                   body: JSON.stringify({
                     type: 'text',
                     content: part.trim(),
-                    position: { x: margins.left, y: yPosition },
+                    bounds: { x: margins.left, y: yPosition, width: contentWidth, height: messageHeight },
                     style: {
                       fontFamily: 'Helvetica',
                       fontSize: 10,
@@ -284,7 +285,7 @@ const EnhancedPdfEditor = () => {
                     }
                   })
                 });
-                yPosition += Math.max(40, part.length / 100 * 12) + 15;
+                yPosition += messageHeight + 15;
               }
             }
           }
