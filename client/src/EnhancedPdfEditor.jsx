@@ -235,8 +235,45 @@ const EnhancedPdfEditor = () => {
       // Process collected messages into document elements
       let yPosition = 100;
       const pageWidth = 595;
+      const pageHeight = 842; // A4 height in points
       const margins = { left: 72, right: 72, top: 72, bottom: 72 };
       const contentWidth = pageWidth - margins.left - margins.right;
+      const maxContentHeight = pageHeight - margins.top - margins.bottom;
+      let currentPageIndex = 0;
+      
+      // Helper function to create new page when content overflows
+      const createNewPageIfNeeded = async (requiredHeight = 50) => {
+        if (yPosition + requiredHeight > maxContentHeight) {
+          console.log('EnhancedPdfEditor: Creating new page due to content overflow', {
+            currentYPosition: yPosition,
+            requiredHeight,
+            maxContentHeight,
+            currentPageIndex
+          });
+          
+          // Add new page to document
+          const newPageResponse = await apiCall(`/documents/${response.document.id}/pages`, {
+            method: 'POST',
+            body: JSON.stringify({
+              size: 'A4',
+              orientation: 'portrait',
+              margins: margins,
+              background: { color: '#ffffff' }
+            })
+          });
+          
+          if (newPageResponse.success) {
+            response.document.pages.push(newPageResponse.page);
+            currentPageIndex = response.document.pages.length - 1;
+            yPosition = margins.top + 20; // Reset Y position for new page
+            console.log('EnhancedPdfEditor: New page created successfully', {
+              newPageId: newPageResponse.page.id,
+              currentPageIndex,
+              resetYPosition: yPosition
+            });
+          }
+        }
+      };
 
       // Group messages by conversation
       const messagesByConversation = collectedMessages.reduce((acc, message) => {
@@ -254,15 +291,18 @@ const EnhancedPdfEditor = () => {
       for (const [conversationId, convData] of Object.entries(messagesByConversation)) {
         // Add conversation title
         try {
+          await createNewPageIfNeeded(35); // Check if we need new page for title
+          
           console.log('EnhancedPdfEditor: Adding conversation title element', {
             conversationId,
             title: convData.title,
             yPosition,
             documentId: response.document.id,
-            pageId: response.document.pages[0].id
+            pageId: response.document.pages[currentPageIndex].id,
+            currentPageIndex
           });
           
-          const titleResponse = await apiCall(`/documents/${response.document.id}/pages/${response.document.pages[0].id}/elements`, {
+          const titleResponse = await apiCall(`/documents/${response.document.id}/pages/${response.document.pages[currentPageIndex].id}/elements`, {
             method: 'POST',
             body: JSON.stringify({
               type: 'text',
@@ -332,14 +372,17 @@ const EnhancedPdfEditor = () => {
                 // Add role header
                 const roleText = message.message?.author?.role === 'user' ? 'User:' : 'Assistant:';
                 try {
+                  await createNewPageIfNeeded(25); // Check if we need new page for role header
+                  
                   console.log('EnhancedPdfEditor: Adding role header element', {
                     roleText,
                     messageId: message.id,
-                    authorRole: message.author?.role,
-                    yPosition
+                    authorRole: message.message?.author?.role,
+                    yPosition,
+                    currentPageIndex
                   });
                   
-                  const roleResponse = await apiCall(`/documents/${response.document.id}/pages/${response.document.pages[0].id}/elements`, {
+                  const roleResponse = await apiCall(`/documents/${response.document.id}/pages/${response.document.pages[currentPageIndex].id}/elements`, {
                     method: 'POST',
                     body: JSON.stringify({
                       type: 'text',
@@ -367,44 +410,74 @@ const EnhancedPdfEditor = () => {
                 }
                 yPosition += 20;
 
-                // Add message content
-                const messageHeight = Math.max(40, part.length / 100 * 12);
-                try {
-                  console.log('EnhancedPdfEditor: Adding message content element', {
-                    messageId: message.id,
-                    contentLength: part.trim().length,
-                    messageHeight,
-                    yPosition,
-                    contentPreview: part.trim().substring(0, 100) + '...'
-                  });
+                // Add message content with paragraph processing
+                const paragraphs = part.trim().split(/\n\s*\n/).filter(p => p.trim().length > 0);
+                
+                console.log('EnhancedPdfEditor: Processing message content into paragraphs', {
+                  messageId: message.id,
+                  totalContentLength: part.trim().length,
+                  paragraphCount: paragraphs.length,
+                  paragraphs: paragraphs.map(p => p.substring(0, 50) + '...')
+                });
+
+                for (let paragraphIndex = 0; paragraphIndex < paragraphs.length; paragraphIndex++) {
+                  const paragraph = paragraphs[paragraphIndex].trim();
+                  if (!paragraph) continue;
+
+                  // Calculate height based on content length and estimated line wrapping
+                  const estimatedLines = Math.ceil(paragraph.length / 80); // ~80 chars per line
+                  const paragraphHeight = Math.max(25, estimatedLines * 12); // 12pt line height
                   
-                  const contentResponse = await apiCall(`/documents/${response.document.id}/pages/${response.document.pages[0].id}/elements`, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                      type: 'text',
-                      content: part.trim(),
-                      bounds: { x: margins.left, y: yPosition, width: contentWidth, height: messageHeight },
-                      style: {
-                        fontFamily: 'Helvetica',
-                        fontSize: 10,
-                        color: '#000000'
-                      }
-                    })
-                  });
-                  
-                  console.log('EnhancedPdfEditor: Message content element added successfully', {
-                    response: contentResponse,
-                    success: contentResponse.success,
-                    elementId: contentResponse.element?.id
-                  });
-                } catch (error) {
-                  console.error('EnhancedPdfEditor: Failed to add message content element', {
-                    error: error.message,
-                    messageId: message.id,
-                    contentLength: part.trim().length
-                  });
+                  try {
+                    await createNewPageIfNeeded(paragraphHeight + 15); // Check if we need new page for paragraph
+                    
+                    console.log('EnhancedPdfEditor: Adding paragraph element', {
+                      messageId: message.id,
+                      paragraphIndex,
+                      paragraphLength: paragraph.length,
+                      estimatedLines,
+                      paragraphHeight,
+                      yPosition,
+                      currentPageIndex,
+                      paragraphPreview: paragraph.substring(0, 100) + '...'
+                    });
+                    
+                    const contentResponse = await apiCall(`/documents/${response.document.id}/pages/${response.document.pages[currentPageIndex].id}/elements`, {
+                      method: 'POST',
+                      body: JSON.stringify({
+                        type: 'text',
+                        content: paragraph,
+                        bounds: { x: margins.left, y: yPosition, width: contentWidth, height: paragraphHeight },
+                        style: {
+                          fontFamily: 'Helvetica',
+                          fontSize: 11,
+                          color: '#000000',
+                          lineHeight: 1.4
+                        }
+                      })
+                    });
+                    
+                    console.log('EnhancedPdfEditor: Paragraph element added successfully', {
+                      response: contentResponse,
+                      success: contentResponse.success,
+                      elementId: contentResponse.element?.id,
+                      paragraphIndex
+                    });
+
+                    yPosition += paragraphHeight + 10; // Add spacing between paragraphs
+                    
+                  } catch (error) {
+                    console.error('EnhancedPdfEditor: Failed to add paragraph element', {
+                      error: error.message,
+                      messageId: message.id,
+                      paragraphIndex,
+                      paragraphLength: paragraph.length
+                    });
+                  }
                 }
-                yPosition += messageHeight + 15;
+                
+                // Add extra spacing after message content
+                yPosition += 10;
               }
             }
           }
