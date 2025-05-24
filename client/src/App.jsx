@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import { AppBar, Toolbar, Typography, Container, Box, TextField, GlobalStyles, Button, CssBaseline, useMediaQuery, IconButton, Drawer, List, ListItem, ListItemText, ListItemIcon, Divider } from '@mui/material';
-import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import ConversationView from './ConversationView.jsx';
 import ConversationSearchTable from './ConversationSearchTable.jsx';
 import ArchiveImportWizard from './ArchiveImportWizard.jsx';
@@ -10,13 +10,13 @@ import ParserInfoPage from './ParserInfoPage.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import EnhancedPdfEditor from './EnhancedPdfEditor.jsx';
 import { DocumentBuilderProvider } from './context/DocumentBuilderContext.jsx';
+import SmartPdfEditorLink from './components/SmartPdfEditorLink.jsx';
 
-export default function App() {
+function AppContent() {
   const [search, setSearch] = useState('');
   const [perPage, setPerPage] = useState(10);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMobile = useMediaQuery('(max-width:899px)');
-  const navigate = useNavigate();
   
   // Close mobile menu when route changes
   const handleNavigation = () => {
@@ -27,30 +27,6 @@ export default function App() {
 
   return (
     <>
-      <CssBaseline />
-      <GlobalStyles styles={{
-        'pre': { whiteSpace: 'pre-wrap', wordBreak: 'break-all', margin: '0 0 1em' },
-        'img': { maxWidth: '100%', maxHeight: '72vh', height: 'auto', display: 'block', margin: '0px auto' },
-        // Prevent body scroll, allow only container scrolling
-        'body': { 
-          overflow: 'hidden', 
-          height: '100vh',
-          margin: 0,
-          padding: 0,
-        },
-        'html': { overflow: 'hidden' },
-        // Better scrollbars
-        '::-webkit-scrollbar': { width: '8px', height: '8px' },
-        '::-webkit-scrollbar-thumb': { backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: '4px' },
-        '::-webkit-scrollbar-track': { backgroundColor: 'rgba(0,0,0,0.05)' },
-        // Make sure divs with overflow scroll have momentum scrolling on iOS
-        '.scroll-container': {
-          WebkitOverflowScrolling: 'touch',
-          scrollbarWidth: 'thin'
-        }
-      }} />
-      <Router>
-        <DocumentBuilderProvider>
         <AppBar position="sticky">
           <Toolbar>
             {isMobile && (
@@ -131,29 +107,21 @@ export default function App() {
                 >
                   Import Archive
                 </Button>
-                <Button 
-                  color="inherit" 
-                  sx={{ 
-                    ml: 2, 
-                    transition: 'color 0.4s ease',
-                    '&:hover': {
-                      color: 'rgba(255, 255, 240, 0.85)', // Soft off-white with slight yellow tint
-                      backgroundColor: 'transparent'
-                    }
-                  }}
-                  onClick={() => {
-                    // Check if there are collected messages
-                    const collectedMessages = sessionStorage.getItem('documentBuilder_messages');
-                    if (collectedMessages && JSON.parse(collectedMessages).length > 0) {
-                      navigate('/pdf-editor?source=collected');
-                    } else {
-                      navigate('/pdf-editor');
-                    }
-                    handleNavigation();
-                  }}
-                >
-                  PDF Editor
-                </Button>
+                <SmartPdfEditorLink onClick={handleNavigation}>
+                  <Button 
+                    color="inherit" 
+                    sx={{ 
+                      ml: 2, 
+                      transition: 'color 0.4s ease',
+                      '&:hover': {
+                        color: 'rgba(255, 255, 240, 0.85)', // Soft off-white with slight yellow tint
+                        backgroundColor: 'transparent'
+                      }
+                    }}
+                  >
+                    PDF Editor
+                  </Button>
+                </SmartPdfEditorLink>
               </>
             )}
           </Toolbar>
@@ -223,28 +191,19 @@ export default function App() {
               >
                 <ListItemText primary="Import Archive" />
               </ListItem>
-              <ListItem 
-                onClick={() => {
-                  // Check if there are collected messages
-                  const collectedMessages = sessionStorage.getItem('documentBuilder_messages');
-                  if (collectedMessages && JSON.parse(collectedMessages).length > 0) {
-                    navigate('/pdf-editor?source=collected');
-                  } else {
-                    navigate('/pdf-editor');
-                  }
-                  handleNavigation();
-                }}
-                button={false}
-                sx={{
-                  transition: 'background-color 0.4s ease',
-                  cursor: 'pointer',
-                  '&:hover': {
-                    backgroundColor: 'rgba(25, 118, 210, 0.12)',
-                  }
-                }}
-              >
-                <ListItemText primary="PDF Editor" />
-              </ListItem>
+              <SmartPdfEditorLink onClick={handleNavigation}>
+                <ListItem 
+                  button={false}
+                  sx={{
+                    transition: 'background-color 0.4s ease',
+                    '&:hover': {
+                      backgroundColor: 'rgba(25, 118, 210, 0.12)',
+                    }
+                  }}
+                >
+                  <ListItemText primary="PDF Editor" />
+                </ListItem>
+              </SmartPdfEditorLink>
             </List>
           </Box>
         </Drawer>
@@ -386,6 +345,38 @@ export default function App() {
             />
           </Routes>
         </Container>
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <>
+      <CssBaseline />
+      <GlobalStyles styles={{
+        'pre': { whiteSpace: 'pre-wrap', wordBreak: 'break-all', margin: '0 0 1em' },
+        'img': { maxWidth: '100%', maxHeight: '72vh', height: 'auto', display: 'block', margin: '0px auto' },
+        // Prevent body scroll, allow only container scrolling
+        'body': { 
+          overflow: 'hidden', 
+          height: '100vh',
+          margin: 0,
+          padding: 0,
+        },
+        'html': { overflow: 'hidden' },
+        // Better scrollbars
+        '::-webkit-scrollbar': { width: '8px', height: '8px' },
+        '::-webkit-scrollbar-thumb': { backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: '4px' },
+        '::-webkit-scrollbar-track': { backgroundColor: 'rgba(0,0,0,0.05)' },
+        // Make sure divs with overflow scroll have momentum scrolling on iOS
+        '.scroll-container': {
+          WebkitOverflowScrolling: 'touch',
+          scrollbarWidth: 'thin'
+        }
+      }} />
+      <Router>
+        <DocumentBuilderProvider>
+          <AppContent />
         </DocumentBuilderProvider>
       </Router>
     </>
