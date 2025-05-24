@@ -5,7 +5,54 @@
 // Note: This is a hand-rolled parser for demonstration, not a full CommonMark+GFM spec implementation.
 // For production, consider using a well-maintained library.
 
-export function parseMarkdownGFM(md) {
+function parseMarkdownGFM(md) {
+  // Step 1: Preserve LaTeX blocks before processing markdown
+  const latexBlocks = [];
+  let latexIndex = 0;
+  
+  // Preserve display math blocks \[...\]
+  md = md.replace(/\\\[[\s\S]*?\\\]/g, (match) => {
+    const placeholder = `@@LATEX_DISPLAY_${latexIndex}@@`;
+    latexBlocks[latexIndex] = match;
+    latexIndex++;
+    return placeholder;
+  });
+  
+  // Preserve inline math blocks \(...\)
+  md = md.replace(/\\\([\s\S]*?\\\)/g, (match) => {
+    const placeholder = `@@LATEX_INLINE_${latexIndex}@@`;
+    latexBlocks[latexIndex] = match;
+    latexIndex++;
+    return placeholder;
+  });
+  
+  // Preserve dollar math blocks $...$ and $...$
+  md = md.replace(/\$\$[\s\S]*?\$\$/g, (match) => {
+    const placeholder = `@@LATEX_DOLLAR_DISPLAY_${latexIndex}@@`;
+    latexBlocks[latexIndex] = match;
+    latexIndex++;
+    return placeholder;
+  });
+  
+  md = md.replace(/\$([^$\n]+)\$/g, (match) => {
+    const placeholder = `@@LATEX_DOLLAR_INLINE_${latexIndex}@@`;
+    latexBlocks[latexIndex] = match;
+    latexIndex++;
+    return placeholder;
+  });
+  
+  // Step 2: Protect LaTeX placeholders from markdown processing
+  const placeholderProtection = [];
+  let protectionIndex = 0;
+  
+  // Protect all LaTeX placeholders by temporarily replacing them with safe tokens
+  md = md.replace(/@@LATEX_[A-Z_]+_\d+@@/g, (match) => {
+    const safeToken = `XLATEXPROTX${protectionIndex}X`;
+    placeholderProtection[protectionIndex] = match;
+    protectionIndex++;
+    return safeToken;
+  });
+
   // Escape HTML special chars, except for placeholders and images/links
   md = md.replace(/&(?![a-zA-Z]+;|#\d+;)/g, '&amp;')
          .replace(/</g, '&lt;')
@@ -89,5 +136,20 @@ export function parseMarkdownGFM(md) {
   md = md.replace(/<ul>\s*<\/ul>/g, '');
   md = md.replace(/<ol>\s*<\/ol>/g, '');
 
+  // Step 3: Restore LaTeX placeholders after markdown processing (before LaTeX restoration)
+  for (let i = placeholderProtection.length - 1; i >= 0; i--) {
+    md = md.replace(`XLATEXPROTX${i}X`, placeholderProtection[i]);
+  }
+  
+  // Step 4: Restore LaTeX blocks after markdown processing
+  for (let i = latexBlocks.length - 1; i >= 0; i--) {
+    md = md.replace(`@@LATEX_DISPLAY_${i}@@`, latexBlocks[i]);
+    md = md.replace(`@@LATEX_INLINE_${i}@@`, latexBlocks[i]);
+    md = md.replace(`@@LATEX_DOLLAR_DISPLAY_${i}@@`, latexBlocks[i]);
+    md = md.replace(`@@LATEX_DOLLAR_INLINE_${i}@@`, latexBlocks[i]);
+  }
+
   return md;
 }
+
+module.exports = { parseMarkdownGFM };

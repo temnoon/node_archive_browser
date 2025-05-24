@@ -1,21 +1,58 @@
 import React from 'react';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, Typography, ButtonGroup, Chip } from '@mui/material';
+import { 
+  PictureAsPdf as PdfIcon, 
+  CheckBox as SelectIcon,
+  CheckBoxOutlineBlank as UnselectIcon,
+  Clear as ClearIcon
+} from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useMessageSelection } from '../context/MessageSelectionContext';
 
 /**
  * ConversationControls Component
- * Provides controls for the conversation view (media button, tool message toggle)
+ * Provides controls for the conversation view (media button, tool message toggle, PDF export)
  */
 export default function ConversationControls({ 
   conversationId, 
   hasMedia, 
   hideToolMessages, 
-  setHideToolMessages 
+  setHideToolMessages,
+  onPdfExport, // Function to handle PDF export
+  messages = [] // Messages array for selection functions
 }) {
   const navigate = useNavigate();
   
+  // Safely get selection context with fallbacks
+  let selection;
+  try {
+    selection = useMessageSelection();
+  } catch (error) {
+    // Fallback if context is not available
+    selection = {
+      selectionMode: false,
+      selectedCount: 0,
+      toggleSelectionMode: () => {},
+      clearSelection: () => {},
+      selectAll: () => {},
+      selectUserMessages: () => {},
+      selectAssistantMessages: () => {}
+    };
+  }
+  
+  const {
+    selectionMode = false,
+    selectedCount = 0,
+    toggleSelectionMode = () => {},
+    clearSelection = () => {},
+    selectAll = () => {},
+    selectUserMessages = () => {},
+    selectAssistantMessages = () => {}
+  } = selection || {};
+  
   return (
-    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+      {/* Media Gallery Button */}
       {hasMedia && (
         <Button 
           variant="outlined" 
@@ -24,6 +61,67 @@ export default function ConversationControls({
         >
           View Conversation Media
         </Button>
+      )}
+      
+      {/* PDF Export Controls */}
+      {!selectionMode ? (
+        <ButtonGroup size="small" variant="outlined">
+          <Button
+            startIcon={<PdfIcon />}
+            onClick={() => onPdfExport && onPdfExport('conversation')}
+          >
+            Export PDF
+          </Button>
+          <Button
+            startIcon={<SelectIcon />}
+            onClick={toggleSelectionMode}
+          >
+            Select Messages
+          </Button>
+        </ButtonGroup>
+      ) : (
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+          <Chip 
+            label={`${selectedCount} selected`}
+            color="primary"
+            size="small"
+          />
+          
+          <ButtonGroup size="small" variant="outlined">
+            <Button onClick={() => selectUserMessages && selectUserMessages(messages)}>
+              User
+            </Button>
+            <Button onClick={() => selectAssistantMessages && selectAssistantMessages(messages)}>
+              Assistant
+            </Button>
+            <Button onClick={() => selectAll && selectAll(messages)}>
+              All
+            </Button>
+          </ButtonGroup>
+          
+          <ButtonGroup size="small">
+            <Button
+              variant="contained"
+              startIcon={<PdfIcon />}
+              onClick={() => onPdfExport && onPdfExport('messages')}
+              disabled={selectedCount === 0}
+            >
+              Export Selected
+            </Button>
+            <Button
+              startIcon={<ClearIcon />}
+              onClick={clearSelection}
+            >
+              Clear
+            </Button>
+            <Button
+              startIcon={<UnselectIcon />}
+              onClick={toggleSelectionMode}
+            >
+              Exit
+            </Button>
+          </ButtonGroup>
+        </Box>
       )}
       
       {/* Tool and system message toggle */}

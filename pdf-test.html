@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PDF Export Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        button { padding: 10px 20px; margin: 10px; font-size: 16px; }
+        #result { margin-top: 20px; padding: 15px; border: 1px solid #ccc; background: #f5f5f5; }
+        .success { border-color: green; background: #e8f5e9; }
+        .error { border-color: red; background: #ffebee; }
+    </style>
+</head>
+<body>
+    <h1>PDF Export Test</h1>
+    <p>Testing the fixed PDF export functionality with MathJax timeout improvements.</p>
+    
+    <button onclick="testPDFExport()">Test PDF Export</button>
+    <button onclick="clearResult()">Clear Result</button>
+    
+    <div id="result" style="display: none;"></div>
+
+    <script>
+        async function testPDFExport() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = '';
+            resultDiv.innerHTML = '<p>🔄 Testing PDF export... Please wait...</p>';
+            
+            const conversationId = '682ca632-f780-8005-886b-c5113b714e4f';
+            const exportRequest = {
+                layout: {
+                    format: 'A4',
+                    margin: { top: '1in', right: '1in', bottom: '1in', left: '1in' }
+                },
+                style: {
+                    fontFamily: 'Times, serif',
+                    fontSize: '12pt',
+                    includeHeaders: true,
+                    includePageNumbers: true
+                },
+                filter: {
+                    includeToolMessages: false,
+                    includeSystemMessages: false,
+                    roles: ['user', 'assistant']
+                },
+                title: "Noether's Theorem Overview Test"
+            };
+
+            try {
+                const startTime = Date.now();
+                console.log('Starting PDF export test...');
+                
+                const response = await fetch(`http://localhost:3001/api/pdf/conversation/${conversationId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(exportRequest)
+                });
+
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+                
+                console.log('Response status:', response.status);
+                console.log('Duration:', duration + 'ms');
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    
+                    resultDiv.className = 'success';
+                    resultDiv.innerHTML = `
+                        <h3>✅ PDF Export Successful!</h3>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <p><strong>Duration:</strong> ${duration}ms</p>
+                        <p><strong>PDF Size:</strong> ${blob.size} bytes</p>
+                        <p><strong>Content Type:</strong> ${blob.type}</p>
+                        <button onclick="downloadPDF()" id="downloadBtn">Download Test PDF</button>
+                    `;
+                    
+                    // Store the blob for download
+                    window.testPDFBlob = blob;
+                    
+                    console.log('✅ PDF export successful!');
+                    console.log('PDF size:', blob.size, 'bytes');
+                    
+                } else {
+                    const errorText = await response.text();
+                    
+                    resultDiv.className = 'error';
+                    resultDiv.innerHTML = `
+                        <h3>❌ PDF Export Failed</h3>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <p><strong>Duration:</strong> ${duration}ms</p>
+                        <p><strong>Error:</strong></p>
+                        <pre>${errorText}</pre>
+                    `;
+                    
+                    console.log('❌ PDF export failed:', errorText);
+                }
+
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `
+                    <h3>❌ Request Failed</h3>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                `;
+                
+                console.error('Request failed:', error);
+            }
+        }
+
+        function downloadPDF() {
+            if (window.testPDFBlob) {
+                const url = URL.createObjectURL(window.testPDFBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `test-export-${Date.now()}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        function clearResult() {
+            document.getElementById('result').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

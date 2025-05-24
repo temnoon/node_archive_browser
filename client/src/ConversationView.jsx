@@ -14,9 +14,15 @@ import ConversationControls from './components/ConversationControls';
 import MessageItem from './components/MessageItem';
 import SimpleMediaModal from './components/SimpleMediaModal';
 import MessageNavigationBar from './components/MessageNavigationBar';
+import PDFExportDialog from './components/PDFExportDialog';
 
-export default function ConversationView() {
+// Import context
+import { MessageSelectionProvider, useMessageSelection } from './context/MessageSelectionContext';
+
+// Create a wrapper component that uses the selection context
+function ConversationViewContent() {
   const { id } = useParams();
+  const selection = useMessageSelection();
   
   // Conversation state
   const [data, setData] = useState({ 
@@ -55,6 +61,10 @@ export default function ConversationView() {
   // Media modal state
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [mediaModalOpen, setMediaModalOpen] = useState(false);
+  
+  // PDF export state
+  const [pdfExportDialogOpen, setPdfExportDialogOpen] = useState(false);
+  const [pdfExportType, setPdfExportType] = useState('conversation'); // 'conversation', 'messages'
   
   // Refs for scrolling and positioning
   const scrollRef = useRef();
@@ -124,6 +134,16 @@ export default function ConversationView() {
     setMediaModalOpen(false);
     setSelectedMedia(null);
   };
+  
+  // Handle PDF export dialog
+  const handleOpenPdfExport = useCallback((exportType = 'conversation') => {
+    setPdfExportType(exportType);
+    setPdfExportDialogOpen(true);
+  }, []);
+  
+  const handleClosePdfExport = useCallback(() => {
+    setPdfExportDialogOpen(false);
+  }, []);
   
   // Handle loading media filenames with optimized caching
   const handleLoadMediaFilenames = useCallback(async (folder) => {
@@ -537,6 +557,8 @@ export default function ConversationView() {
           hasMedia={data.has_media}
           hideToolMessages={hideToolMessages}
           setHideToolMessages={setHideToolMessages}
+          onPdfExport={handleOpenPdfExport}
+          messages={filteredMessages}
         />
         
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -620,6 +642,8 @@ export default function ConversationView() {
               conversationFolder={data.folder}
               onMediaClick={handleOpenMediaModal}
               isCurrent={index === currentMessageIndex}
+              messageIndex={index}
+              allMessages={filteredMessages}
             />
           </div>
         ))}
@@ -654,6 +678,24 @@ export default function ConversationView() {
         selectedMedia={selectedMedia}
         conversationFolder={data.folder}
       />
+      
+      {/* PDF Export Dialog */}
+      <PDFExportDialog
+        open={pdfExportDialogOpen}
+        onClose={handleClosePdfExport}
+        conversationData={{ ...data, id }}
+        selectedMessages={selection.selectedMessages}
+        exportType={pdfExportType}
+      />
     </Box>
+  );
+}
+
+// Main component wrapped with MessageSelectionProvider
+export default function ConversationView() {
+  return (
+    <MessageSelectionProvider>
+      <ConversationViewContent />
+    </MessageSelectionProvider>
   );
 }

@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{title}}</title>
+  
+  <!-- MathJax Configuration and Loading -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['\\(', '\\)'], ['$', '$']],
+        displayMath: [['\\[', '\\]'], ['$$', '$$']],
+        processEscapes: true,
+        processEnvironments: true
+      },
+      svg: {
+        fontCache: 'global'
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      },
+      startup: {
+        ready: () => {
+          console.log('MathJax is loaded, but not yet initialized');
+          try {
+            MathJax.startup.defaultReady();
+            console.log('MathJax is initialized, and the initial typeset is queued');
+          } catch (e) {
+            console.error('MathJax initialization error:', e);
+          }
+        },
+        pageReady: () => {
+          console.log('MathJax page ready');
+          return MathJax.startup.defaultPageReady();
+        }
+      }
+    };
+    
+    // Fallback timeout to mark MathJax as ready even if it fails to load
+    setTimeout(() => {
+      if (typeof window.MathJax === 'undefined') {
+        console.warn('MathJax failed to load, creating mock object');
+        window.MathJax = {
+          startup: {
+            document: {
+              state: () => 10 // Return READY state
+            }
+          },
+          typesetPromise: () => Promise.resolve()
+        };
+      }
+    }, 8000);
+  </script>
+  <script type="text/javascript" id="MathJax-script" async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"
+    onerror="console.error('Failed to load MathJax from CDN'); window.mathJaxLoadError = true;">
+  </script>
+  
+  <style>
+    /* Reset and base styles */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: {{style.fontFamily}};
+      font-size: {{style.fontSize}};
+      line-height: 1.6;
+      color: #333;
+      background: white;
+      padding: 0;
+      margin: 0;
+    }
+
+    /* Page layout */
+    .page {
+      width: 100%;
+      min-height: 100vh;
+      padding: 0;
+      margin: 0;
+    }
+
+    /* Title page */
+    .title-page {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      text-align: center;
+      page-break-after: always;
+      border-bottom: none;
+    }
+
+    .title-page h1 {
+      font-size: 2.5em;
+      margin-bottom: 1em;
+      color: #2c3e50;
+    }
+
+    .title-page .metadata {
+      font-size: 1.1em;
+      color: #666;
+      margin-bottom: 0.5em;
+    }
+
+    .title-page .generated {
+      font-size: 0.9em;
+      color: #888;
+      margin-top: 2em;
+    }
+
+    /* Message styles */
+    .message {
+      margin: 1.5em 0;
+      padding: 1em;
+      border-radius: 8px;
+      page-break-inside: avoid;
+      orphans: 2;
+      widows: 2;
+    }
+
+    .message.user {
+      background-color: #e3f2fd;
+      border-left: 4px solid #2196f3;
+    }
+
+    .message.assistant {
+      background-color: #f3e5f5;
+      border-left: 4px solid #9c27b0;
+    }
+
+    .message.tool {
+      background-color: #e8f5e9;
+      border-left: 4px solid #4caf50;
+    }
+
+    .message.system {
+      background-color: #fff3e0;
+      border-left: 4px solid #ff9800;
+    }
+
+    .message-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75em;
+      font-size: 0.9em;
+      color: #666;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 0.5em;
+    }
+
+    .message-role {
+      font-weight: bold;
+      text-transform: capitalize;
+    }
+
+    .message-timestamp {
+      font-size: 0.8em;
+    }
+
+    .message-model {
+      font-size: 0.8em;
+      font-style: italic;
+    }
+
+    .message-content {
+      line-height: 1.7;
+    }
+
+    /* Typography */
+    h1, h2, h3, h4, h5, h6 {
+      margin: 1em 0 0.5em 0;
+      color: #2c3e50;
+      page-break-after: avoid;
+    }
+
+    h1 { font-size: 1.8em; }
+    h2 { font-size: 1.5em; }
+    h3 { font-size: 1.3em; }
+    h4 { font-size: 1.1em; }
+
+    p {
+      margin: 0.75em 0;
+      text-align: justify;
+    }
+
+    /* Code blocks */
+    pre {
+      background-color: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 4px;
+      padding: 1em;
+      margin: 1em 0;
+      overflow-x: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+      page-break-inside: avoid;
+    }
+
+    code {
+      background-color: #f8f9fa;
+      padding: 0.2em 0.4em;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+    }
+
+    pre code {
+      background: none;
+      padding: 0;
+    }
+
+    /* Lists */
+    ul, ol {
+      margin: 0.75em 0;
+      padding-left: 2em;
+    }
+
+    li {
+      margin: 0.25em 0;
+    }
+
+    /* Tables */
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 1em 0;
+      page-break-inside: avoid;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 0.5em;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f2f2f2;
+      font-weight: bold;
+    }
+
+    /* Blockquotes */
+    blockquote {
+      border-left: 4px solid #ddd;
+      margin: 1em 0;
+      padding: 0.5em 1em;
+      background-color: #f9f9f9;
+      font-style: italic;
+    }
+
+    /* Media styles - Fixed aspect ratio preservation */
+    .media-container {
+      margin: 1em 0;
+      text-align: center;
+      page-break-inside: avoid;
+      width: 100%;
+    }
+
+    .media-item {
+      margin: 0.5em;
+      display: inline-block;
+      vertical-align: top;
+      max-width: 100%;
+    }
+
+    .media-item img {
+      /* Preserve aspect ratio regardless of container width */
+      max-width: 100%;
+      height: auto;
+      width: auto;
+      /* Set a reasonable max height to prevent oversized images */
+      max-height: 500px;
+      /* Ensure aspect ratio is preserved when both max-width and max-height apply */
+      object-fit: contain;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      /* Center the image within its container */
+      display: block;
+      margin: 0 auto;
+    }
+
+    .media-item video {
+      max-width: 100%;
+      height: auto;
+      width: auto;
+      max-height: 400px;
+      object-fit: contain;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .audio-placeholder {
+      background-color: #f0f0f0;
+      border: 2px dashed #ccc;
+      border-radius: 4px;
+      padding: 2em;
+      text-align: center;
+      color: #666;
+      font-style: italic;
+    }
+
+    /* LaTeX/Math styles */
+    .MathJax_Display {
+      margin: 1em 0;
+      page-break-inside: avoid;
+    }
+
+    .MathJax {
+      font-size: inherit !important;
+    }
+
+    /* Page breaks */
+    .page-break {
+      page-break-before: always;
+    }
+
+    .avoid-break {
+      page-break-inside: avoid;
+    }
+
+    /* Links */
+    a {
+      color: #2196f3;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    /* Print-specific styles */
+    @media print {
+      body {
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+      }
+      
+      .message {
+        break-inside: avoid;
+      }
+      
+      .media-container {
+        break-inside: avoid;
+      }
+      
+      .MathJax_Display {
+        break-inside: avoid;
+      }
+    }
+
+    /* Footer styles */
+    .conversation-footer {
+      margin-top: 3em;
+      padding-top: 1em;
+      border-top: 2px solid #ddd;
+      text-align: center;
+      color: #666;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <!-- Title Page -->
+  <div class="title-page">
+    <h1>{{title}}</h1>
+    <div class="metadata">{{totalMessages}} messages</div>
+    {{#if generated}}
+    <div class="generated">Generated on {{generated}}</div>
+    {{/if}}
+  </div>
+
+  <!-- Messages -->
+  <div class="page">
+    {{#each messages}}
+    <div class="message {{role}} avoid-break">
+      <div class="message-header">
+        <div>
+          <span class="message-role">{{role}}</span>
+          {{#if model}}
+          <span class="message-model">({{model}})</span>
+          {{/if}}
+        </div>
+        {{#if timestamp}}
+        <div class="message-timestamp">{{timestamp}}</div>
+        {{/if}}
+      </div>
+      
+      <div class="message-content">
+        {{#if content.text}}
+        <div class="text-content">
+          {{{content.text}}}
+        </div>
+        {{/if}}
+        
+        {{#if content.mediaRefs}}
+        {{#if content.mediaRefs.length}}
+        <div class="media-container">
+          {{#each content.mediaRefs}}
+          <div class="media-item">
+            {{#if (eq type 'image')}}
+            <img src="{{url}}" alt="{{filename}}">
+            {{else if (eq type 'video')}}
+            <video controls>
+              <source src="{{url}}" type="video/mp4">
+              Video: {{filename}}
+            </video>
+            {{else if (eq type 'audio')}}
+            <div class="audio-placeholder">
+              🎵 Audio: {{#if originalName}}{{originalName}}{{else}}{{filename}}{{/if}}
+              {{#if duration}}({{duration}}s){{/if}}
+            </div>
+            {{else}}
+            {{#if originalName}}
+            <div class="audio-placeholder">
+              📎 {{originalName}}
+            </div>
+            {{/if}}
+            {{/if}}
+          </div>
+          {{/each}}
+        </div>
+        {{/if}}
+        {{/if}}
+      </div>
+    </div>
+    {{/each}}
+  </div>
+
+  <!-- Footer -->
+  <div class="conversation-footer">
+    <div>End of conversation</div>
+    <div>Exported from Archive Browser</div>
+  </div>
+
+  <!-- Handlebars helpers -->
+  <script>
+    // Register Handlebars helpers for template logic
+    if (typeof Handlebars !== 'undefined') {
+      Handlebars.registerHelper('eq', function(a, b) {
+        return a === b;
+      });
+    }
+  </script>
+
+  <!-- Wait for MathJax to be ready -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOM Content Loaded, checking for MathJax...');
+      
+      // Function to mark page as ready
+      const markReady = () => {
+        window.mathjaxReady = true;
+        console.log('Page marked as ready for PDF generation');
+      };
+      
+      // Check if MathJax loaded successfully
+      if (window.mathJaxLoadError) {
+        console.warn('MathJax CDN load error detected, proceeding without LaTeX');
+        markReady();
+        return;
+      }
+      
+      // Process any LaTeX content that might be in the HTML
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        console.log('MathJax available, starting typesetting...');
+        MathJax.typesetPromise().then(() => {
+          console.log('MathJax typesetting complete');
+          markReady();
+        }).catch((err) => {
+          console.error('MathJax typesetting error:', err);
+          markReady(); // Continue even if MathJax fails
+        });
+      } else {
+        console.log('MathJax not available, proceeding without LaTeX');
+        markReady();
+      }
+      
+      // Fallback timeout to ensure we don't wait forever
+      setTimeout(() => {
+        if (!window.mathjaxReady) {
+          console.warn('MathJax timeout, forcing ready state');
+          markReady();
+        }
+      }, 5000);
+    });
+  </script>
+</body>
+</html>

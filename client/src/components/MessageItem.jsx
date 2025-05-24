@@ -1,11 +1,12 @@
 import React, { memo, useState } from 'react';
-import { Box, Paper, Typography, Chip, Button, IconButton, Tooltip } from '@mui/material';
+import { Box, Paper, Typography, Chip, Button, IconButton, Tooltip, Checkbox } from '@mui/material';
 import Markdown from '../Markdown.jsx';
 import ToolMessageRenderer from '../ToolMessageRenderer';
 import EnhancedToolMessageRenderer from '../EnhancedToolMessageRenderer';
 import CanvasRenderer from '../CanvasRenderer';
 import SimpleMediaRenderer from './SimpleMediaRenderer';
 import { extractMessageContent } from '../utils/messageUtils';
+import { useMessageSelection } from '../context/MessageSelectionContext';
 
 /**
  * MessageItem Component
@@ -17,11 +18,40 @@ function MessageItem({
   openGizmoEditor, 
   conversationFolder,
   onMediaClick,
-  isCurrent
+  isCurrent,
+  messageIndex = 0, // Add message index for selection
+  allMessages = [] // Add all messages for selection context
 }) {
+  // Safely get selection context with fallbacks
+  let selection;
+  try {
+    selection = useMessageSelection();
+  } catch (error) {
+    // Fallback if context is not available
+    selection = {
+      selectionMode: false,
+      isMessageSelected: () => false,
+      handleMessageClick: () => {}
+    };
+  }
+  
+  const { 
+    selectionMode = false, 
+    isMessageSelected = () => false, 
+    handleMessageClick = () => {} 
+  } = selection || {};
+  
   // Extract message info
   const role = msg.message?.author?.role || 'unknown';
   const createTime = msg.message?.create_time;
+  const isSelected = isMessageSelected(msg.id);
+  
+  // Handle message click for selection
+  const handleClick = (event) => {
+    if (selectionMode) {
+      handleMessageClick(msg.id, messageIndex, allMessages, event);
+    }
+  };
   
   // Determine background color based on role
   const bgColor = 
@@ -50,12 +80,23 @@ function MessageItem({
       position: 'relative', 
       textAlign: 'left',
       transition: 'box-shadow 0.2s ease-in-out',
+      cursor: selectionMode ? 'pointer' : 'default',
       // Add highlight border when this is the current message
       ...(isCurrent && {
         boxShadow: '0 0 0 2px #1976d2',
         scrollMarginTop: '80px', // Adjusted for header height
+      }),
+      // Add selection styling
+      ...(isSelected && {
+        boxShadow: '0 0 0 2px #4caf50',
+        backgroundColor: role === 'user' ? '#c8e6c9' : 
+                       role === 'assistant' ? '#e1bee7' :
+                       role === 'tool' ? '#c8e6c9' :
+                       '#fff3c4'
       })
-    }}>
+    }}
+    onClick={handleClick}
+    >
       {/* Add special indicator for parsed messages */}
       {msg.parsed && (
         <Box 
@@ -73,25 +114,40 @@ function MessageItem({
       )}
       
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-        <Typography variant="subtitle2" color="text.secondary">
-          {role} {createTime ? `– ${new Date(createTime * 1000).toISOString().replace('T', ' ').substring(0, 19)}` : ''}
-          {msg.message?.metadata?.model_slug ? ` (${msg.message.metadata.model_slug})` : ''}
-          {msg.message?.metadata?.gizmo_id && (
-          <Box component="span" sx={{ ml: 1 }}>
-            <Chip 
-              size="small" 
-              label={`Custom GPT: ${msg.gizmo_name || msg.message.metadata.gizmo_id}`}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {/* Selection checkbox */}
+          {selectionMode && (
+            <Checkbox
+              checked={isSelected}
+              onChange={(e) => {
+                e.stopPropagation();
+                handleClick(e);
+              }}
+              size="small"
               color="primary"
-              variant="outlined"
-              sx={{ maxWidth: '250px', textOverflow: 'ellipsis', overflow: 'hidden' }}
-              onClick={() => openGizmoEditor(
-                msg.message.metadata.gizmo_id,
-                msg.gizmo_name
-              )}
             />
-          </Box>
-        )}
-        </Typography>
+          )}
+          
+          <Typography variant="subtitle2" color="text.secondary">
+            {role} {createTime ? `– ${new Date(createTime * 1000).toISOString().replace('T', ' ').substring(0, 19)}` : ''}
+            {msg.message?.metadata?.model_slug ? ` (${msg.message.metadata.model_slug})` : ''}
+            {msg.message?.metadata?.gizmo_id && (
+            <Box component="span" sx={{ ml: 1 }}>
+              <Chip 
+                size="small" 
+                label={`Custom GPT: ${msg.gizmo_name || msg.message.metadata.gizmo_id}`}
+                color="primary"
+                variant="outlined"
+                sx={{ maxWidth: '250px', textOverflow: 'ellipsis', overflow: 'hidden' }}
+                onClick={() => openGizmoEditor(
+                  msg.message.metadata.gizmo_id,
+                  msg.gizmo_name
+                )}
+              />
+            </Box>
+          )}
+          </Typography>
+        </Box>
         
         <Tooltip title={showRawJson ? "Show rendered message" : "View raw JSON"}>
           <Button 

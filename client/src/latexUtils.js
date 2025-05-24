@@ -14,8 +14,16 @@ export function extractMathSegments(text) {
   const segments = [];
   let idx = 0;
   
+  // Process display LaTeX with double dollar signs: $$ ... $$ (should come first)
+  let processedText = text.replace(/\$\$([\s\S]*?)\$\$/g, (_, content) => {
+    const key = `@@MATH${idx}@@`;
+    segments.push({ key, math: content.trim(), type: 'block' });
+    idx++;
+    return key;
+  });
+  
   // Process block LaTeX: \[ ... \]
-  let processedText = text.replace(/\\\[((?:.|\n)+?)\\\]/g, (_, content) => {
+  processedText = processedText.replace(/\\\[((?:.|\n)+?)\\\]/g, (_, content) => {
     const key = `@@MATH${idx}@@`;
     segments.push({ key, math: content, type: 'block' });
     idx++;
@@ -28,6 +36,61 @@ export function extractMathSegments(text) {
     segments.push({ key, math: content, type: 'inline' });
     idx++;
     return key;
+  });
+  
+  // Process inline LaTeX with single dollar signs: $ ... $
+  processedText = processedText.replace(/\$([^$\n]+?)\$/g, (match, content) => {
+    // Validation: Check if content looks like mathematics
+    
+    // 1. Complex LaTeX expressions (keep existing validation)
+    if (content.includes('\\') || 
+        content.match(/\\[a-zA-Z]+/) || 
+        content.includes('{') || 
+        content.includes('^') || 
+        content.includes('_')) {
+      const key = `@@MATH${idx}@@`;
+      segments.push({ key, math: content, type: 'inline' });
+      idx++;
+      return key;
+    }
+    
+    // 2. Single letters (standard mathematical variables)
+    if (content.match(/^[a-zA-Z]$/)) {
+      const key = `@@MATH${idx}@@`;
+      segments.push({ key, math: content, type: 'inline' });
+      idx++;
+      return key;
+    }
+    
+    // 3. Short mathematical expressions (letter + number, simple combinations)
+    if (content.match(/^[a-zA-Z][0-9]*$/) || 
+        (content.match(/^[a-zA-Z]+$/) && content.length <= 3)) {
+      const key = `@@MATH${idx}@@`;
+      segments.push({ key, math: content, type: 'inline' });
+      idx++;
+      return key;
+    }
+    
+    // 4. Exclude obvious non-mathematical content
+    // Currency patterns: numbers with decimals, multiple digits, etc.
+    if (content.match(/^[0-9]+\.?[0-9]*$/) || 
+        content.match(/^[0-9]+$/) || 
+        (content.includes('.') && content.match(/[0-9]/))) {
+      return match; // Leave as is - likely currency
+    }
+    
+    // 5. Other mathematical patterns (operators, etc.)
+    if (content.includes('+') || content.includes('-') || content.includes('*') ||
+        content.includes('/') || content.includes('=') || content.includes('<') ||
+        content.includes('>')) {
+      const key = `@@MATH${idx}@@`;
+      segments.push({ key, math: content, type: 'inline' });
+      idx++;
+      return key;
+    }
+    
+    // If none of the above, leave as is
+    return match;
   });
   
   return { text: processedText, segments };

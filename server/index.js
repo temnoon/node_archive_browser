@@ -55,6 +55,7 @@ const canvasController = require('./src/controllers/canvasController');
 const gizmoController = require('./src/controllers/gizmoController');
 const parserController = require('./src/controllers/parserController');
 const archiveController = require('./src/controllers/archiveController');
+const pdfController = require('./src/controllers/pdfController');
 
 // Import services
 const archiveService = require('./src/services/archiveService');
@@ -83,6 +84,7 @@ const updateArchiveRoot = (newRoot) => {
   canvasController.setArchiveRoot(newRoot);
   gizmoController.setArchiveRoot(newRoot);
   parserController.setArchiveRoot(newRoot);
+  pdfController.setArchiveRoot(newRoot);
   console.log(`Updated all controllers to use archive root: ${newRoot}`);
 };
 
@@ -146,6 +148,18 @@ app.get('/api/parser/stats', parserController.getParserStats);
 app.get('/api/archive-info', archiveController.getArchiveInfo);
 app.post('/api/set-archive-root', archiveController.setArchiveRoot);
 app.post('/api/open-folder-dialog', archiveController.openFolderDialog);
+
+// PDF Export routes
+app.get('/api/pdf/options', pdfController.getExportOptions);
+app.post('/api/pdf/conversation/:id', pdfController.exportConversation);
+app.get('/api/conversations/:id/export/pdf', pdfController.exportConversation); // Add GET route for direct export
+app.post('/api/pdf/conversations', pdfController.exportMultipleConversations);
+app.post('/api/pdf/messages', pdfController.exportMessages);
+app.post('/api/pdf/preview/:id', pdfController.previewExport);
+app.post('/api/pdf/test/:id', pdfController.testSimpleExport);
+app.get('/api/pdf/test/:id', pdfController.testSimpleExport); // Add GET route for testing
+app.post('/api/pdf/debug/:id', pdfController.testDebugExport);
+app.get('/api/pdf/debug/:id', pdfController.testDebugExport); // Add GET route for debugging
 
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, '../client/dist')));
