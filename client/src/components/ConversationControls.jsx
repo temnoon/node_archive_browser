@@ -5,10 +5,12 @@ import {
   CheckBox as SelectIcon,
   CheckBoxOutlineBlank as UnselectIcon,
   Clear as ClearIcon,
-  Edit as EditIcon
+  Edit as EditIcon,
+  Add as AddIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useMessageSelection } from '../context/MessageSelectionContext';
+import { useDocumentBuilder } from '../context/DocumentBuilderContext';
 
 /**
  * ConversationControls Component
@@ -20,7 +22,8 @@ export default function ConversationControls({
   hideToolMessages, 
   setHideToolMessages,
   onPdfExport, // Function to handle PDF export
-  messages = [] // Messages array for selection functions
+  messages = [], // Messages array for selection functions
+  conversationData = {} // Full conversation data including title
 }) {
   const navigate = useNavigate();
   
@@ -33,6 +36,7 @@ export default function ConversationControls({
     selection = {
       selectionMode: false,
       selectedCount: 0,
+      selectedMessages: [],
       toggleSelectionMode: () => {},
       clearSelection: () => {},
       selectAll: () => {},
@@ -40,10 +44,14 @@ export default function ConversationControls({
       selectAssistantMessages: () => {}
     };
   }
+
+  // Document builder context
+  const documentBuilder = useDocumentBuilder();
   
   const {
     selectionMode = false,
     selectedCount = 0,
+    selectedMessages = [],
     toggleSelectionMode = () => {},
     clearSelection = () => {},
     selectAll = () => {},
@@ -53,7 +61,30 @@ export default function ConversationControls({
 
   // Enhanced PDF Editor navigation
   const handleEnhancedPdfEditor = () => {
-    navigate(`/pdf-editor/${conversationId}`);
+    if (selectionMode && selectedMessages.length > 0) {
+      // Add selected messages to document builder and navigate
+      documentBuilder.addSelectedMessages(
+        conversationId, 
+        conversationData.title || `Conversation ${conversationId}`, 
+        selectedMessages
+      );
+      documentBuilder.createDocument();
+    } else {
+      // Navigate to single conversation import
+      navigate(`/pdf-editor/${conversationId}`);
+    }
+  };
+
+  // Add selected messages to collection without navigating
+  const handleAddToCollection = () => {
+    if (selectionMode && selectedMessages.length > 0) {
+      documentBuilder.addSelectedMessages(
+        conversationId, 
+        conversationData.title || `Conversation ${conversationId}`, 
+        selectedMessages
+      );
+      clearSelection();
+    }
   };
   
   return (
@@ -121,6 +152,23 @@ export default function ConversationControls({
               disabled={selectedCount === 0}
             >
               Export Selected
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleAddToCollection}
+              disabled={selectedCount === 0}
+            >
+              Add to Document
+            </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<EditIcon />}
+              onClick={handleEnhancedPdfEditor}
+              disabled={selectedCount === 0}
+            >
+              Enhanced PDF Editor
             </Button>
             <Button
               startIcon={<ClearIcon />}

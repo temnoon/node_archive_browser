@@ -1,0 +1,54 @@
+{
+  "id": "mb294bg3cemitm3bljo",
+  "version": "1.0",
+  "created": "2025-05-24T13:14:26.163Z",
+  "modified": "2025-05-24T13:14:26.163Z",
+  "metadata": {
+    "title": "Conversation 682d04c3-f424-8005-bf17-29e6f7b53dbb",
+    "author": "Archive Browser",
+    "subject": "",
+    "keywords": []
+  },
+  "settings": {
+    "size": "A4",
+    "orientation": "portrait",
+    "margins": {
+      "top": 72,
+      "right": 72,
+      "bottom": 72,
+      "left": 72
+    },
+    "units": "points"
+  },
+  "pages": [
+    {
+      "id": "mb294bg3krmijqnfjh",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "top": 72,
+        "right": 72,
+        "bottom": 72,
+        "left": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    }
+  ],
+  "styles": {
+    "fonts": [],
+    "colors": [],
+    "gradients": [],
+    "themes": []
+  },
+  "collaborators": []
+}

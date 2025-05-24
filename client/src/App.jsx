@@ -9,6 +9,7 @@ import MediaGallery from './MediaGallery.jsx';
 import ParserInfoPage from './ParserInfoPage.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import EnhancedPdfEditor from './EnhancedPdfEditor.jsx';
+import { DocumentBuilderProvider } from './context/DocumentBuilderContext.jsx';
 
 export default function App() {
   const [search, setSearch] = useState('');
@@ -48,6 +49,7 @@ export default function App() {
         }
       }} />
       <Router>
+        <DocumentBuilderProvider>
         <AppBar position="sticky">
           <Toolbar>
             {isMobile && (
@@ -363,6 +365,7 @@ export default function App() {
             />
           </Routes>
         </Container>
+        </DocumentBuilderProvider>
       </Router>
     </>
   );

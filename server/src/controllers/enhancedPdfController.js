@@ -603,21 +603,101 @@ class EnhancedPdfController {
   createFromConversation = async (req, res) => {
     try {
       const { conversationId } = req.params;
-      const { template = 'default', options = {} } = req.body;
+      const { template = 'conversation', options = {} } = req.body;
       
-      // This would integrate with existing conversation loading logic
-      // For now, return a placeholder response
+      // Get conversation data via HTTP call
+      const fetch = require('node-fetch');
+      const conversationResponse = await fetch(`http://localhost:3001/api/conversations/${conversationId}`);
+      
+      if (!conversationResponse.ok) {
+        throw new Error(`Failed to load conversation: ${conversationResponse.statusText}`);
+      }
+      
+      const conversationData = await conversationResponse.json();
+      
+      // Create document with conversation title
       const document = await this.pdfService.createDocument({
-        title: `Conversation ${conversationId}`,
+        title: conversationData.title || `Conversation ${conversationId}`,
+        template: 'conversation',
+        pageFormat: 'A4',
         ...options
       });
       
+      // Process messages and add as text elements
+      if (conversationData.messages && conversationData.messages.length > 0) {
+        let yPosition = 100; // Start position
+        const pageWidth = 595; // A4 width in points
+        const margins = { left: 72, right: 72, top: 72, bottom: 72 };
+        const contentWidth = pageWidth - margins.left - margins.right;
+        
+        for (const message of conversationData.messages) {
+          if (message.content && message.content.parts) {
+            for (const part of message.content.parts) {
+              if (typeof part === 'string' && part.trim()) {
+                // Add role header (User/Assistant)
+                const roleText = message.author?.role === 'user' ? 'User:' : 'Assistant:';
+                await this.pdfService.addElement(document.id, document.pages[0].id, {
+                  type: 'text',
+                  content: roleText,
+                  position: { x: margins.left, y: yPosition },
+                  style: {
+                    fontFamily: 'Helvetica',
+                    fontSize: 14,
+                    fontWeight: 'bold',
+                    color: message.author?.role === 'user' ? '#2E7D32' : '#1976D2'
+                  },
+                  bounds: {
+                    x: margins.left,
+                    y: yPosition,
+                    width: contentWidth,
+                    height: 20
+                  }
+                });
+                yPosition += 25;
+                
+                // Add message content
+                await this.pdfService.addElement(document.id, document.pages[0].id, {
+                  type: 'text',
+                  content: part.trim(),
+                  position: { x: margins.left, y: yPosition },
+                  style: {
+                    fontFamily: 'Helvetica',
+                    fontSize: 11,
+                    color: '#000000'
+                  },
+                  bounds: {
+                    x: margins.left,
+                    y: yPosition,
+                    width: contentWidth,
+                    height: Math.max(50, part.length / 80 * 15) // Estimate height based on content
+                  }
+                });
+                yPosition += Math.max(60, part.length / 80 * 15 + 20);
+                
+                // Add some spacing between messages
+                yPosition += 15;
+                
+                // Check if we need a new page
+                if (yPosition > 750) { // Near bottom of page
+                  // Add new page logic would go here
+                  yPosition = 100; // Reset for new page
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      // Get the updated document
+      const updatedDocument = await this.pdfService.getDocument(document.id);
+      
       res.status(201).json({
         success: true,
-        document,
-        message: 'Document created from conversation'
+        document: updatedDocument,
+        message: 'Document created from conversation with content'
       });
     } catch (error) {
+      console.error('Error creating document from conversation:', error);
       res.status(400).json({
         success: false,
         error: error.message

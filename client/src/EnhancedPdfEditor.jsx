@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -78,6 +78,7 @@ import {
 
 const EnhancedPdfEditor = () => {
   const { conversationId } = useParams();
+  const [searchParams] = useSearchParams();
   // Core state
   const [document, setDocument] = useState(null);
   const [currentPage, setCurrentPage] = useState(0);
@@ -115,13 +116,16 @@ const EnhancedPdfEditor = () => {
 
   // Initialize editor
   useEffect(() => {
-    if (conversationId) {
+    const source = searchParams.get('source');
+    if (source === 'collected') {
+      createFromCollectedMessages();
+    } else if (conversationId) {
       createFromConversation();
     } else {
       createNewDocument();
     }
     loadFonts();
-  }, [conversationId]);
+  }, [conversationId, searchParams]);
 
   // API calls
   const apiCall = useCallback(async (endpoint, options = {}) => {
@@ -180,6 +184,125 @@ const EnhancedPdfEditor = () => {
       setSuccess('Document created from conversation');
     } catch (error) {
       setError('Failed to create document from conversation');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createFromCollectedMessages = async () => {
+    setLoading(true);
+    try {
+      // Get collected messages from sessionStorage
+      const collectedMessages = JSON.parse(sessionStorage.getItem('documentBuilder_messages') || '[]');
+      const collectedConversations = JSON.parse(sessionStorage.getItem('documentBuilder_conversations') || '[]');
+      
+      if (collectedMessages.length === 0) {
+        throw new Error('No collected messages found');
+      }
+
+      // Create a new document
+      const response = await apiCall('/documents', {
+        method: 'POST',
+        body: JSON.stringify({
+          title: `Collected Messages Document (${collectedConversations.length} conversations)`,
+          template: 'multi-conversation',
+          pageFormat: 'A4'
+        })
+      });
+
+      // Process collected messages into document elements
+      let yPosition = 100;
+      const pageWidth = 595;
+      const margins = { left: 72, right: 72, top: 72, bottom: 72 };
+      const contentWidth = pageWidth - margins.left - margins.right;
+
+      // Group messages by conversation
+      const messagesByConversation = collectedMessages.reduce((acc, message) => {
+        if (!acc[message.conversationId]) {
+          acc[message.conversationId] = {
+            title: message.conversationTitle,
+            messages: []
+          };
+        }
+        acc[message.conversationId].messages.push(message);
+        return acc;
+      }, {});
+
+      // Add content for each conversation
+      for (const [conversationId, convData] of Object.entries(messagesByConversation)) {
+        // Add conversation title
+        await apiCall(`/documents/${response.document.id}/pages/${response.document.pages[0].id}/elements`, {
+          method: 'POST',
+          body: JSON.stringify({
+            type: 'text',
+            content: convData.title,
+            position: { x: margins.left, y: yPosition },
+            style: {
+              fontFamily: 'Helvetica',
+              fontSize: 16,
+              fontWeight: 'bold',
+              color: '#1976D2'
+            }
+          })
+        });
+        yPosition += 35;
+
+        // Add messages
+        for (const message of convData.messages) {
+          if (message.content && message.content.parts) {
+            for (const part of message.content.parts) {
+              if (typeof part === 'string' && part.trim()) {
+                // Add role header
+                const roleText = message.author?.role === 'user' ? 'User:' : 'Assistant:';
+                await apiCall(`/documents/${response.document.id}/pages/${response.document.pages[0].id}/elements`, {
+                  method: 'POST',
+                  body: JSON.stringify({
+                    type: 'text',
+                    content: roleText,
+                    position: { x: margins.left, y: yPosition },
+                    style: {
+                      fontFamily: 'Helvetica',
+                      fontSize: 12,
+                      fontWeight: 'bold',
+                      color: message.author?.role === 'user' ? '#2E7D32' : '#1976D2'
+                    }
+                  })
+                });
+                yPosition += 20;
+
+                // Add message content
+                await apiCall(`/documents/${response.document.id}/pages/${response.document.pages[0].id}/elements`, {
+                  method: 'POST',
+                  body: JSON.stringify({
+                    type: 'text',
+                    content: part.trim(),
+                    position: { x: margins.left, y: yPosition },
+                    style: {
+                      fontFamily: 'Helvetica',
+                      fontSize: 10,
+                      color: '#000000'
+                    }
+                  })
+                });
+                yPosition += Math.max(40, part.length / 100 * 12) + 15;
+              }
+            }
+          }
+        }
+        yPosition += 30; // Space between conversations
+      }
+
+      // Get updated document
+      const updatedDoc = await apiCall(`/documents/${response.document.id}`);
+      setDocument(updatedDoc.document);
+      setSuccess(`Document created with ${collectedMessages.length} messages from ${collectedConversations.length} conversations`);
+      
+      // Clear collected messages
+      sessionStorage.removeItem('documentBuilder_messages');
+      sessionStorage.removeItem('documentBuilder_conversations');
+      
+    } catch (error) {
+      setError('Failed to create document from collected messages: ' + error.message);
     } finally {
       setLoading(false);
     }

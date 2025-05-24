@@ -559,6 +559,7 @@ function ConversationViewContent() {
           setHideToolMessages={setHideToolMessages}
           onPdfExport={handleOpenPdfExport}
           messages={filteredMessages}
+          conversationData={data}
         />
         
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
