@@ -1,0 +1,747 @@
+const EnhancedPdfService = require('../services/enhancedPdfService');
+const FontManager = require('../services/fontManager');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs-extra');
+
+/**
+ * Enhanced PDF Editor API Controller
+ * Provides REST endpoints for Adobe Acrobat-level PDF editing capabilities
+ */
+class EnhancedPdfController {
+  constructor() {
+    this.pdfService = new EnhancedPdfService();
+    this.fontManager = new FontManager();
+    this.setupMulter();
+    this.setupEventHandlers();
+  }
+
+  setupMulter() {
+    this.upload = multer({
+      storage: multer.memoryStorage(),
+      limits: {
+        fileSize: 10 * 1024 * 1024, // 10MB limit
+        files: 1
+      },
+      fileFilter: (req, file, cb) => {
+        const allowedTypes = ['font/ttf', 'font/otf', 'application/font-woff', 'application/font-woff2'];
+        const allowedExtensions = ['.ttf', '.otf', '.woff', '.woff2'];
+        const ext = path.extname(file.originalname).toLowerCase();
+        
+        if (allowedTypes.includes(file.mimetype) || allowedExtensions.includes(ext)) {
+          cb(null, true);
+        } else {
+          cb(new Error('Invalid font file type. Only TTF, OTF, WOFF, and WOFF2 files are allowed.'));
+        }
+      }
+    });
+  }
+
+  setupEventHandlers() {
+    // Listen for real-time events from PDF service
+    this.pdfService.on('document-created', (data) => {
+      this.broadcastUpdate('document-created', data);
+    });
+
+    this.pdfService.on('element-updated', (data) => {
+      this.broadcastUpdate('element-updated', data);
+    });
+
+    this.fontManager.on('custom-font-embedded', (data) => {
+      this.broadcastUpdate('font-embedded', data);
+    });
+  }
+
+  broadcastUpdate(event, data) {
+    // WebSocket broadcasting would be implemented here
+    // For now, we'll just log the events
+    console.log(`Broadcasting ${event}:`, data);
+  }
+
+  /**
+   * Document Management Endpoints
+   */
+
+  // POST /api/enhanced-pdf/documents
+  createDocument = async (req, res) => {
+    try {
+      const options = req.body;
+      const document = await this.pdfService.createDocument(options);
+      
+      res.status(201).json({
+        success: true,
+        document,
+        message: 'Document created successfully'
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  };
+
+  // GET /api/enhanced-pdf/documents/:id
+  getDocument = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const document = await this.pdfService.loadDocument(id);
+      
+      res.json({
+        success: true,
+        document
+      });
+    } catch (error) {
+      res.status(404).json({
+        success: false,
+        error: error.message
+      });
+    }
+  };
+
+  // PUT /api/enhanced-pdf/documents/:id
+  updateDocument = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      
+      const operation = {
+        type: 'update-document',
+        updates
+      };
+      
+      const document = await this.pdfService.applyEdit(id, operation);
+      
+      res.json({
+        success: true,
+        document,
+        message: 'Document updated successfully'
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  };
+
+  // DELETE /api/enhanced-pdf/documents/:id
+  deleteDocument = async (req, res) => {
+    try {
+      const { id } = req.params;
+      await this.pdfService.deleteDocument(id);
+      
+      res.json({
+        success: true,
+        message: 'Document deleted successfully'
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  };
+
+  // GET /api/enhanced-pdf/documents/:id/state
+  getDocumentState = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const state = await this.pdfService.getDocumentState(id);
+      
+      res.json({
+        success: true,
+        state
+      });
+    } catch (error) {
+      res.status(404).json({
+        success: false,
+        error: error.message
+      });
+    }
+  };
+
+  /**
+   * Page Management Endpoints
+   */
+
+  // POST /api/enhanced-pdf/documents/:id/pages
+  addPage = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const pageSettings = req.body;
+      
+      const page = await this.pdfService.addPage(id, pageSettings);
+      
+      res.status(201).json({
+        success: true,
+        page,
+        message: 'Page added successfully'
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  };
+
+  // DELETE /api/enhanced-pdf/documents/:id/pages/:pageId
+  deletePage = async (req, res) => {
+    try {
+      const { id, pageId } = req.params;
+      await this.pdfService.deletePage(id, pageId);
+      
+      res.json({
+        success: true,
+        message: 'Page deleted successfully'
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  };
+
+  /**
+   * Element Management Endpoints
+   */
+
+  // POST /api/enhanced-pdf/documents/:id/pages/:pageId/elements
+  addElement = async (req, res) => {
+    try {
+      const { id, pageId } = req.params;
+      const elementData = req.body;
+      
+      const element = await this.pdfService.addElement(id, pageId, elementData);
+      
+      res.status(201).json({
+        success: true,
+        element,
+        message: 'Element added successfully'
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  };
+
+  // PUT /api/enhanced-pdf/documents/:id/pages/:pageId/elements/:elementId
+  updateElement = async (req, res) => {
+    try {
+      const { id, pageId, elementId } = req.params;
+      const updates = req.body;
+      
+      const element = await this.pdfService.updateElement(id, pageId, elementId, updates);
+      
+      res.json({
+        success: true,
+        element,
+        message: 'Element updated successfully'
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  };
+
+  // DELETE /api/enhanced-pdf/documents/:id/pages/:pageId/elements/:elementId
+  deleteElement = async (req, res) => {
+    try {
+      const { id, pageId, elementId } = req.params;
+      await this.pdfService.deleteElement(id, pageId, elementId);
+      
+      res.json({
+        success: true,
+        message: 'Element deleted successfully'
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  };
+
+  /**
+   * Font Management Endpoints
+   */
+
+  // GET /api/enhanced-pdf/fonts
+  getFonts = async (req, res) => {
+    try {
+      const { type, search, category, limit } = req.query;
+      let fonts;
+
+      if (search) {
+        fonts = this.fontManager.searchFonts(search, { type, limit: parseInt(limit) });
+      } else if (category) {
+        fonts = this.fontManager.getFontsByCategory(category);
+      } else if (type) {
+        switch (type) {
+          case 'system':
+            fonts = this.fontManager.getSystemFonts();
+            break;
+          case 'web':
+            fonts = this.fontManager.getWebFonts();
+            break;
+          case 'custom':
+            fonts = this.fontManager.getCustomFonts();
+            break;
+          default:
+            fonts = this.fontManager.getAvailableFonts();
+        }
+      } else {
+        fonts = this.fontManager.getAvailableFonts();
+      }
+
+      res.json({
+        success: true,
+        fonts: fonts.map(font => ({
+          familyName: font.familyName,
+          type: font.type,
+          variants: font.variants,
+          weight: font.weight,
+          style: font.style,
+          loaded: font.loaded,
+          features: font.features
+        }))
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  };
+
+  // GET /api/enhanced-pdf/fonts/:fontFamily
+  getFontDetails = async (req, res) => {
+    try {
+      const { fontFamily } = req.params;
+      const fontData = this.fontManager.getFontData(fontFamily);
+      
+      if (!fontData) {
+        return res.status(404).json({
+          success: false,
+          error: 'Font not found'
+        });
+      }
+
+      res.json({
+        success: true,
+        font: fontData
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  };
+
+  // POST /api/enhanced-pdf/fonts/web
+  loadWebFont = async (req, res) => {
+    try {
+      const { fontFamily, variants = ['regular'], provider = 'google' } = req.body;
+      
+      if (!fontFamily) {
+        return res.status(400).json({
+          success: false,
+          error: 'Font family is required'
+        });
+      }
+
+      const fontData = await this.fontManager.loadWebFont(fontFamily, variants, provider);
+      
+      res.json({
+        success: true,
+        font: fontData,
+        message: 'Web font loaded successfully'
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  };
+
+  // POST /api/enhanced-pdf/fonts/custom
+  uploadCustomFont = async (req, res) => {
+    this.upload.single('font')(req, res, async (err) => {
+      if (err) {
+        return res.status(400).json({
+          success: false,
+          error: err.message
+        });
+      }
+
+      try {
+        const { buffer, originalname } = req.file;
+        const { fontName, metadata = {} } = req.body;
+        
+        const fontData = await this.fontManager.embedCustomFont(
+          buffer, 
+          fontName || path.parse(originalname).name,
+          metadata
+        );
+        
+        res.status(201).json({
+          success: true,
+          font: fontData,
+          message: 'Custom font uploaded successfully'
+        });
+      } catch (error) {
+        res.status(400).json({
+          success: false,
+          error: error.message
+        });
+      }
+    });
+  };
+
+  // DELETE /api/enhanced-pdf/fonts/custom/:fontName
+  deleteCustomFont = async (req, res) => {
+    try {
+      const { fontName } = req.params;
+      await this.fontManager.removeCustomFont(fontName);
+      
+      res.json({
+        success: true,
+        message: 'Custom font deleted successfully'
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  };
+
+  // GET /api/enhanced-pdf/fonts/stats
+  getFontStats = async (req, res) => {
+    try {
+      const stats = this.fontManager.getStats();
+      
+      res.json({
+        success: true,
+        stats
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  };
+
+  /**
+   * Typography Endpoints
+   */
+
+  // POST /api/enhanced-pdf/typography/metrics
+  calculateTextMetrics = async (req, res) => {
+    try {
+      const { text, fontFamily, fontSize, options = {} } = req.body;
+      
+      if (!text || !fontFamily || !fontSize) {
+        return res.status(400).json({
+          success: false,
+          error: 'Text, fontFamily, and fontSize are required'
+        });
+      }
+
+      const metrics = this.fontManager.calculateTextMetrics(text, fontFamily, fontSize, options);
+      
+      res.json({
+        success: true,
+        metrics
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  };
+
+  // POST /api/enhanced-pdf/typography/features
+  applyOpenTypeFeatures = async (req, res) => {
+    try {
+      const { text, fontFamily, features = {} } = req.body;
+      
+      if (!text || !fontFamily) {
+        return res.status(400).json({
+          success: false,
+          error: 'Text and fontFamily are required'
+        });
+      }
+
+      const processedText = this.fontManager.applyOpenTypeFeatures(text, fontFamily, features);
+      
+      res.json({
+        success: true,
+        processedText,
+        originalText: text,
+        appliedFeatures: features
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  };
+
+  /**
+   * Export Endpoints
+   */
+
+  // POST /api/enhanced-pdf/documents/:id/export
+  exportDocument = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { format = 'pdf', options = {} } = req.body;
+      
+      const buffer = await this.pdfService.exportToBuffer(id, format);
+      
+      const filename = `document_${id}.${format}`;
+      const contentType = format === 'pdf' ? 'application/pdf' : 'application/octet-stream';
+      
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Length', buffer.length);
+      
+      res.end(buffer, 'binary');
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  };
+
+  // POST /api/enhanced-pdf/documents/:id/preview
+  generatePreview = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { pageIndex = 0, resolution = 150 } = req.query;
+      
+      // Generate preview would involve rendering a specific page as an image
+      // This is a simplified response for now
+      const document = await this.pdfService.loadDocument(id);
+      
+      res.json({
+        success: true,
+        preview: {
+          documentId: id,
+          pageIndex: parseInt(pageIndex),
+          resolution: parseInt(resolution),
+          url: `/api/enhanced-pdf/documents/${id}/preview/${pageIndex}.png`
+        }
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  };
+
+  /**
+   * Template Endpoints
+   */
+
+  // POST /api/enhanced-pdf/templates
+  createTemplate = async (req, res) => {
+    try {
+      const { name, templateData } = req.body;
+      
+      if (!name || !templateData) {
+        return res.status(400).json({
+          success: false,
+          error: 'Template name and data are required'
+        });
+      }
+
+      const template = await this.pdfService.createTemplate(name, templateData);
+      
+      res.status(201).json({
+        success: true,
+        template,
+        message: 'Template created successfully'
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  };
+
+  // POST /api/enhanced-pdf/documents/:id/apply-template
+  applyTemplate = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { templateName, data = {} } = req.body;
+      
+      if (!templateName) {
+        return res.status(400).json({
+          success: false,
+          error: 'Template name is required'
+        });
+      }
+
+      const document = await this.pdfService.applyTemplate(id, templateName, data);
+      
+      res.json({
+        success: true,
+        document,
+        message: 'Template applied successfully'
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  };
+
+  /**
+   * Real-time Editing Endpoints
+   */
+
+  // POST /api/enhanced-pdf/documents/:id/operations
+  applyOperation = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const operation = req.body;
+      
+      const result = await this.pdfService.applyEdit(id, operation);
+      
+      res.json({
+        success: true,
+        result,
+        operation
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  };
+
+  /**
+   * Integration with Existing Archive Browser
+   */
+
+  // POST /api/enhanced-pdf/from-conversation/:conversationId
+  createFromConversation = async (req, res) => {
+    try {
+      const { conversationId } = req.params;
+      const { template = 'default', options = {} } = req.body;
+      
+      // This would integrate with existing conversation loading logic
+      // For now, return a placeholder response
+      const document = await this.pdfService.createDocument({
+        title: `Conversation ${conversationId}`,
+        ...options
+      });
+      
+      res.status(201).json({
+        success: true,
+        document,
+        message: 'Document created from conversation'
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  };
+
+  /**
+   * Utility Endpoints
+   */
+
+  // GET /api/enhanced-pdf/health
+  getHealth = async (req, res) => {
+    try {
+      const fontStats = this.fontManager.getStats();
+      
+      res.json({
+        success: true,
+        health: 'OK',
+        services: {
+          pdfService: 'running',
+          fontManager: 'running'
+        },
+        stats: {
+          fonts: fontStats
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  };
+
+  // GET /api/enhanced-pdf/capabilities
+  getCapabilities = async (req, res) => {
+    try {
+      res.json({
+        success: true,
+        capabilities: {
+          document: {
+            create: true,
+            edit: true,
+            delete: true,
+            multiPage: true,
+            templates: true
+          },
+          text: {
+            richFormatting: true,
+            customFonts: true,
+            webFonts: true,
+            openTypeFeatures: true,
+            advancedTypography: true
+          },
+          graphics: {
+            vectorShapes: true,
+            images: true,
+            gradients: true,
+            bezierCurves: true
+          },
+          export: {
+            pdf: true,
+            highResolution: true,
+            print: true
+          },
+          collaboration: {
+            realTime: true,
+            multiUser: false, // Future feature
+            versionControl: false // Future feature
+          }
+        }
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  };
+}
+
+module.exports = new EnhancedPdfController();
