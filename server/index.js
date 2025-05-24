@@ -8,7 +8,7 @@ const fs = require('fs-extra');
 const rateLimit = {
   requestCounts: {},
   windowMs: 1000, // 1 second window
-  maxRequestsPerWindow: 200, // Increased from 50 to 200 requests per window
+  maxRequestsPerWindow: 2000, // Increased for bulk PDF content processing
   resetTime: Date.now(),
   
   limiter: function(req, res, next) {
@@ -29,9 +29,11 @@ const rateLimit = {
     // Initialize or increment count
     this.requestCounts[key] = (this.requestCounts[key] || 0) + 1;
     
-    // Check if over limit - use higher limits for static resources
+    // Check if over limit - use higher limits for static resources and PDF operations
     const isStaticResource = req.path.includes('/media/') || req.path.includes('/static/');
-    const limit = isStaticResource ? this.maxRequestsPerWindow * 2 : this.maxRequestsPerWindow;
+    const isPdfOperation = req.path.includes('/enhanced-pdf/');
+    const limit = isStaticResource ? this.maxRequestsPerWindow * 2 : 
+                  isPdfOperation ? this.maxRequestsPerWindow * 5 : this.maxRequestsPerWindow;
     
     if (this.requestCounts[key] > limit) {
       // Set retry-after header

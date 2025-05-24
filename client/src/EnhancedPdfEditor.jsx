@@ -76,6 +76,9 @@ import {
   LockOpen as LockOpenIcon
 } from '@mui/icons-material';
 
+// Utility function to add delays between API calls
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 const EnhancedPdfEditor = () => {
   const { conversationId } = useParams();
   const [searchParams] = useSearchParams();
@@ -262,6 +265,9 @@ const EnhancedPdfEditor = () => {
             })
           });
           
+          // Add delay after page creation
+          await delay(200);
+          
           if (newPageResponse.success) {
             response.document.pages.push(newPageResponse.page);
             currentPageIndex = response.document.pages.length - 1;
@@ -316,6 +322,9 @@ const EnhancedPdfEditor = () => {
               }
             })
           });
+          
+          // Add delay to prevent rate limiting
+          await delay(150);
           
           console.log('EnhancedPdfEditor: Conversation title element added successfully', {
             response: titleResponse,
@@ -550,36 +559,33 @@ const EnhancedPdfEditor = () => {
                       });
                       yPosition += 25;
                       
-                      // Process paragraphs in text content
-                      const paragraphs = partItem.content.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+                      // Process text content as single block
+                      const textContent = partItem.content.trim();
+                      const estimatedLines = Math.ceil(textContent.length / 80);
+                      const textHeight = Math.max(40, estimatedLines * 14);
                       
-                      for (let paragraphIndex = 0; paragraphIndex < paragraphs.length; paragraphIndex++) {
-                        const paragraph = paragraphs[paragraphIndex].trim();
-                        if (!paragraph) continue;
+                      await createNewPageIfNeeded(textHeight + 15);
+                      
+                      const contentResponse = await apiCall(`/documents/${response.document.id}/pages/${response.document.pages[currentPageIndex].id}/elements`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                          type: 'text',
+                          content: textContent,
+                          bounds: { x: margins.left, y: yPosition, width: contentWidth, height: textHeight },
+                          style: {
+                            fontFamily: 'Helvetica',
+                            fontSize: 11,
+                            color: '#000000',
+                            lineHeight: 1.4,
+                            whiteSpace: 'pre-wrap'
+                          }
+                        })
+                      });
+                      
+                      // Add delay between content blocks
+                      await delay(75);
 
-                        const estimatedLines = Math.ceil(paragraph.length / 80);
-                        const paragraphHeight = Math.max(25, estimatedLines * 12);
-                        
-                        await createNewPageIfNeeded(paragraphHeight + 15);
-                        
-                        const contentResponse = await apiCall(`/documents/${response.document.id}/pages/${response.document.pages[currentPageIndex].id}/elements`, {
-                          method: 'POST',
-                          body: JSON.stringify({
-                            type: 'text',
-                            content: paragraph,
-                            bounds: { x: margins.left, y: yPosition, width: contentWidth, height: paragraphHeight },
-                            style: {
-                              fontFamily: 'Helvetica',
-                              fontSize: 11,
-                              color: '#000000',
-                              lineHeight: 1.4
-                            }
-                          })
-                        });
-
-                        yPosition += paragraphHeight + 10;
-                      }
-                      yPosition += 10;
+                      yPosition += textHeight + 15;
                     }
                   }
                   
@@ -621,6 +627,9 @@ const EnhancedPdfEditor = () => {
                     })
                   });
                   
+                  // Add delay between API calls
+                  await delay(100);
+                  
                   console.log('EnhancedPdfEditor: Role header element added successfully', {
                     response: roleResponse,
                     success: roleResponse.success
@@ -634,74 +643,57 @@ const EnhancedPdfEditor = () => {
                 }
                 yPosition += 20;
 
-                // Add message content with paragraph processing
-                const paragraphs = part.trim().split(/\n\s*\n/).filter(p => p.trim().length > 0);
+                // Combine content into larger blocks to reduce API calls
+                const fullContent = part.trim();
+                const estimatedLines = Math.ceil(fullContent.length / 80);
+                const contentHeight = Math.max(60, estimatedLines * 14);
                 
-                console.log('EnhancedPdfEditor: Processing message content into paragraphs', {
-                  messageId: message.id,
-                  totalContentLength: part.trim().length,
-                  paragraphCount: paragraphs.length,
-                  paragraphs: paragraphs.map(p => p.substring(0, 50) + '...')
-                });
-
-                for (let paragraphIndex = 0; paragraphIndex < paragraphs.length; paragraphIndex++) {
-                  const paragraph = paragraphs[paragraphIndex].trim();
-                  if (!paragraph) continue;
-
-                  // Calculate height based on content length and estimated line wrapping
-                  const estimatedLines = Math.ceil(paragraph.length / 80); // ~80 chars per line
-                  const paragraphHeight = Math.max(25, estimatedLines * 12); // 12pt line height
+                try {
+                  await createNewPageIfNeeded(contentHeight + 20);
                   
-                  try {
-                    await createNewPageIfNeeded(paragraphHeight + 15); // Check if we need new page for paragraph
-                    
-                    console.log('EnhancedPdfEditor: Adding paragraph element', {
-                      messageId: message.id,
-                      paragraphIndex,
-                      paragraphLength: paragraph.length,
-                      estimatedLines,
-                      paragraphHeight,
-                      yPosition,
-                      currentPageIndex,
-                      paragraphPreview: paragraph.substring(0, 100) + '...'
-                    });
-                    
-                    const contentResponse = await apiCall(`/documents/${response.document.id}/pages/${response.document.pages[currentPageIndex].id}/elements`, {
-                      method: 'POST',
-                      body: JSON.stringify({
-                        type: 'text',
-                        content: paragraph,
-                        bounds: { x: margins.left, y: yPosition, width: contentWidth, height: paragraphHeight },
-                        style: {
-                          fontFamily: 'Helvetica',
-                          fontSize: 11,
-                          color: '#000000',
-                          lineHeight: 1.4
-                        }
-                      })
-                    });
-                    
-                    console.log('EnhancedPdfEditor: Paragraph element added successfully', {
-                      response: contentResponse,
-                      success: contentResponse.success,
-                      elementId: contentResponse.element?.id,
-                      paragraphIndex
-                    });
+                  console.log('EnhancedPdfEditor: Adding combined message content', {
+                    messageId: message.id,
+                    contentLength: fullContent.length,
+                    estimatedLines,
+                    contentHeight,
+                    yPosition,
+                    currentPageIndex
+                  });
+                  
+                  const contentResponse = await apiCall(`/documents/${response.document.id}/pages/${response.document.pages[currentPageIndex].id}/elements`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                      type: 'text',
+                      content: fullContent,
+                      bounds: { x: margins.left, y: yPosition, width: contentWidth, height: contentHeight },
+                      style: {
+                        fontFamily: 'Helvetica',
+                        fontSize: 11,
+                        color: '#000000',
+                        lineHeight: 1.4,
+                        whiteSpace: 'pre-wrap'
+                      }
+                    })
+                  });
+                  
+                  // Add delay between major content blocks
+                  await delay(100);
+                  
+                  console.log('EnhancedPdfEditor: Combined content element added successfully', {
+                    response: contentResponse,
+                    success: contentResponse.success,
+                    elementId: contentResponse.element?.id
+                  });
 
-                    yPosition += paragraphHeight + 10; // Add spacing between paragraphs
-                    
-                  } catch (error) {
-                    console.error('EnhancedPdfEditor: Failed to add paragraph element', {
-                      error: error.message,
-                      messageId: message.id,
-                      paragraphIndex,
-                      paragraphLength: paragraph.length
-                    });
-                  }
+                  yPosition += contentHeight + 20;
+                  
+                } catch (error) {
+                  console.error('EnhancedPdfEditor: Failed to add combined content element', {
+                    error: error.message,
+                    messageId: message.id,
+                    contentLength: fullContent.length
+                  });
                 }
-                
-                // Add extra spacing after message content
-                yPosition += 10;
               }
             }
           }
