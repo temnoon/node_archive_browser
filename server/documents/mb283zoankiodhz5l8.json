@@ -1,0 +1,54 @@
+{
+  "id": "mb283zoankiodhz5l8",
+  "version": "1.0",
+  "created": "2025-05-24T12:46:11.290Z",
+  "modified": "2025-05-24T12:46:11.290Z",
+  "metadata": {
+    "title": "Test Document",
+    "author": "Archive Browser",
+    "subject": "",
+    "keywords": []
+  },
+  "settings": {
+    "size": "A4",
+    "orientation": "portrait",
+    "margins": {
+      "top": 72,
+      "right": 72,
+      "bottom": 72,
+      "left": 72
+    },
+    "units": "points"
+  },
+  "pages": [
+    {
+      "id": "mb283zoa5r1xbmrezu7",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "top": 72,
+        "right": 72,
+        "bottom": 72,
+        "left": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    }
+  ],
+  "styles": {
+    "fonts": [],
+    "colors": [],
+    "gradients": [],
+    "themes": []
+  },
+  "collaborators": []
+}

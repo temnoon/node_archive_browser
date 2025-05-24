@@ -43,30 +43,9 @@ class FontManager extends EventEmitter {
    */
   
   async loadSystemFonts() {
-    const systemFonts = this.getSystemFontPaths();
+    // Temporarily disable system font scanning due to Node.js compatibility issues
+    console.log('System font scanning temporarily disabled for stability');
     let loadedCount = 0;
-
-    for (const fontPath of systemFonts) {
-      try {
-        // Skip if fontPath is not a string
-        if (typeof fontPath !== 'string') {
-          continue;
-        }
-          
-        const fontData = await this.loadFontFile(fontPath);
-        if (fontData) {
-          this.fonts.set(fontData.familyName, {
-            ...fontData,
-            type: 'system',
-            path: fontPath,
-            loaded: true
-          });
-          loadedCount++;
-        }
-      } catch (error) {
-        console.warn(`Failed to load system font ${fontPath}:`, error.message);
-      }
-    }
 
     // Add built-in PDF fonts
     const builtInFonts = [
@@ -159,7 +138,6 @@ class FontManager extends EventEmitter {
 
     return fontFiles.filter(path => typeof path === 'string');
   }
-</edits>
 
   async loadFontFile(fontPath) {
     try {
@@ -408,46 +386,8 @@ class FontManager extends EventEmitter {
   }
 
   async loadCustomFonts() {
-    try {
-      const files = await fs.readdir(this.customFontStorage);
-      const fontFiles = files.filter(file => file.endsWith('.ttf') || file.endsWith('.otf'));
-      let loadedCount = 0;
-
-      for (const fontFile of fontFiles) {
-        try {
-          const fontPath = path.join(this.customFontStorage, fontFile);
-          const fontBuffer = await fs.readFile(fontPath);
-          const metadataPath = `${fontPath}.json`;
-          
-          let metadata = {};
-          if (await fs.pathExists(metadataPath)) {
-            metadata = await fs.readJSON(metadataPath);
-          }
-
-          const font = fontkit.open(fontBuffer);
-          const fontData = {
-            familyName: metadata.familyName || font.familyName,
-            originalName: font.familyName,
-            type: 'custom',
-            path: fontPath,
-            buffer: fontBuffer,
-            metadata: metadata.metadata || {},
-            uploadedAt: metadata.uploadedAt,
-            loaded: true
-          };
-
-          this.customFonts.set(fontData.familyName, fontData);
-          this.fonts.set(fontData.familyName, fontData);
-          loadedCount++;
-        } catch (error) {
-          console.warn(`Failed to load custom font ${fontFile}:`, error.message);
-        }
-      }
-
-      console.log(`Loaded ${loadedCount} custom fonts`);
-    } catch (error) {
-      console.warn('Error loading custom fonts:', error.message);
-    }
+    // Temporarily disable custom font loading due to Node.js compatibility issues
+    console.log('Custom font loading temporarily disabled for stability');
   }
 
   async removeCustomFont(fontName) {
@@ -758,30 +698,8 @@ class FontManager extends EventEmitter {
   }
 
   async loadCachedWebFonts() {
-    try {
-      const cacheFiles = await fs.readdir(this.webFontStorage);
-      const jsonFiles = cacheFiles.filter(file => file.endsWith('.json'));
-      let loadedCount = 0;
-
-      for (const jsonFile of jsonFiles) {
-        try {
-          const cachePath = path.join(this.webFontStorage, jsonFile);
-          const fontData = await fs.readJSON(cachePath);
-          
-          this.webFontCache.set(jsonFile.replace('.json', ''), fontData);
-          this.fonts.set(fontData.familyName, fontData);
-          loadedCount++;
-        } catch (error) {
-          console.warn(`Failed to load cached web font ${jsonFile}:`, error.message);
-        }
-      }
-
-      if (loadedCount > 0) {
-        console.log(`Loaded ${loadedCount} cached web fonts`);
-      }
-    } catch (error) {
-      console.warn('Error loading cached web fonts:', error.message);
-    }
+    // Temporarily disable cached web font loading due to Node.js compatibility issues
+    console.log('Cached web font loading temporarily disabled for stability');
   }
 
   /**
