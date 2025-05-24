@@ -874,9 +874,9 @@ const EnhancedPdfEditor = () => {
   );
 
   const renderLayerPanel = () => (
-    <Card sx={{ height: '100%' }}>
+    <Card sx={{ height: '100%', backgroundColor: '#ffffff' }}>
       <CardContent>
-        <Typography variant="h6" gutterBottom>
+        <Typography variant="h6" gutterBottom sx={{ color: '#000000' }}>
           Layers
         </Typography>
         
@@ -885,23 +885,35 @@ const EnhancedPdfEditor = () => {
             {document.pages[currentPage].elements.map((element, index) => (
               <ListItem
                 key={element.id}
-                component="button"
                 selected={selectedElement?.id === element.id}
                 onClick={() => setSelectedElement(element)}
+                sx={{ 
+                  cursor: 'pointer',
+                  backgroundColor: selectedElement?.id === element.id ? 'rgba(25, 118, 210, 0.12)' : 'transparent',
+                  color: '#000000',
+                  '&:hover': {
+                    backgroundColor: selectedElement?.id === element.id ? 'rgba(25, 118, 210, 0.2)' : 'rgba(0, 0, 0, 0.04)'
+                  }
+                }}
               >
-                <ListItemIcon>
+                <ListItemIcon sx={{ color: '#000000' }}>
                   {element.type === 'text' ? <TextIcon /> : <RectangleIcon />}
                 </ListItemIcon>
                 <ListItemText
                   primary={`${element.type} ${index + 1}`}
-                  secondary={element.type === 'text' ? element.content : element.content?.shape}
+                  secondary={element.content?.substring(0, 30) + '...'}
+                  sx={{ 
+                    '& .MuiListItemText-primary': { color: '#000000' },
+                    '& .MuiListItemText-secondary': { color: '#666666' }
+                  }}
                 />
-                <IconButton
-                  size="small"
+                <IconButton 
+                  size="small" 
                   onClick={(e) => {
                     e.stopPropagation();
                     deleteElement(element.id);
                   }}
+                  sx={{ color: '#666666' }}
                 >
                   <DeleteIcon fontSize="small" />
                 </IconButton>

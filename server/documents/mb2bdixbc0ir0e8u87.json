@@ -1,0 +1,101 @@
+{
+  "id": "mb2bdixbc0ir0e8u87",
+  "version": "1.0",
+  "created": "2025-05-24T14:17:34.991Z",
+  "modified": "2025-05-24T14:18:19.668Z",
+  "metadata": {
+    "title": "Collected Messages Document (0 conversations)",
+    "author": "Archive Browser",
+    "subject": "",
+    "keywords": []
+  },
+  "settings": {
+    "size": "A4",
+    "orientation": "portrait",
+    "margins": {
+      "top": 72,
+      "right": 72,
+      "bottom": 72,
+      "left": 72
+    },
+    "units": "points"
+  },
+  "pages": [
+    {
+      "id": "mb2bdixb71lbl3mzbqu",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "top": 72,
+        "right": 72,
+        "bottom": 72,
+        "left": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2bdixlliebpz8mf9",
+          "type": "text",
+          "bounds": {
+            "x": 85,
+            "y": 113,
+            "width": 451,
+            "height": 25
+          },
+          "style": {
+            "fontFamily": "Times-Roman",
+            "fontSize": 20,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Logo Design Request",
+          "created": "2025-05-24T14:17:35.001Z",
+          "modified": "2025-05-24T14:18:13.901Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2behecs69fxtgxmxo",
+          "type": "text",
+          "bounds": {
+            "x": 152.73162841796875,
+            "y": 268.82354736328125,
+            "width": 200,
+            "height": 40
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "normal",
+            "fontStyle": "normal",
+            "color": "#000000",
+            "textAlign": "left"
+          },
+          "content": "Double-click to edit",
+          "created": "2025-05-24T14:18:19.668Z",
+          "modified": "2025-05-24T14:18:19.668Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    }
+  ],
+  "styles": {
+    "fonts": [],
+    "colors": [],
+    "gradients": [],
+    "themes": []
+  },
+  "collaborators": []
+}
