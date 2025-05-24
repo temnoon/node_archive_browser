@@ -48,6 +48,13 @@ export const DocumentBuilderProvider = ({ children }) => {
 
   // Add specific selected messages
   const addSelectedMessages = useCallback((conversationId, conversationTitle, selectedMessages) => {
+    console.log('DocumentBuilder: addSelectedMessages called', {
+      conversationId,
+      conversationTitle,
+      selectedMessagesCount: selectedMessages.length,
+      selectedMessages: selectedMessages.map(m => ({ id: m.id, author: m.message?.author?.role }))
+    });
+    
     setCollectedMessages(prev => {
       // Create unique IDs for selected messages to avoid conflicts
       const newMessages = selectedMessages.map(message => ({
@@ -57,6 +64,12 @@ export const DocumentBuilderProvider = ({ children }) => {
         collectedAt: new Date().toISOString(),
         uniqueId: `${conversationId}-${message.id}-${Date.now()}`
       }));
+      
+      console.log('DocumentBuilder: Adding messages to collection', {
+        previousCount: prev.length,
+        newMessagesCount: newMessages.length,
+        totalAfter: prev.length + newMessages.length
+      });
       
       return [...prev, ...newMessages];
     });
@@ -100,13 +113,24 @@ export const DocumentBuilderProvider = ({ children }) => {
 
   // Navigate to Enhanced PDF Editor with collected content
   const createDocument = useCallback(() => {
+    console.log('DocumentBuilder: createDocument called', {
+      collectedMessagesCount: collectedMessages.length,
+      collectedConversationsCount: collectedConversations.size
+    });
+    
     if (collectedMessages.length === 0) {
+      console.error('DocumentBuilder: No messages collected when trying to create document');
       throw new Error('No messages collected');
     }
 
     // Store collected content in sessionStorage for PDF editor to access
     sessionStorage.setItem('documentBuilder_messages', JSON.stringify(collectedMessages));
     sessionStorage.setItem('documentBuilder_conversations', JSON.stringify(Array.from(collectedConversations.entries())));
+    
+    console.log('DocumentBuilder: Stored messages in sessionStorage', {
+      messagesStored: collectedMessages.length,
+      conversationsStored: Array.from(collectedConversations.entries()).length
+    });
     
     // Navigate to PDF editor with special flag for collected content
     navigate('/pdf-editor?source=collected');

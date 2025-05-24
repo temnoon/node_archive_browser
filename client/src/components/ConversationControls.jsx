@@ -59,16 +59,27 @@ export default function ConversationControls({
     selectAssistantMessages = () => {}
   } = selection || {};
 
+  // Helper to get actual message objects from selected IDs
+  const getSelectedMessageObjects = () => {
+    if (!selectedMessages || selectedMessages.length === 0) return [];
+    const selectedIds = new Set(selectedMessages);
+    return messages.filter(msg => selectedIds.has(msg.id));
+  };
+
   // Enhanced PDF Editor navigation
   const handleEnhancedPdfEditor = () => {
     if (selectionMode && selectedMessages.length > 0) {
-      // Add selected messages to document builder and navigate
-      documentBuilder.addSelectedMessages(
-        conversationId, 
-        conversationData.title || `Conversation ${conversationId}`, 
-        selectedMessages
-      );
-      documentBuilder.createDocument();
+      // Get actual message objects from IDs
+      const messageObjects = getSelectedMessageObjects();
+      if (messageObjects.length > 0) {
+        // Add selected messages to document builder and navigate
+        documentBuilder.addSelectedMessages(
+          conversationId, 
+          conversationData.title || `Conversation ${conversationId}`, 
+          messageObjects
+        );
+        documentBuilder.createDocument();
+      }
     } else {
       // Navigate to single conversation import
       navigate(`/pdf-editor/${conversationId}`);
@@ -78,12 +89,16 @@ export default function ConversationControls({
   // Add selected messages to collection without navigating
   const handleAddToCollection = () => {
     if (selectionMode && selectedMessages.length > 0) {
-      documentBuilder.addSelectedMessages(
-        conversationId, 
-        conversationData.title || `Conversation ${conversationId}`, 
-        selectedMessages
-      );
-      clearSelection();
+      // Get actual message objects from IDs
+      const messageObjects = getSelectedMessageObjects();
+      if (messageObjects.length > 0) {
+        documentBuilder.addSelectedMessages(
+          conversationId, 
+          conversationData.title || `Conversation ${conversationId}`, 
+          messageObjects
+        );
+        clearSelection();
+      }
     }
   };
   
