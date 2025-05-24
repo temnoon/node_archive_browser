@@ -475,13 +475,13 @@ const EnhancedPdfEditor = () => {
                   // Extract image URL from various possible formats
                   const imageUrl = part.asset_pointer?.url || part.url || part.image_url;
                   const imageWidth = part.asset_pointer?.width || part.width || 400;
-                  const imageHeight = part.asset_pointer?.height || part.height || 300;
+                  const sourceImageHeight = part.asset_pointer?.height || part.height || 300;
                   
                   console.log('EnhancedPdfEditor: Adding image element', {
                     messageId: message.id,
                     imageUrl: imageUrl,
                     imageWidth: imageWidth,
-                    imageHeight: imageHeight,
+                    imageHeight: sourceImageHeight,
                     yPosition,
                     currentPageIndex,
                     originalPart: JSON.stringify(part, null, 2)
@@ -494,7 +494,7 @@ const EnhancedPdfEditor = () => {
                       content: {
                         url: imageUrl,
                         originalWidth: imageWidth,
-                        originalHeight: imageHeight
+                        originalHeight: sourceImageHeight
                       },
                       bounds: { 
                         x: margins.left, 
