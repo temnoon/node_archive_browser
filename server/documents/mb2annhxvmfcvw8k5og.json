@@ -1,0 +1,121 @@
+{
+  "id": "mb2annhxvmfcvw8k5og",
+  "version": "1.0",
+  "created": "2025-05-24T13:57:27.861Z",
+  "modified": "2025-05-24T13:57:27.883Z",
+  "metadata": {
+    "title": "Collected Messages Document (3 conversations)",
+    "author": "Archive Browser",
+    "subject": "",
+    "keywords": []
+  },
+  "settings": {
+    "size": "A4",
+    "orientation": "portrait",
+    "margins": {
+      "top": 72,
+      "right": 72,
+      "bottom": 72,
+      "left": 72
+    },
+    "units": "points"
+  },
+  "pages": [
+    {
+      "id": "mb2annhxvpymvqnsy1",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "top": 72,
+        "right": 72,
+        "bottom": 72,
+        "left": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2anni8uw8805juij",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 100,
+            "width": 451,
+            "height": 25
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 16,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Phenomenology vs Hard Problem",
+          "created": "2025-05-24T13:57:27.872Z",
+          "modified": "2025-05-24T13:57:27.872Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2annide6ojkd591hd",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 165,
+            "width": 451,
+            "height": 25
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 16,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Meta Philosophy Inquiry",
+          "created": "2025-05-24T13:57:27.877Z",
+          "modified": "2025-05-24T13:57:27.877Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2annijyicmtaoip6l",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 230,
+            "width": 451,
+            "height": 25
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 16,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Humanity and Compassion",
+          "created": "2025-05-24T13:57:27.883Z",
+          "modified": "2025-05-24T13:57:27.883Z",
+          "zIndex": 2,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    }
+  ],
+  "styles": {
+    "fonts": [],
+    "colors": [],
+    "gradients": [],
+    "themes": []
+  },
+  "collaborators": []
+}

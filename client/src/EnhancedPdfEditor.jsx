@@ -117,11 +117,21 @@ const EnhancedPdfEditor = () => {
   // Initialize editor
   useEffect(() => {
     const source = searchParams.get('source');
+    console.log('EnhancedPdfEditor: useEffect initialization', {
+      conversationId,
+      source,
+      searchParams: Object.fromEntries(searchParams.entries()),
+      currentURL: window.location.href
+    });
+    
     if (source === 'collected') {
+      console.log('EnhancedPdfEditor: Taking collected messages path');
       createFromCollectedMessages();
     } else if (conversationId) {
+      console.log('EnhancedPdfEditor: Taking single conversation path', { conversationId });
       createFromConversation();
     } else {
+      console.log('EnhancedPdfEditor: Taking new document path');
       createNewDocument();
     }
     loadFonts();
@@ -196,7 +206,19 @@ const EnhancedPdfEditor = () => {
       const collectedMessages = JSON.parse(sessionStorage.getItem('documentBuilder_messages') || '[]');
       const collectedConversations = JSON.parse(sessionStorage.getItem('documentBuilder_conversations') || '[]');
       
+      console.log('EnhancedPdfEditor: createFromCollectedMessages', {
+        collectedMessagesLength: collectedMessages.length,
+        collectedConversationsLength: collectedConversations.length,
+        sessionStorageKeys: Object.keys(sessionStorage),
+        collectedMessagesPreview: collectedMessages.slice(0, 3).map(m => ({
+          id: m.id,
+          conversationId: m.conversationId,
+          hasContent: !!m.content
+        }))
+      });
+      
       if (collectedMessages.length === 0) {
+        console.error('EnhancedPdfEditor: No collected messages found in sessionStorage');
         throw new Error('No collected messages found');
       }
 
@@ -299,6 +321,7 @@ const EnhancedPdfEditor = () => {
       setSuccess(`Document created with ${collectedMessages.length} messages from ${collectedConversations.length} conversations`);
       
       // Clear collected messages
+      console.log('EnhancedPdfEditor: Clearing sessionStorage after successful import');
       sessionStorage.removeItem('documentBuilder_messages');
       sessionStorage.removeItem('documentBuilder_conversations');
       

@@ -163,6 +163,7 @@ export default function App() {
                 component={Link} 
                 to="/" 
                 onClick={handleNavigation}
+                button={false}
                 sx={{
                   transition: 'background-color 0.4s ease',
                   '&:hover': {
@@ -176,6 +177,7 @@ export default function App() {
                 component={Link} 
                 to="/media" 
                 onClick={handleNavigation}
+                button={false}
                 sx={{
                   transition: 'background-color 0.4s ease',
                   '&:hover': {
@@ -189,6 +191,7 @@ export default function App() {
                 component={Link} 
                 to="/parser" 
                 onClick={handleNavigation}
+                button={false}
                 sx={{
                   transition: 'background-color 0.4s ease',
                   '&:hover': {
@@ -202,6 +205,7 @@ export default function App() {
                 component={Link} 
                 to="/import" 
                 onClick={handleNavigation}
+                button={false}
                 sx={{
                   transition: 'background-color 0.4s ease',
                   '&:hover': {
@@ -215,6 +219,7 @@ export default function App() {
                 component={Link} 
                 to="/pdf-editor" 
                 onClick={handleNavigation}
+                button={false}
                 sx={{
                   transition: 'background-color 0.4s ease',
                   '&:hover': {

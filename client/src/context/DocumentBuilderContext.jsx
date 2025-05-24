@@ -71,7 +71,24 @@ export const DocumentBuilderProvider = ({ children }) => {
         totalAfter: prev.length + newMessages.length
       });
       
-      return [...prev, ...newMessages];
+      const updatedMessages = [...prev, ...newMessages];
+      
+      // Immediately store in sessionStorage for debugging
+      console.log('DocumentBuilder: Storing updated messages in sessionStorage', {
+        totalMessages: updatedMessages.length,
+        sessionStorageBefore: sessionStorage.getItem('documentBuilder_messages')?.length || 0
+      });
+      sessionStorage.setItem('documentBuilder_messages', JSON.stringify(updatedMessages));
+      
+      // Verify storage
+      const storedCheck = JSON.parse(sessionStorage.getItem('documentBuilder_messages') || '[]');
+      console.log('DocumentBuilder: SessionStorage verification after addSelectedMessages', {
+        storedCount: storedCheck.length,
+        expectedCount: updatedMessages.length,
+        sessionStorageSize: sessionStorage.getItem('documentBuilder_messages')?.length || 0
+      });
+      
+      return updatedMessages;
     });
 
     // Update conversation metadata
@@ -113,23 +130,37 @@ export const DocumentBuilderProvider = ({ children }) => {
 
   // Navigate to Enhanced PDF Editor with collected content
   const createDocument = useCallback(() => {
+    // Check both state and sessionStorage
+    const sessionMessages = JSON.parse(sessionStorage.getItem('documentBuilder_messages') || '[]');
+    
     console.log('DocumentBuilder: createDocument called', {
       collectedMessagesCount: collectedMessages.length,
-      collectedConversationsCount: collectedConversations.size
+      collectedConversationsCount: collectedConversations.size,
+      sessionStorageMessagesCount: sessionMessages.length,
+      sessionStorageKeys: Object.keys(sessionStorage).filter(k => k.startsWith('documentBuilder')),
+      sessionStorageContent: sessionStorage.getItem('documentBuilder_messages')?.substring(0, 200) + '...'
     });
     
-    if (collectedMessages.length === 0) {
-      console.error('DocumentBuilder: No messages collected when trying to create document');
+    // Use sessionStorage if state is empty but sessionStorage has content
+    const messagesToUse = collectedMessages.length > 0 ? collectedMessages : sessionMessages;
+    
+    if (messagesToUse.length === 0) {
+      console.error('DocumentBuilder: No messages collected when trying to create document', {
+        stateEmpty: collectedMessages.length === 0,
+        sessionStorageEmpty: sessionMessages.length === 0,
+        allSessionStorageKeys: Object.keys(sessionStorage)
+      });
       throw new Error('No messages collected');
     }
 
     // Store collected content in sessionStorage for PDF editor to access
-    sessionStorage.setItem('documentBuilder_messages', JSON.stringify(collectedMessages));
+    sessionStorage.setItem('documentBuilder_messages', JSON.stringify(messagesToUse));
     sessionStorage.setItem('documentBuilder_conversations', JSON.stringify(Array.from(collectedConversations.entries())));
     
     console.log('DocumentBuilder: Stored messages in sessionStorage', {
-      messagesStored: collectedMessages.length,
-      conversationsStored: Array.from(collectedConversations.entries()).length
+      messagesStored: messagesToUse.length,
+      conversationsStored: Array.from(collectedConversations.entries()).length,
+      finalSessionStorageSize: sessionStorage.getItem('documentBuilder_messages')?.length || 0
     });
     
     // Navigate to PDF editor with special flag for collected content
