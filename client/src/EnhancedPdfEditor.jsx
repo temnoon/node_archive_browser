@@ -79,6 +79,78 @@ import {
 // Utility function to add delays between API calls
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+// Markdown parsing utility
+const parseMarkdown = (text) => {
+  if (!text || typeof text !== 'string') return text;
+  
+  // Simple markdown parsing with React elements
+  const parseMarkdownToReact = (str) => {
+    const parts = [];
+    let currentIndex = 0;
+    
+    // Patterns for markdown elements
+    const patterns = [
+      { regex: /\*\*(.*?)\*\*/g, component: (match, content) => <strong key={currentIndex++}>{content}</strong> },
+      { regex: /\*(.*?)\*/g, component: (match, content) => <em key={currentIndex++}>{content}</em> },
+      { regex: /`(.*?)`/g, component: (match, content) => <code key={currentIndex++} style={{backgroundColor: '#f5f5f5', padding: '2px 4px', borderRadius: '3px', fontFamily: 'Courier'}}>{content}</code> },
+      { regex: /~~(.*?)~~/g, component: (match, content) => <span key={currentIndex++} style={{textDecoration: 'line-through'}}>{content}</span> }
+    ];
+    
+    let processedText = str;
+    const replacements = [];
+    
+    // Find all markdown patterns and their positions
+    patterns.forEach(pattern => {
+      let match;
+      while ((match = pattern.regex.exec(str)) !== null) {
+        replacements.push({
+          start: match.index,
+          end: match.index + match[0].length,
+          component: pattern.component(match[0], match[1]),
+          original: match[0]
+        });
+      }
+    });
+    
+    // Sort replacements by position
+    replacements.sort((a, b) => a.start - b.start);
+    
+    // Build the result with React elements
+    if (replacements.length === 0) {
+      return str;
+    }
+    
+    const result = [];
+    let lastEnd = 0;
+    
+    replacements.forEach((replacement, index) => {
+      // Add text before this replacement
+      if (replacement.start > lastEnd) {
+        result.push(str.substring(lastEnd, replacement.start));
+      }
+      
+      // Add the replacement component
+      result.push(replacement.component);
+      lastEnd = replacement.end;
+    });
+    
+    // Add remaining text
+    if (lastEnd < str.length) {
+      result.push(str.substring(lastEnd));
+    }
+    
+    return result;
+  };
+  
+  // Handle line breaks and paragraphs
+  const lines = text.split('\n');
+  return lines.map((line, index) => (
+    <div key={index} style={{ marginBottom: line.trim() === '' ? '8px' : '0' }}>
+      {parseMarkdownToReact(line)}
+    </div>
+  ));
+};
+
 const EnhancedPdfEditor = () => {
   const { conversationId } = useParams();
   const [searchParams] = useSearchParams();
@@ -376,22 +448,43 @@ const EnhancedPdfEditor = () => {
                 partLength: typeof part === 'string' ? part.length : 'not string',
                 partPreview: typeof part === 'string' ? part.substring(0, 100) + '...' : part,
                 isImageAsset: part && typeof part === 'object' && part.content_type === 'image_asset_pointer',
-                hasAssetPointer: part && typeof part === 'object' && part.asset_pointer
+                hasAssetPointer: part && typeof part === 'object' && part.asset_pointer,
+                contentType: part && typeof part === 'object' ? part.content_type : null,
+                objectKeys: part && typeof part === 'object' ? Object.keys(part) : null,
+                fullObject: part && typeof part === 'object' ? JSON.stringify(part, null, 2) : null
               });
               
-              // Handle image content
-              if (part && typeof part === 'object' && part.content_type === 'image_asset_pointer' && part.asset_pointer) {
+              // Handle image content - check multiple possible image formats
+              if (part && typeof part === 'object' && 
+                  ((part.content_type === 'image_asset_pointer' && part.asset_pointer) ||
+                   (part.type === 'image' && part.url) ||
+                   (part.image_url) ||
+                   (part.content_type && part.content_type.includes('image')))) {
+                
+                console.log('EnhancedPdfEditor: Image detected!', {
+                  contentType: part.content_type,
+                  hasAssetPointer: !!part.asset_pointer,
+                  hasUrl: !!part.url,
+                  hasImageUrl: !!part.image_url,
+                  imageData: JSON.stringify(part, null, 2)
+                });
                 try {
                   const imageHeight = 200; // Standard image height
                   await createNewPageIfNeeded(imageHeight + 30);
                   
+                  // Extract image URL from various possible formats
+                  const imageUrl = part.asset_pointer?.url || part.url || part.image_url;
+                  const imageWidth = part.asset_pointer?.width || part.width || 400;
+                  const imageHeight = part.asset_pointer?.height || part.height || 300;
+                  
                   console.log('EnhancedPdfEditor: Adding image element', {
                     messageId: message.id,
-                    imageUrl: part.asset_pointer.url,
-                    imageWidth: part.asset_pointer.width,
-                    imageHeight: part.asset_pointer.height,
+                    imageUrl: imageUrl,
+                    imageWidth: imageWidth,
+                    imageHeight: imageHeight,
                     yPosition,
-                    currentPageIndex
+                    currentPageIndex,
+                    originalPart: JSON.stringify(part, null, 2)
                   });
                   
                   const imageResponse = await apiCall(`/documents/${response.document.id}/pages/${response.document.pages[currentPageIndex].id}/elements`, {
@@ -399,14 +492,14 @@ const EnhancedPdfEditor = () => {
                     body: JSON.stringify({
                       type: 'image',
                       content: {
-                        url: part.asset_pointer.url,
-                        originalWidth: part.asset_pointer.width,
-                        originalHeight: part.asset_pointer.height
+                        url: imageUrl,
+                        originalWidth: imageWidth,
+                        originalHeight: imageHeight
                       },
                       bounds: { 
                         x: margins.left, 
                         y: yPosition, 
-                        width: Math.min(contentWidth, part.asset_pointer.width || 400),
+                        width: Math.min(contentWidth, imageWidth || 400),
                         height: imageHeight 
                       },
                       style: {
@@ -428,7 +521,8 @@ const EnhancedPdfEditor = () => {
                   console.error('EnhancedPdfEditor: Failed to add image element', {
                     error: error.message,
                     messageId: message.id,
-                    imageUrl: part.asset_pointer?.url
+                    imageUrl: imageUrl,
+                    partData: JSON.stringify(part, null, 2)
                   });
                 }
               }
@@ -1105,9 +1199,36 @@ const EnhancedPdfEditor = () => {
 
   const renderElement = (element) => {
     if (element.type === 'text') {
-      return element.content || 'Text';
+      const content = element.content || 'Text';
+      return (
+        <div style={{ 
+          width: '100%', 
+          height: '100%', 
+          overflow: 'hidden',
+          fontSize: element.style?.fontSize || 12,
+          fontFamily: element.style?.fontFamily || 'Helvetica',
+          color: element.style?.color || '#000000',
+          lineHeight: element.style?.lineHeight || 1.4,
+          whiteSpace: 'pre-wrap'
+        }}>
+          {parseMarkdown(content)}
+        </div>
+      );
     } else if (element.type === 'shape') {
       return null; // Shape styling is handled by CSS
+    } else if (element.type === 'image') {
+      return (
+        <img 
+          src={element.content?.url} 
+          alt="Conversation image"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            borderRadius: element.style?.borderRadius || '4px'
+          }}
+        />
+      );
     }
     return null;
   };
@@ -1122,8 +1243,48 @@ const EnhancedPdfEditor = () => {
         {selectedElement ? (
           <Box>
             <Typography variant="subtitle2" gutterBottom>
-              {selectedElement.type === 'text' ? 'Text Element' : 'Shape Element'}
+              {selectedElement.type === 'text' ? 'Text Element' : 
+               selectedElement.type === 'image' ? 'Image Element' : 'Shape Element'}
             </Typography>
+            
+            {selectedElement.type === 'image' && (
+              <Box>
+                <TextField
+                  label="Image URL"
+                  fullWidth
+                  margin="dense"
+                  value={selectedElement.content?.url || ''}
+                  onChange={(e) => updateElement(selectedElement.id, {
+                    content: { ...selectedElement.content, url: e.target.value }
+                  })}
+                />
+                <Typography variant="subtitle2" sx={{ mt: 2 }}>Position</Typography>
+                <Grid container spacing={1}>
+                  <Grid item xs={6}>
+                    <TextField
+                      label="X"
+                      type="number"
+                      size="small"
+                      value={selectedElement.bounds?.x || 0}
+                      onChange={(e) => updateElement(selectedElement.id, {
+                        bounds: { ...selectedElement.bounds, x: parseInt(e.target.value) }
+                      })}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      label="Y"
+                      type="number"
+                      size="small"
+                      value={selectedElement.bounds?.y || 0}
+                      onChange={(e) => updateElement(selectedElement.id, {
+                        bounds: { ...selectedElement.bounds, y: parseInt(e.target.value) }
+                      })}
+                    />
+                  </Grid>
+                </Grid>
+              </Box>
+            )}
             
             {selectedElement.type === 'text' && (
               <Box>
@@ -1251,7 +1412,8 @@ const EnhancedPdfEditor = () => {
                 }}
               >
                 <ListItemIcon sx={{ color: '#000000' }}>
-                  {element.type === 'text' ? <TextIcon /> : <RectangleIcon />}
+                  {element.type === 'text' ? <TextIcon /> : 
+                   element.type === 'image' ? <ImageIcon /> : <RectangleIcon />}
                 </ListItemIcon>
                 <ListItemText
                   primary={`${element.type} ${index + 1}`}
@@ -1260,6 +1422,8 @@ const EnhancedPdfEditor = () => {
                       ? (typeof element.content === 'string' ? element.content.substring(0, 30) + '...' : 'Text element')
                       : element.type === 'shape' 
                       ? (element.content?.shape || 'Shape')
+                      : element.type === 'image'
+                      ? 'Image'
                       : 'Element'
                   }
                   sx={{ 

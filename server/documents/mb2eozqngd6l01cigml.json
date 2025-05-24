@@ -1,0 +1,5874 @@
+{
+  "id": "mb2eozqngd6l01cigml",
+  "version": "1.0",
+  "created": "2025-05-24T15:50:28.847Z",
+  "modified": "2025-05-24T15:50:45.419Z",
+  "metadata": {
+    "title": "Collected Messages Document (0 conversations)",
+    "author": "Archive Browser",
+    "subject": "",
+    "keywords": []
+  },
+  "settings": {
+    "size": "A4",
+    "orientation": "portrait",
+    "margins": {
+      "top": 72,
+      "right": 72,
+      "bottom": 72,
+      "left": 72
+    },
+    "units": "points"
+  },
+  "pages": [
+    {
+      "id": "mb2eozqnuiw88xwhm1",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "top": 72,
+        "right": 72,
+        "bottom": 72,
+        "left": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2eozqvxoq2crozefm",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 100,
+            "width": 451,
+            "height": 25
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 16,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Discourse AI Customization Guide",
+          "created": "2025-05-24T15:50:28.855Z",
+          "modified": "2025-05-24T15:50:28.855Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2eozvbq0a6srmqbc",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 135,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#2E7D32"
+          },
+          "content": "User:",
+          "created": "2025-05-24T15:50:29.015Z",
+          "modified": "2025-05-24T15:50:29.015Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2eozyhhyne6e34gc",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 155,
+            "width": 451,
+            "height": 98
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "I'd like to understand better how to use Discourse AI more effectvely. I've configured the OpenAI API Key, and used the available models to enable various functions, but newer models are clearly missing, notably 4o. I used o1 as the model which generated Dall-E image, which worked, but I feel this will cost more than it needs to. I also would like to understand how to add my own code to expand the capabilities of AI agents in Discourse (notably creating AI Curators as partners of category moderators)",
+          "created": "2025-05-24T15:50:29.129Z",
+          "modified": "2025-05-24T15:50:29.129Z",
+          "zIndex": 2,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep01xugwhnszlh6",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 273,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:29.253Z",
+          "modified": "2025-05-24T15:50:29.253Z",
+          "zIndex": 3,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep05awyx31sn34yg",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 293,
+            "width": 451,
+            "height": 60
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "User is configuring Discourse AI features with their own OpenAI API key, aiming to expand AI agent capabilities such as creating AI Curators to assist category moderators.",
+          "created": "2025-05-24T15:50:29.374Z",
+          "modified": "2025-05-24T15:50:29.374Z",
+          "zIndex": 4,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep08uqt9g40efavc",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 373,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:29.502Z",
+          "modified": "2025-05-24T15:50:29.502Z",
+          "zIndex": 5,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep08zmop21gnm94",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 398,
+            "width": 451,
+            "height": 196
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "You're taking a powerful approach by integrating AI into Discourse, especially with the goal of creating \"AI Curators\" as intelligent co-moderators. Here's a breakdown of how to improve your current setup and extend it:\n\n---\n\n## ✅ Current State: Discourse AI with OpenAI API\n\nYou've:\n- Installed Discourse with the [Discourse AI plugin](https://github.com/discourse/discourse-ai)\n- Configured an OpenAI API key\n- Enabled available models (e.g. GPT-3.5-turbo, GPT-4, o1 for DALL-E)\n- Noted that GPT-4o is not yet listed or usable via dropdown\n\n---\n\n## 🚧 Limitations and Immediate Enhancements\n\n### 1. **GPT-4o and Custom Model Access**\nAs of now, **Discourse AI plugin lags behind OpenAI’s newest model support** (like `gpt-4o`). You can:\n- **Manually override** the model in plugin settings or code.\n  - Check `site_settings.yml` or relevant initializer files in `discourse-ai` for default model specs.\n  - You may also override per-function (e.g., summarizer vs. classifier).\n- **Edit YAML directly in plugin** if dropdowns don’t list all models:",
+          "created": "2025-05-24T15:50:29.507Z",
+          "modified": "2025-05-24T15:50:29.507Z",
+          "zIndex": 6,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep0bh5if3cucq90k",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 609,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:29.597Z",
+          "modified": "2025-05-24T15:50:29.597Z",
+          "zIndex": 7,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    },
+    {
+      "id": "mb2ep0btywsj65k03y",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "left": 72,
+        "right": 72,
+        "top": 72,
+        "bottom": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2ep0i0cehpnjuubfn",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 92,
+            "width": 451,
+            "height": 48
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "  ai_openai_completions_model: gpt-4o\n  ",
+          "created": "2025-05-24T15:50:29.832Z",
+          "modified": "2025-05-24T15:50:29.832Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep0ix52gchvm46bt",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 155,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:29.865Z",
+          "modified": "2025-05-24T15:50:29.865Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep0jduhybt2l77pp",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 180,
+            "width": 451,
+            "height": 126
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "### 2. **Cost Optimization**\n- `o1` is probably pointing to `dall-e-3`, which is expensive.\n- For image generation, you might route through a **middleware service or queue** to defer/restrict generation.\n- Optionally, **implement a credit/token system** within Discourse to limit access by trust level, badge, or group.\n\n---\n\n## 🔧 Expanding AI Functionality: Custom AI Curators\n\nTo create AI Curators as assistant moderators (essentially persistent, rule-aware agents), you’ll need to:\n\n### Step 1: **Hook into Categories**\n\nEach Discourse category can be extended via:\n- Custom plugin using `CategoryCustomFields`\n- Assigning AI Curators per category via a plugin schema like:",
+          "created": "2025-05-24T15:50:29.881Z",
+          "modified": "2025-05-24T15:50:29.881Z",
+          "zIndex": 2,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep0lrm1ep8n97ax",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 321,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:29.967Z",
+          "modified": "2025-05-24T15:50:29.967Z",
+          "zIndex": 3,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep0lwd8y51hh5pom",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 346,
+            "width": 451,
+            "height": 48
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "  category.custom_fields[\"ai_curator_prompt\"] = \"Moderate discussions on neuroscience with an eye for respectful disagreement and link sharing.\"\n  ",
+          "created": "2025-05-24T15:50:29.972Z",
+          "modified": "2025-05-24T15:50:29.972Z",
+          "zIndex": 4,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep0m32m3yz3ai23w",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 409,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:29.979Z",
+          "modified": "2025-05-24T15:50:29.979Z",
+          "zIndex": 5,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep0m8mehdwennlg",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 434,
+            "width": 451,
+            "height": 56
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "### Step 2: **Extend Plugin: Add Agent Workers**\n\nInside the `discourse-ai` plugin (or a custom plugin that depends on it), you can:\n- Define background jobs or long-running listeners using `Jobs::Scheduled`\n- Add new class inheriting from `DiscourseAi::AiBot::Base` to define an agent",
+          "created": "2025-05-24T15:50:29.984Z",
+          "modified": "2025-05-24T15:50:29.984Z",
+          "zIndex": 6,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep0oqq0v37dxe4zd",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 505,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:30.074Z",
+          "modified": "2025-05-24T15:50:30.074Z",
+          "zIndex": 7,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    },
+    {
+      "id": "mb2ep0oywj5ykbc9qe",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "left": 72,
+        "right": 72,
+        "top": 72,
+        "bottom": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2ep0v97w3fzs1tx4v",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 92,
+            "width": 451,
+            "height": 202
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "  module DiscourseAi\n    module AiBot\n      class CuratorAgent < Base\n        def process(post)\n          if relevant_to_category?(post)\n            ai_summarize(post)\n            ai_respond_if_needed(post)\n          end\n        end\n      end\n    end\n  end\n  ",
+          "created": "2025-05-24T15:50:30.309Z",
+          "modified": "2025-05-24T15:50:30.309Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep0w0zdpk4w7cdq",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 309,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:30.336Z",
+          "modified": "2025-05-24T15:50:30.336Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep0w7s6athry7w2",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 334,
+            "width": 451,
+            "height": 40
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "- Hook it into post creation:",
+          "created": "2025-05-24T15:50:30.343Z",
+          "modified": "2025-05-24T15:50:30.343Z",
+          "zIndex": 2,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep0yuljwezbtst9q",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 389,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:30.438Z",
+          "modified": "2025-05-24T15:50:30.439Z",
+          "zIndex": 3,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep0zbo44eyubb9xc",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 414,
+            "width": 451,
+            "height": 76
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "  on(:post_created) do |post, opts, user|\n    DiscourseAi::AiBot::CuratorAgent.new.process(post)\n  end\n  ",
+          "created": "2025-05-24T15:50:30.455Z",
+          "modified": "2025-05-24T15:50:30.455Z",
+          "zIndex": 4,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep0zjgcy225szouh",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 505,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:30.463Z",
+          "modified": "2025-05-24T15:50:30.463Z",
+          "zIndex": 5,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep0zprom9f7tt7hh",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 530,
+            "width": 451,
+            "height": 42
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "### Step 3: **Custom Prompts per Curator**\nYou might allow defining curator personas:\n- Add a custom admin interface (or use category description + tags)\n- Feed persona prompt into system message of GPT call:",
+          "created": "2025-05-24T15:50:30.469Z",
+          "modified": "2025-05-24T15:50:30.469Z",
+          "zIndex": 6,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep120iff0c882dac",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 587,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:30.552Z",
+          "modified": "2025-05-24T15:50:30.552Z",
+          "zIndex": 7,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep127p4hrppyfvp",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 612,
+            "width": 451,
+            "height": 48
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "  system_prompt = SiteSetting.ai_curator_persona || \"You are a careful philosophical moderator...\"\n  ",
+          "created": "2025-05-24T15:50:30.559Z",
+          "modified": "2025-05-24T15:50:30.559Z",
+          "zIndex": 8,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    },
+    {
+      "id": "mb2ep12d7eqq1lhox6b",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "left": 72,
+        "right": 72,
+        "top": 72,
+        "bottom": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2ep18ba1wdjqlsge6",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 92,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:30.779Z",
+          "modified": "2025-05-24T15:50:30.779Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep18s1gy4bve4pxh",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 117,
+            "width": 451,
+            "height": 168
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "---\n\n## 🔍 Recommendations for Production-Ready Deployment\n\n- **Rate-limit AI responses per category** to avoid overposting\n- **Log AI actions** visibly with tags or special post formatting (e.g. `[AI Curator Note]`)\n- **Fallbacks and monitoring**: Add retry logic and log failures with `Discourse::Utils::Logster`\n\n---\n\n## 📚 Resources & Tools\n\n- [Discourse AI GitHub](https://github.com/discourse/discourse-ai)\n- [Discourse Plugin Developer’s Guide](https://meta.discourse.org/t/beginners-guide-to-creating-discourse-plugins-part-1/30515)\n- For GPT-4o: [OpenAI API Documentation](https://platform.openai.com/docs/guides/gpt)\n\n---\n\n## ✅ Next Steps for You\n\nWould you like me to help:\n- Scaffold a Discourse plugin for AI Curators?\n- Add GPT-4o model override safely?\n- Integrate a basic credit/token limiter?\n\nLet me know which path you want to focus on first, and I can generate the actual Ruby/plugin code to get you started.",
+          "created": "2025-05-24T15:50:30.796Z",
+          "modified": "2025-05-24T15:50:30.796Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep1bjhxu0dxh2ykg",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 300,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:30.895Z",
+          "modified": "2025-05-24T15:50:30.895Z",
+          "zIndex": 2,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep1ext5cq0lf10pd",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 320,
+            "width": 451,
+            "height": 60
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "Model set context updated.",
+          "created": "2025-05-24T15:50:31.017Z",
+          "modified": "2025-05-24T15:50:31.017Z",
+          "zIndex": 3,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep1i3uvp31tz8j1g",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 400,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#2E7D32"
+          },
+          "content": "User:",
+          "created": "2025-05-24T15:50:31.131Z",
+          "modified": "2025-05-24T15:50:31.131Z",
+          "zIndex": 4,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep1la0cm14ytkmsl",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 420,
+            "width": 451,
+            "height": 70
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "Can I create a custom plugin that \"hooks\" into the Discourse AI plugin to add the newer models, without modifying the Discourse AI code? I'm thinking of the way Wordpress allows hooks to override functions, but without interfering with updating existing core or plugin code. Help me understand the available mechanisms in Discourse.",
+          "created": "2025-05-24T15:50:31.246Z",
+          "modified": "2025-05-24T15:50:31.246Z",
+          "zIndex": 5,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep1oeos9esvd1q9",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 510,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:31.358Z",
+          "modified": "2025-05-24T15:50:31.358Z",
+          "zIndex": 6,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    },
+    {
+      "id": "mb2ep1oop0mtrzxuii",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "left": 72,
+        "right": 72,
+        "top": 72,
+        "bottom": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2ep1uliuxgrc3ctt8",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 92,
+            "width": 451,
+            "height": 224
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "Yes, you **can create a custom plugin** that _hooks into_ the Discourse AI plugin to extend its capabilities — including registering new models like `gpt-4o` — **without modifying the core Discourse AI plugin** directly. This is very much in line with Discourse’s plugin architecture, which is inspired more by Ruby on Rails than WordPress, but offers flexible extension points.\n\nLet me break this down:\n\n---\n\n## 🔧 1. Discourse Plugin Architecture Basics\n\nDiscourse plugins are Ruby code that integrate into the core via:\n\n- **Initializers** (`plugin.rb`)\n- **Event hooks** (`on(:post_created)`, etc.)\n- **Module overrides** (via `prepend`, `class_eval`, or `Module#alias_method`)\n- **Site settings and custom fields**\n- **Registerable extensions** (like AI models, embeddings, analyzers, bots)\n\nThe **Discourse AI plugin** is designed to support extensions, and it already registers different providers (like OpenAI, Anthropic, etc.) via internal registries.\n\n---\n\n## 🧩 2. Strategy to Add a New Model (like `gpt-4o`) via Custom Plugin\n\nYou can build a **separate plugin** that adds support for new models via:\n\n### ✅ A. Register a new model alias\nYou can hook into the `DiscourseAi::Completions::OpenAiCompletions` and **add your own model mapping** by patching it:",
+          "created": "2025-05-24T15:50:31.581Z",
+          "modified": "2025-05-24T15:50:31.581Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep1x4q0rsxev2saq",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 331,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:31.672Z",
+          "modified": "2025-05-24T15:50:31.672Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep1y2a9h6tapadw",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 356,
+            "width": 451,
+            "height": 244
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "# plugins/discourse-ai-extension/plugin.rb\n\n# name: discourse-ai-extension\n# version: 0.1\n# required_version: 3.2.0\n\nafter_initialize do\n  module ::DiscourseAi::Completions::OpenAiCompletionsExtension\n    def default_model\n      \"gpt-4o\"\n    end\n  end\n\n  ::DiscourseAi::Completions::OpenAiCompletions.prepend(::DiscourseAi::Completions::OpenAiCompletionsExtension)\nend\n",
+          "created": "2025-05-24T15:50:31.706Z",
+          "modified": "2025-05-24T15:50:31.706Z",
+          "zIndex": 2,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep1yctg5qji0b139",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 615,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:31.716Z",
+          "modified": "2025-05-24T15:50:31.716Z",
+          "zIndex": 3,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    },
+    {
+      "id": "mb2ep1ykt4smljptpp",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "left": 72,
+        "right": 72,
+        "top": 72,
+        "bottom": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2ep24h1cqq7rsr0mk",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 92,
+            "width": 451,
+            "height": 56
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "> ✅ This overrides the model used when the plugin asks OpenAI for completions.\n\n### ✅ B. Add a new model to site settings\nIf the model list is constrained by allowed settings (`SiteSetting.ai_openai_completions_model` choices), you can **extend the setting options**:",
+          "created": "2025-05-24T15:50:31.937Z",
+          "modified": "2025-05-24T15:50:31.937Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep279rmajs9z9p1",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 163,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:32.037Z",
+          "modified": "2025-05-24T15:50:32.037Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep27nyjzobsfdc7f",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 188,
+            "width": 451,
+            "height": 286
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "# plugins/discourse-ai-extension/plugin.rb\nregister_asset \"javascripts/discourse/initializers/add_gpt4o_model.js\"\n\n# assets/javascripts/discourse/initializers/add_gpt4o_model.js\nimport { withPluginApi } from \"discourse/lib/plugin-api\";\n\nexport default {\n  name: \"add-gpt4o-model\",\n  initialize() {\n    withPluginApi(\"0.8\", (api) => {\n      const siteSettings = api.container.lookup(\"site-settings:main\");\n      const modelSetting = siteSettings.ai_openai_completions_model;\n      if (modelSetting && !modelSetting.choices.includes(\"gpt-4o\")) {\n        modelSetting.choices.push(\"gpt-4o\");\n      }\n    });\n  },\n};\n",
+          "created": "2025-05-24T15:50:32.051Z",
+          "modified": "2025-05-24T15:50:32.051Z",
+          "zIndex": 2,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep27t78u4pry81rk",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 489,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:32.057Z",
+          "modified": "2025-05-24T15:50:32.057Z",
+          "zIndex": 3,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    },
+    {
+      "id": "mb2ep281e02zz99xup9",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "left": 72,
+        "right": 72,
+        "top": 72,
+        "bottom": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2ep2e21nvmcvuio6f",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 92,
+            "width": 451,
+            "height": 280
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "This allows the **admin interface** to show your model, assuming the backend can use it.\n\n---\n\n## 🧠 3. Avoiding Code Collisions\n\nDiscourse uses conventions like:\n- `after_initialize` blocks for safe plugin injection\n- `register_x` style hooks (e.g. `register_asset`, `register_model`, `register_custom_field_type`)\n\nAvoiding core/plugin modifications ensures:\n- You can safely update `discourse-ai`\n- Your plugin can be toggled independently\n- You maintain compatibility across Discourse upgrades\n\nUse `prepend` or `class_eval` for Ruby methods only if there's no public hook exposed — but these should be scoped carefully to avoid affecting unrelated functionality.\n\n---\n\n## 🧪 4. Recommended Practice for AI Plugins\n\nThe best approach would be:\n- Create a **plugin that defines its own subclass** of the AI worker or tool, e.g. `MyGpt4oSummarizer < ::DiscourseAi::Summarizer::Base`\n- Register it explicitly for certain categories or tags\n- Provide fallback logic to the default summarizer otherwise\n\n---\n\n## 🧭 Summary: Hooking Into Discourse AI Safely\n\n| Goal | Method |\n|------|--------|\n| Use new model (e.g., `gpt-4o`) | `prepend` to override model-returning method |\n| Add model to admin dropdown | Patch JavaScript via `register_asset` |\n| Create new summarizer/chat tool | Subclass & register via initializer |\n| Avoid breaking upgrades | Never modify `discourse-ai` directly; rely on plugin layering |\n\n---\n\nWould you like a ready-to-deploy skeleton of this plugin (`discourse-ai-extension`) that adds `gpt-4o` and allows category-specific prompt customization for AI curators?",
+          "created": "2025-05-24T15:50:32.282Z",
+          "modified": "2025-05-24T15:50:32.282Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep2gnohlgfl7gqpa",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 387,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#2E7D32"
+          },
+          "content": "User:",
+          "created": "2025-05-24T15:50:32.375Z",
+          "modified": "2025-05-24T15:50:32.375Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep2k176t2vxiy8bw",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 407,
+            "width": 451,
+            "height": 84
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "For additional AI models, I'd like to support Google's Gemini and Gemma models, the Groq.com models which include many open source models (served with high performance) and anthropic models as well as a full complement of the current OpenAI models. Please give me as complete code as possible, with instructions on what folders they should be placed in, and how to package them for installation into Discourse.",
+          "created": "2025-05-24T15:50:32.497Z",
+          "modified": "2025-05-24T15:50:32.497Z",
+          "zIndex": 2,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep2nbkylfp5kfuwj",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 511,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:32.615Z",
+          "modified": "2025-05-24T15:50:32.615Z",
+          "zIndex": 3,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep2qj3kuzxznjpa2",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 531,
+            "width": 451,
+            "height": 60
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "User wants to support multiple external AI model providers in their Discourse instance, including Google Gemini/Gemma, Groq-hosted models, Anthropic, and the full OpenAI model suite. They are requesting complete plugin code and folder structure for Discourse plugin development.",
+          "created": "2025-05-24T15:50:32.731Z",
+          "modified": "2025-05-24T15:50:32.731Z",
+          "zIndex": 4,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep2u43gk0a2p40ph",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 611,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:32.860Z",
+          "modified": "2025-05-24T15:50:32.860Z",
+          "zIndex": 5,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    },
+    {
+      "id": "mb2ep2ukw02oq8dqzn",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "left": 72,
+        "right": 72,
+        "top": 72,
+        "bottom": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2ep30jx2353gbzkr",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 92,
+            "width": 451,
+            "height": 112
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "To support multiple AI providers (OpenAI, Anthropic, Google Gemini/Gemma, and Groq-hosted models) in Discourse using a **custom plugin**, you can build a plugin that extends the `discourse-ai` framework with modular provider support. Below is a complete working structure with setup instructions.\n\n---\n\n## ✅ Overview\n\nWe will:\n- Create a plugin called `discourse-multi-ai`\n- Hook into Discourse AI to support:\n  - OpenAI (GPT-4o, GPT-3.5-turbo, etc.)\n  - Anthropic (Claude 3 family)\n  - Google Gemini/Gemma\n  - Groq (Mixtral, LLaMA, etc.)\n\n---\n\n## 📁 Plugin Structure",
+          "created": "2025-05-24T15:50:33.091Z",
+          "modified": "2025-05-24T15:50:33.091Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep33cyrfooj7jnrl",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 219,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:33.192Z",
+          "modified": "2025-05-24T15:50:33.192Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep33qm6gbiyfya0d",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 244,
+            "width": 451,
+            "height": 244
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "plugins/\n└── discourse-multi-ai/\n    ├── plugin.rb\n    ├── lib/\n    │   └── discourse_multi_ai/\n    │       ├── engine.rb\n    │       ├── providers/\n    │       │   ├── base_provider.rb\n    │       │   ├── openai_provider.rb\n    │       │   ├── anthropic_provider.rb\n    │       │   ├── gemini_provider.rb\n    │       │   └── groq_provider.rb\n    └── config/\n        └── locales/\n            └── en.yml\n",
+          "created": "2025-05-24T15:50:33.206Z",
+          "modified": "2025-05-24T15:50:33.206Z",
+          "zIndex": 2,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep342e4dtuazb8v",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 503,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:33.218Z",
+          "modified": "2025-05-24T15:50:33.218Z",
+          "zIndex": 3,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep34a2zhfs8g2nwj",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 528,
+            "width": 451,
+            "height": 40
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "---\n\n## 📦 Step-by-Step Setup\n\n### 1. `plugin.rb`",
+          "created": "2025-05-24T15:50:33.226Z",
+          "modified": "2025-05-24T15:50:33.226Z",
+          "zIndex": 4,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep3763ofjj8oa8i2",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 583,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:33.330Z",
+          "modified": "2025-05-24T15:50:33.330Z",
+          "zIndex": 5,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    },
+    {
+      "id": "mb2ep37h2dg6986h5y",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "left": 72,
+        "right": 72,
+        "top": 72,
+        "bottom": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2ep3dpu9pbrlowpl",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 92,
+            "width": 451,
+            "height": 342
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "# name: discourse-multi-ai\n# version: 0.1\n# authors: Tem Noon, ChatGPT\n# required_version: 3.2.0\n# about: Extend Discourse AI with multiple external AI providers\n\nenabled_site_setting :multi_ai_enabled\n\nrequire_relative \"lib/discourse_multi_ai/engine\"\n\nafter_initialize do\n  require_relative \"lib/discourse_multi_ai/providers/base_provider\"\n  require_relative \"lib/discourse_multi_ai/providers/openai_provider\"\n  require_relative \"lib/discourse_multi_ai/providers/anthropic_provider\"\n  require_relative \"lib/discourse_multi_ai/providers/gemini_provider\"\n  require_relative \"lib/discourse_multi_ai/providers/groq_provider\"\n\n  DiscourseAi::Completions::BaseCompletions.register_provider(:openai, DiscourseMultiAi::OpenAiProvider)\n  DiscourseAi::Completions::BaseCompletions.register_provider(:anthropic, DiscourseMultiAi::AnthropicProvider)\n  DiscourseAi::Completions::BaseCompletions.register_provider(:gemini, DiscourseMultiAi::GeminiProvider)\n  DiscourseAi::Completions::BaseCompletions.register_provider(:groq, DiscourseMultiAi::GroqProvider)\nend\n",
+          "created": "2025-05-24T15:50:33.565Z",
+          "modified": "2025-05-24T15:50:33.565Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep3ebdneocanjox5",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 449,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:33.587Z",
+          "modified": "2025-05-24T15:50:33.587Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep3ephghzh705azm",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 474,
+            "width": 451,
+            "height": 40
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "---\n\n### 2. `lib/discourse_multi_ai/engine.rb`",
+          "created": "2025-05-24T15:50:33.601Z",
+          "modified": "2025-05-24T15:50:33.601Z",
+          "zIndex": 2,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep3h7ft8zrl5n1uh",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 529,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:33.691Z",
+          "modified": "2025-05-24T15:50:33.691Z",
+          "zIndex": 3,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep3hk463dei8s2pr",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 554,
+            "width": 451,
+            "height": 118
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "module DiscourseMultiAi\n  class Engine < ::Rails::Engine\n    engine_name \"discourse_multi_ai\"\n    isolate_namespace DiscourseMultiAi\n  end\nend\n",
+          "created": "2025-05-24T15:50:33.704Z",
+          "modified": "2025-05-24T15:50:33.704Z",
+          "zIndex": 4,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    },
+    {
+      "id": "mb2ep3hxl2mrlyvxp9i",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "left": 72,
+        "right": 72,
+        "top": 72,
+        "bottom": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2ep3nyg6zegslja79",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 92,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:33.934Z",
+          "modified": "2025-05-24T15:50:33.934Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep3ohi3v17obmtsf",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 117,
+            "width": 451,
+            "height": 40
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "---\n\n### 3. `lib/discourse_multi_ai/providers/base_provider.rb`",
+          "created": "2025-05-24T15:50:33.953Z",
+          "modified": "2025-05-24T15:50:33.953Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep3qwzzs9k4qh7cc",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 172,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:34.040Z",
+          "modified": "2025-05-24T15:50:34.040Z",
+          "zIndex": 2,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep3r61n9yw2w9hs7",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 197,
+            "width": 451,
+            "height": 132
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "module DiscourseMultiAi\n  class BaseProvider\n    def self.perform_completion(prompt:, model:, api_key:, **options)\n      raise NotImplementedError\n    end\n  end\nend\n",
+          "created": "2025-05-24T15:50:34.050Z",
+          "modified": "2025-05-24T15:50:34.050Z",
+          "zIndex": 3,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep3rik3vqt45tmg",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 344,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:34.062Z",
+          "modified": "2025-05-24T15:50:34.062Z",
+          "zIndex": 4,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep3rvtytxxjexxqd",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 369,
+            "width": 451,
+            "height": 40
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "---\n\n### 4. OpenAI Provider – `openai_provider.rb`",
+          "created": "2025-05-24T15:50:34.075Z",
+          "modified": "2025-05-24T15:50:34.075Z",
+          "zIndex": 5,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep3ufr8qvwe3rtk",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 424,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:34.167Z",
+          "modified": "2025-05-24T15:50:34.167Z",
+          "zIndex": 6,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    },
+    {
+      "id": "mb2ep3usrgpu3qd1qcq",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "left": 72,
+        "right": 72,
+        "top": 72,
+        "bottom": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2ep411aff29lg7s3w",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 92,
+            "width": 451,
+            "height": 356
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "require \"net/http\"\nrequire \"json\"\n\nmodule DiscourseMultiAi\n  class OpenAiProvider < BaseProvider\n    def self.perform_completion(prompt:, model:, api_key:, temperature: 0.7)\n      uri = URI(\"https://api.openai.com/v1/chat/completions\")\n      headers = {\n        \"Authorization\" => \"Bearer #{api_key}\",\n        \"Content-Type\" => \"application/json\"\n      }\n\n      body = {\n        model: model,\n        messages: [{ role: \"user\", content: prompt }],\n        temperature: temperature\n      }\n\n      response = Net::HTTP.post(uri, body.to_json, headers)\n      JSON.parse(response.body)[\"choices\"].first[\"message\"][\"content\"]\n    end\n  end\nend\n",
+          "created": "2025-05-24T15:50:34.405Z",
+          "modified": "2025-05-24T15:50:34.405Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep41unktwllnq5u",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 463,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:34.434Z",
+          "modified": "2025-05-24T15:50:34.434Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep4293nnlixxk7sm",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 488,
+            "width": 451,
+            "height": 40
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "---\n\n### 5. Anthropic Provider – `anthropic_provider.rb`",
+          "created": "2025-05-24T15:50:34.449Z",
+          "modified": "2025-05-24T15:50:34.449Z",
+          "zIndex": 2,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep44rigqurcv8jne",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 543,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:34.539Z",
+          "modified": "2025-05-24T15:50:34.539Z",
+          "zIndex": 3,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    },
+    {
+      "id": "mb2ep458ijmiadjzua8",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "left": 72,
+        "right": 72,
+        "top": 72,
+        "bottom": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2ep4birrrydc3vimi",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 92,
+            "width": 451,
+            "height": 384
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "require \"net/http\"\nrequire \"json\"\n\nmodule DiscourseMultiAi\n  class AnthropicProvider < BaseProvider\n    def self.perform_completion(prompt:, model:, api_key:, temperature: 0.7)\n      uri = URI(\"https://api.anthropic.com/v1/messages\")\n      headers = {\n        \"x-api-key\" => api_key,\n        \"anthropic-version\" => \"2023-06-01\",\n        \"content-type\" => \"application/json\"\n      }\n\n      body = {\n        model: model,\n        max_tokens: 1024,\n        messages: [{ role: \"user\", content: prompt }],\n        temperature: temperature\n      }\n\n      response = Net::HTTP.post(uri, body.to_json, headers)\n      JSON.parse(response.body).dig(\"content\", 0, \"text\")\n    end\n  end\nend\n",
+          "created": "2025-05-24T15:50:34.782Z",
+          "modified": "2025-05-24T15:50:34.782Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep4cgeq3z1s4j0gl",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 491,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:34.816Z",
+          "modified": "2025-05-24T15:50:34.816Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep4cv09n2gegho632",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 516,
+            "width": 451,
+            "height": 40
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "---\n\n### 6. Gemini Provider – `gemini_provider.rb`",
+          "created": "2025-05-24T15:50:34.831Z",
+          "modified": "2025-05-24T15:50:34.831Z",
+          "zIndex": 2,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep4fgqe36cao05ab",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 571,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:34.924Z",
+          "modified": "2025-05-24T15:50:34.924Z",
+          "zIndex": 3,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    },
+    {
+      "id": "mb2ep4fs4mcokmqfasc",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "left": 72,
+        "right": 72,
+        "top": 72,
+        "bottom": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2ep4luhh5ca2yf9ap",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 92,
+            "width": 451,
+            "height": 314
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "require \"net/http\"\nrequire \"json\"\n\nmodule DiscourseMultiAi\n  class GeminiProvider < BaseProvider\n    def self.perform_completion(prompt:, model:, api_key:, temperature: 0.7)\n      uri = URI(\"https://generativelanguage.googleapis.com/v1beta/models/#{model}:generateContent?key=#{api_key}\")\n\n      body = {\n        contents: [{ parts: [{ text: prompt }] }],\n        generationConfig: { temperature: temperature }\n      }\n\n      headers = { \"Content-Type\" => \"application/json\" }\n\n      response = Net::HTTP.post(uri, body.to_json, headers)\n      JSON.parse(response.body).dig(\"candidates\", 0, \"content\", \"parts\", 0, \"text\")\n    end\n  end\nend\n",
+          "created": "2025-05-24T15:50:35.154Z",
+          "modified": "2025-05-24T15:50:35.154Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep4mk07v87mp0u9qg",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 421,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:35.180Z",
+          "modified": "2025-05-24T15:50:35.180Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep4mw10vwnl7vm1zn",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 446,
+            "width": 451,
+            "height": 40
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "---\n\n### 7. Groq Provider – `groq_provider.rb`",
+          "created": "2025-05-24T15:50:35.192Z",
+          "modified": "2025-05-24T15:50:35.192Z",
+          "zIndex": 2,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep4p9xcqix2fro3g",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 501,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:35.277Z",
+          "modified": "2025-05-24T15:50:35.277Z",
+          "zIndex": 3,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    },
+    {
+      "id": "mb2ep4pmf00lh5sjmgv",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "left": 72,
+        "right": 72,
+        "top": 72,
+        "bottom": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2ep4vtb0c9ema5g2d",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 92,
+            "width": 451,
+            "height": 356
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "require \"net/http\"\nrequire \"json\"\n\nmodule DiscourseMultiAi\n  class GroqProvider < BaseProvider\n    def self.perform_completion(prompt:, model:, api_key:, temperature: 0.7)\n      uri = URI(\"https://api.groq.com/openai/v1/chat/completions\")\n      headers = {\n        \"Authorization\" => \"Bearer #{api_key}\",\n        \"Content-Type\" => \"application/json\"\n      }\n\n      body = {\n        model: model,\n        messages: [{ role: \"user\", content: prompt }],\n        temperature: temperature\n      }\n\n      response = Net::HTTP.post(uri, body.to_json, headers)\n      JSON.parse(response.body)[\"choices\"].first[\"message\"][\"content\"]\n    end\n  end\nend\n",
+          "created": "2025-05-24T15:50:35.513Z",
+          "modified": "2025-05-24T15:50:35.513Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep4wm9po11miszhr",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 463,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:35.542Z",
+          "modified": "2025-05-24T15:50:35.542Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep4wulbmdqxzxohd",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 488,
+            "width": 451,
+            "height": 40
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "---\n\n### 8. Admin Settings (Optional)\n\nTo wire this to the admin UI, create `config/locales/en.yml`:",
+          "created": "2025-05-24T15:50:35.550Z",
+          "modified": "2025-05-24T15:50:35.550Z",
+          "zIndex": 2,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep4zc08n7vbcr70gu",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 543,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:35.640Z",
+          "modified": "2025-05-24T15:50:35.640Z",
+          "zIndex": 3,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep4zt9fa7ohsdvb",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 568,
+            "width": 451,
+            "height": 76
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "en:\n  site_settings:\n    multi_ai_enabled: \"Enable Multiple AI Providers\"\n",
+          "created": "2025-05-24T15:50:35.657Z",
+          "modified": "2025-05-24T15:50:35.657Z",
+          "zIndex": 4,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep509xz4kdrec7le",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 659,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:35.673Z",
+          "modified": "2025-05-24T15:50:35.673Z",
+          "zIndex": 5,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    },
+    {
+      "id": "mb2ep50i5h4m8kajwb5",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "left": 72,
+        "right": 72,
+        "top": 72,
+        "bottom": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2ep57benad3fzwg25",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 92,
+            "width": 451,
+            "height": 42
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "Add more settings via `settings.yml` if needed (e.g., per-provider API keys).\n\n---\n\n## 🧪 Testing & Installation\n\n### Local Plugin Installation\n\n1. Place the folder in `plugins/` of your Discourse installation:",
+          "created": "2025-05-24T15:50:35.927Z",
+          "modified": "2025-05-24T15:50:35.927Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep5a51m42ln9trmh",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 149,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:36.029Z",
+          "modified": "2025-05-24T15:50:36.029Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep5aoif3751ilh4p",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 174,
+            "width": 451,
+            "height": 48
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "   /var/discourse/plugins/discourse-multi-ai\n   ",
+          "created": "2025-05-24T15:50:36.048Z",
+          "modified": "2025-05-24T15:50:36.048Z",
+          "zIndex": 2,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep5b14t981q5g88m",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 237,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:36.061Z",
+          "modified": "2025-05-24T15:50:36.061Z",
+          "zIndex": 3,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep5bdltnnywmgkc",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 262,
+            "width": 451,
+            "height": 40
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "2. Rebuild Discourse:",
+          "created": "2025-05-24T15:50:36.073Z",
+          "modified": "2025-05-24T15:50:36.073Z",
+          "zIndex": 4,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep5dzwkbkgrdjmt",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 317,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:36.167Z",
+          "modified": "2025-05-24T15:50:36.167Z",
+          "zIndex": 5,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep5een64naa2wbs",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 342,
+            "width": 451,
+            "height": 48
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "   ./launcher rebuild app\n   ",
+          "created": "2025-05-24T15:50:36.182Z",
+          "modified": "2025-05-24T15:50:36.182Z",
+          "zIndex": 6,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep5ezq2cbwdiuqs",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 405,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:36.203Z",
+          "modified": "2025-05-24T15:50:36.203Z",
+          "zIndex": 7,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep5fcfy6igzih85",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 430,
+            "width": 451,
+            "height": 70
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "3. Enable the plugin via `Admin > Settings > Plugins`\n\n4. Test via custom usage: You’ll want to wire these providers into specific AI tools (summarizers, classifiers, chatbots). That will require extending or subclassing tools from `discourse-ai`.\n\n---\n\n## 🧠 Bonus: Plug Providers into Custom AI Tools\n\nYou can use a pattern like this in a separate module:",
+          "created": "2025-05-24T15:50:36.216Z",
+          "modified": "2025-05-24T15:50:36.216Z",
+          "zIndex": 8,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep5hrwx33lbs47vo",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 515,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:36.303Z",
+          "modified": "2025-05-24T15:50:36.303Z",
+          "zIndex": 9,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    },
+    {
+      "id": "mb2ep5hxwrasd3ftz2m",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "left": 72,
+        "right": 72,
+        "top": 72,
+        "bottom": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2ep5odmzuwz9h5hlj",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 92,
+            "width": 451,
+            "height": 174
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "module MyCurator\n  def self.summarize(post)\n    prompt = \"Summarize: #{post.raw}\"\n    DiscourseMultiAi::AnthropicProvider.perform_completion(\n      prompt: prompt,\n      model: \"claude-3-opus-20240229\",\n      api_key: SiteSetting.anthropic_api_key\n    )\n  end\nend\n",
+          "created": "2025-05-24T15:50:36.541Z",
+          "modified": "2025-05-24T15:50:36.541Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep5oy812h1u38mq",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 281,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:36.562Z",
+          "modified": "2025-05-24T15:50:36.562Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep5pcclc3eg26a27",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 306,
+            "width": 451,
+            "height": 56
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "---\n\n## ✅ Next Step\n\nWould you like help:\n- Wiring this into category-specific AI curators?\n- Adding support for streaming outputs (where available)?\n- Generating admin UI to control each provider?\n\nLet me know which of these you’d like, and I’ll expand this into a deployable plugin template.",
+          "created": "2025-05-24T15:50:36.576Z",
+          "modified": "2025-05-24T15:50:36.576Z",
+          "zIndex": 2,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep5s10uv8x5xrff6s",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 377,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:36.673Z",
+          "modified": "2025-05-24T15:50:36.673Z",
+          "zIndex": 3,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep5vfz97de122m7h",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 397,
+            "width": 451,
+            "height": 60
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "Model set context updated.",
+          "created": "2025-05-24T15:50:36.795Z",
+          "modified": "2025-05-24T15:50:36.795Z",
+          "zIndex": 4,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep5ylb0tccompu4d",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 477,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#2E7D32"
+          },
+          "content": "User:",
+          "created": "2025-05-24T15:50:36.909Z",
+          "modified": "2025-05-24T15:50:36.909Z",
+          "zIndex": 5,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep61yba3kioucrhq",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 497,
+            "width": 451,
+            "height": 60
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "Where is the plugins folder in the discourse installlation?",
+          "created": "2025-05-24T15:50:37.030Z",
+          "modified": "2025-05-24T15:50:37.030Z",
+          "zIndex": 6,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep6594a3zwui7yrk",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 577,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:37.149Z",
+          "modified": "2025-05-24T15:50:37.149Z",
+          "zIndex": 7,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    },
+    {
+      "id": "mb2ep65rwh3vnqpuofc",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "left": 72,
+        "right": 72,
+        "top": 72,
+        "bottom": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2ep6c692gm2k8x47",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 92,
+            "width": 451,
+            "height": 84
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "In a standard **Discourse Docker installation** (using the official launcher), the plugins folder is located inside the `app` container environment. Here's how you can access and use it:\n\n---\n\n## 📁 Location of the Plugins Folder\n\n### If you're using the [official Docker setup](https://github.com/discourse/discourse/blob/main/docs/INSTALL-cloud.md):\n\n**On your host machine** (where Discourse is installed):",
+          "created": "2025-05-24T15:50:37.398Z",
+          "modified": "2025-05-24T15:50:37.398Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep6f4lb7hoco0xks",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 191,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:37.504Z",
+          "modified": "2025-05-24T15:50:37.504Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep6fiq2wblelbous",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 216,
+            "width": 451,
+            "height": 48
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "/var/discourse/plugins/\n",
+          "created": "2025-05-24T15:50:37.518Z",
+          "modified": "2025-05-24T15:50:37.518Z",
+          "zIndex": 2,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep6fz1zg9xstg1gf",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 279,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:37.535Z",
+          "modified": "2025-05-24T15:50:37.535Z",
+          "zIndex": 3,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep6gc10995g725qt",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 304,
+            "width": 451,
+            "height": 40
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "### Example:",
+          "created": "2025-05-24T15:50:37.548Z",
+          "modified": "2025-05-24T15:50:37.548Z",
+          "zIndex": 4,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep6j0k2qpas4xy4s",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 359,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:37.644Z",
+          "modified": "2025-05-24T15:50:37.644Z",
+          "zIndex": 5,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep6j99m2iqt1tv69",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 384,
+            "width": 451,
+            "height": 48
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "cd /var/discourse/plugins\n",
+          "created": "2025-05-24T15:50:37.653Z",
+          "modified": "2025-05-24T15:50:37.653Z",
+          "zIndex": 6,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep6ji0qm0o9tu4j2a",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 447,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:37.662Z",
+          "modified": "2025-05-24T15:50:37.662Z",
+          "zIndex": 7,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep6jsaz6zehujp4j",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 472,
+            "width": 451,
+            "height": 40
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "This is where you can **clone or copy** custom plugins.\n\n---\n\n## 📦 Installing Your Plugin\n\n### 🔁 Method 1: Clone directly into plugins folder",
+          "created": "2025-05-24T15:50:37.672Z",
+          "modified": "2025-05-24T15:50:37.672Z",
+          "zIndex": 8,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep6md4lglwfio0a5",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 527,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:37.765Z",
+          "modified": "2025-05-24T15:50:37.765Z",
+          "zIndex": 9,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep6mtzkkayz2iiy",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 552,
+            "width": 451,
+            "height": 62
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "cd /var/discourse/plugins\ngit clone https://github.com/yourusername/discourse-multi-ai.git\n",
+          "created": "2025-05-24T15:50:37.781Z",
+          "modified": "2025-05-24T15:50:37.781Z",
+          "zIndex": 10,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep6nbzyxpwfck9in",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 629,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:37.799Z",
+          "modified": "2025-05-24T15:50:37.799Z",
+          "zIndex": 11,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    },
+    {
+      "id": "mb2ep6nosai9lpkmgh",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "left": 72,
+        "right": 72,
+        "top": 72,
+        "bottom": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2ep6tr6k7e11593te",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 92,
+            "width": 451,
+            "height": 56
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "> Make sure your plugin has the correct `plugin.rb` structure and subfolders (as described earlier).\n\n---\n\n## 🔧 Rebuild the App\n\nAfter placing your plugin in `/var/discourse/plugins`, you must **rebuild the Discourse container** to load it:",
+          "created": "2025-05-24T15:50:38.031Z",
+          "modified": "2025-05-24T15:50:38.031Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep6w7ebgjp4wmwgq",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 163,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:38.119Z",
+          "modified": "2025-05-24T15:50:38.119Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep6whfj0elxdr52",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 188,
+            "width": 451,
+            "height": 62
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "cd /var/discourse\n./launcher rebuild app\n",
+          "created": "2025-05-24T15:50:38.129Z",
+          "modified": "2025-05-24T15:50:38.129Z",
+          "zIndex": 2,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep6wtxes2o4w47ir",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 265,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:38.141Z",
+          "modified": "2025-05-24T15:50:38.141Z",
+          "zIndex": 3,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep6x2be2zefwzz7t",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 290,
+            "width": 451,
+            "height": 84
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "This step is essential—plugins are only loaded during the container build.\n\n---\n\n## 🔍 Verifying the Plugin\n\nOnce the container is rebuilt:\n\n- Go to **Admin > Plugins** — your plugin should be listed.\n- You can also visit **Admin > Settings > Plugins** to configure it, if it exposes any settings.\n\n---\n\n## 🛠 Alternative: Development (non-Docker) Setup\n\nIf you're running Discourse in a local development environment (non-Docker, for hacking):",
+          "created": "2025-05-24T15:50:38.150Z",
+          "modified": "2025-05-24T15:50:38.150Z",
+          "zIndex": 4,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep6zmes42iui95ot",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 389,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:38.242Z",
+          "modified": "2025-05-24T15:50:38.242Z",
+          "zIndex": 5,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep6zzhzlondib9a",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 414,
+            "width": 451,
+            "height": 48
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "~/discourse/plugins/\n",
+          "created": "2025-05-24T15:50:38.255Z",
+          "modified": "2025-05-24T15:50:38.255Z",
+          "zIndex": 6,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep708tg31quo5wd",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 477,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:38.264Z",
+          "modified": "2025-05-24T15:50:38.264Z",
+          "zIndex": 7,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep70f8hmliotlk6m",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 502,
+            "width": 451,
+            "height": 42
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "Just drop your plugin there and restart your Puma server.\n\n---\n\nLet me know if you’d like a script to automate the cloning and registration of your plugin inside a Droplet setup.",
+          "created": "2025-05-24T15:50:38.271Z",
+          "modified": "2025-05-24T15:50:38.271Z",
+          "zIndex": 8,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep731hhl5upr0z94",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 559,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#2E7D32"
+          },
+          "content": "User:",
+          "created": "2025-05-24T15:50:38.365Z",
+          "modified": "2025-05-24T15:50:38.365Z",
+          "zIndex": 9,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep76eq9hmxr0yq5d",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 579,
+            "width": 451,
+            "height": 60
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "I see. So while in my discourse folder there is no plugin folder, by creating one, and hooking it into my git account, I can install it into my docker install of discourse when I rebuild that docker container. Did I understand that right?",
+          "created": "2025-05-24T15:50:38.486Z",
+          "modified": "2025-05-24T15:50:38.486Z",
+          "zIndex": 10,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep79qla1hv3ok33i",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 659,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:38.606Z",
+          "modified": "2025-05-24T15:50:38.606Z",
+          "zIndex": 11,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    },
+    {
+      "id": "mb2ep7a0lvfbitznlkg",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "left": 72,
+        "right": 72,
+        "top": 72,
+        "bottom": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2ep7g6n7mmj7xi16",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 92,
+            "width": 451,
+            "height": 98
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "Yes — you've understood that almost perfectly, just a slight clarification needed. Here's the exact process, refined for clarity:\n\n---\n\n## ✅ Your Understanding (Refined)\n\n> “While in my discourse folder there is no plugin folder, by creating one, and hooking it into my git account, I can install it into my docker install of discourse when I rebuild that docker container.”\n\n✔️ **Corrected & Expanded Version:**\n\n- The actual Discourse **app container** lives inside a system-level directory, typically:",
+          "created": "2025-05-24T15:50:38.838Z",
+          "modified": "2025-05-24T15:50:38.838Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep7iwz01t8gxh7a",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 205,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:38.936Z",
+          "modified": "2025-05-24T15:50:38.936Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep7j976ek0jcrvv",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 230,
+            "width": 451,
+            "height": 48
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "  /var/discourse\n  ",
+          "created": "2025-05-24T15:50:38.949Z",
+          "modified": "2025-05-24T15:50:38.949Z",
+          "zIndex": 2,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep7jpgkv7mzwov7l",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 293,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:38.965Z",
+          "modified": "2025-05-24T15:50:38.965Z",
+          "zIndex": 3,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep7jw5sg2swblcnp",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 318,
+            "width": 451,
+            "height": 70
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "- Inside that directory is where the **Docker launcher setup** lives — including your container definition in `containers/app.yml`.\n\n- The **plugins folder is inside `/var/discourse`**, and it's used during the container rebuild process to add any plugins to your Discourse instance.\n\n---\n\n## 🔧 Step-by-Step Guide\n\n### 1. Navigate to the plugins folder:",
+          "created": "2025-05-24T15:50:38.972Z",
+          "modified": "2025-05-24T15:50:38.972Z",
+          "zIndex": 4,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep7mcug0ncz7q09s",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 403,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:39.060Z",
+          "modified": "2025-05-24T15:50:39.060Z",
+          "zIndex": 5,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep7mnx30q63n44bb",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 428,
+            "width": 451,
+            "height": 48
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "cd /var/discourse/plugins\n",
+          "created": "2025-05-24T15:50:39.071Z",
+          "modified": "2025-05-24T15:50:39.071Z",
+          "zIndex": 6,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep7mzpu4j6q11te",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 491,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:39.083Z",
+          "modified": "2025-05-24T15:50:39.083Z",
+          "zIndex": 7,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep7namxqnub2ot8i",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 516,
+            "width": 451,
+            "height": 40
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "If it doesn't exist yet (rare, but can happen if you've never added plugins), just create it:",
+          "created": "2025-05-24T15:50:39.094Z",
+          "modified": "2025-05-24T15:50:39.094Z",
+          "zIndex": 8,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep7pssqdecwifny",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 571,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:39.184Z",
+          "modified": "2025-05-24T15:50:39.184Z",
+          "zIndex": 9,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep7q7afdqek0mnew",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 596,
+            "width": 451,
+            "height": 48
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "mkdir -p /var/discourse/plugins\n",
+          "created": "2025-05-24T15:50:39.199Z",
+          "modified": "2025-05-24T15:50:39.199Z",
+          "zIndex": 10,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep7ql5crn9v4in75",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 659,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:39.213Z",
+          "modified": "2025-05-24T15:50:39.213Z",
+          "zIndex": 11,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    },
+    {
+      "id": "mb2ep7qzlabdr3hiax",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "left": 72,
+        "right": 72,
+        "top": 72,
+        "bottom": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2ep7x3gqzzc1zrdhn",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 92,
+            "width": 451,
+            "height": 40
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "### 2. Clone your plugin from GitHub:",
+          "created": "2025-05-24T15:50:39.447Z",
+          "modified": "2025-05-24T15:50:39.447Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep7zvacvwjng1pu7",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 147,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:39.547Z",
+          "modified": "2025-05-24T15:50:39.547Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep809k1dttgo9x5",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 172,
+            "width": 451,
+            "height": 48
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "git clone https://github.com/YOUR_GITHUB_USER/discourse-multi-ai.git\n",
+          "created": "2025-05-24T15:50:39.561Z",
+          "modified": "2025-05-24T15:50:39.561Z",
+          "zIndex": 2,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep80npwqrurxpm7",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 235,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:39.575Z",
+          "modified": "2025-05-24T15:50:39.575Z",
+          "zIndex": 3,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep80xg0schmqedku",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 260,
+            "width": 451,
+            "height": 40
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "Now your structure will look like:",
+          "created": "2025-05-24T15:50:39.585Z",
+          "modified": "2025-05-24T15:50:39.585Z",
+          "zIndex": 4,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep83fmbkn1b532h",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 315,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:39.675Z",
+          "modified": "2025-05-24T15:50:39.675Z",
+          "zIndex": 5,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep83tc7fym9gepyr",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 340,
+            "width": 451,
+            "height": 48
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "/var/discourse/plugins/discourse-multi-ai/plugin.rb\n",
+          "created": "2025-05-24T15:50:39.689Z",
+          "modified": "2025-05-24T15:50:39.689Z",
+          "zIndex": 6,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep846w8stiqrv3g",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 403,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:39.702Z",
+          "modified": "2025-05-24T15:50:39.702Z",
+          "zIndex": 7,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep84ktaffm206jh",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 428,
+            "width": 451,
+            "height": 40
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "### 3. Rebuild the container to load the plugin:",
+          "created": "2025-05-24T15:50:39.716Z",
+          "modified": "2025-05-24T15:50:39.716Z",
+          "zIndex": 8,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep8737hngjtkdxgh",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 483,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:39.807Z",
+          "modified": "2025-05-24T15:50:39.807Z",
+          "zIndex": 9,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep87f4k9jbdt7xan",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 508,
+            "width": 451,
+            "height": 62
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "cd /var/discourse\n./launcher rebuild app\n",
+          "created": "2025-05-24T15:50:39.819Z",
+          "modified": "2025-05-24T15:50:39.819Z",
+          "zIndex": 10,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep87qcnrgpx6u03",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 585,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:39.830Z",
+          "modified": "2025-05-24T15:50:39.830Z",
+          "zIndex": 11,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep882lak0e2dbkn",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 610,
+            "width": 451,
+            "height": 56
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "> This step is **critical** — plugins are only loaded when the container is rebuilt.\n\n---\n\n## 🧠 Extra Tip: Adding Git Repo Directly to `app.yml`\n\nAs an alternative to manually cloning into `/plugins`, you can also just add the plugin Git URL to your `app.yml` like this:",
+          "created": "2025-05-24T15:50:39.842Z",
+          "modified": "2025-05-24T15:50:39.842Z",
+          "zIndex": 12,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    },
+    {
+      "id": "mb2ep8aom74xnxwqf2i",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "left": 72,
+        "right": 72,
+        "top": 72,
+        "bottom": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2ep8h06uz5201dczl",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 92,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:40.164Z",
+          "modified": "2025-05-24T15:50:40.164Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep8hlkd4tb8kwvu",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 117,
+            "width": 451,
+            "height": 118
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "hooks:\n  after_code:\n    - exec:\n        cd: $home/plugins\n        cmd:\n          - git clone https://github.com/YOUR_GITHUB_USER/discourse-multi-ai.git\n",
+          "created": "2025-05-24T15:50:40.185Z",
+          "modified": "2025-05-24T15:50:40.185Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep8i16v24bkxelgo",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 250,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:40.201Z",
+          "modified": "2025-05-24T15:50:40.201Z",
+          "zIndex": 2,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep8ig4fcv7ozdd6t",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 275,
+            "width": 451,
+            "height": 56
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "Then run `./launcher rebuild app`.\n\nThis method is **especially useful** for provisioning or automated deployments.\n\n---\n\nWould you like me to generate a full plugin scaffold (`plugin.rb`, `settings.yml`, `en.yml`) that you can push to GitHub and pull into Discourse?",
+          "created": "2025-05-24T15:50:40.216Z",
+          "modified": "2025-05-24T15:50:40.216Z",
+          "zIndex": 3,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep8l07wczmrjy0vm",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 346,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#2E7D32"
+          },
+          "content": "User:",
+          "created": "2025-05-24T15:50:40.308Z",
+          "modified": "2025-05-24T15:50:40.308Z",
+          "zIndex": 4,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep8o5pwr0itgo8o",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 366,
+            "width": 451,
+            "height": 60
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "Yes, that sounds great. Note that my username on github is 'temnoon'.",
+          "created": "2025-05-24T15:50:40.421Z",
+          "modified": "2025-05-24T15:50:40.421Z",
+          "zIndex": 5,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep8rflnm910eh3e",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 446,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:40.539Z",
+          "modified": "2025-05-24T15:50:40.539Z",
+          "zIndex": 6,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    },
+    {
+      "id": "mb2ep8utkpg1zlps1m",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "left": 72,
+        "right": 72,
+        "top": 72,
+        "bottom": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2ep91dqzq1m33rayc",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 92,
+            "width": 451,
+            "height": 224
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "{\n  \"name\": \"discourse-multi-ai\",\n  \"type\": \"code/ruby\",\n  \"content\": \"# name: discourse-multi-ai\\n# about: Integrate multiple external AI providers into Discourse AI (OpenAI, Anthropic, Gemini, Groq)\\n# version: 0.1\\n# authors: Tem Noon, ChatGPT\\n# required_version: 3.2.0\\n# url: https://github.com/temnoon/discourse-multi-ai\\n\\nenabled_site_setting :multi_ai_enabled\\n\\nrequire_relative \\\"lib/discourse_multi_ai/engine\\\"\\n\\nafter_initialize do\\n  require_relative \\\"lib/discourse_multi_ai/providers/base_provider\\\"\\n  require_relative \\\"lib/discourse_multi_ai/providers/openai_provider\\\"\\n  require_relative \\\"lib/discourse_multi_ai/providers/anthropic_provider\\\"\\n  require_relative \\\"lib/discourse_multi_ai/providers/gemini_provider\\\"\\n  require_relative \\\"lib/discourse_multi_ai/providers/groq_provider\\\"\\n\\n  DiscourseAi::Completions::BaseCompletions.register_provider(:openai, DiscourseMultiAi::OpenAiProvider)\\n  DiscourseAi::Completions::BaseCompletions.register_provider(:anthropic, DiscourseMultiAi::AnthropicProvider)\\n  DiscourseAi::Completions::BaseCompletions.register_provider(:gemini, DiscourseMultiAi::GeminiProvider)\\n  DiscourseAi::Completions::BaseCompletions.register_provider(:groq, DiscourseMultiAi::GroqProvider)\\nend\"\n}",
+          "created": "2025-05-24T15:50:40.897Z",
+          "modified": "2025-05-24T15:50:40.897Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep94x67mss1ga9c",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 336,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:41.025Z",
+          "modified": "2025-05-24T15:50:41.025Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep95bizwwcpjcyan",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 361,
+            "width": 451,
+            "height": 56
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "Great! I’ve scaffolded the core `plugin.rb` file for your `discourse-multi-ai` plugin. Next, here’s how to complete the plugin with folder structure and required files for your GitHub repo at `https://github.com/temnoon/discourse-multi-ai`.\n\n---\n\n## 🗂️ File Structure",
+          "created": "2025-05-24T15:50:41.039Z",
+          "modified": "2025-05-24T15:50:41.039Z",
+          "zIndex": 2,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep97yjb3rf5mgrx",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 432,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:41.134Z",
+          "modified": "2025-05-24T15:50:41.134Z",
+          "zIndex": 3,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    },
+    {
+      "id": "mb2ep98cwkaxsh517c",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "left": 72,
+        "right": 72,
+        "top": 72,
+        "bottom": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2ep9esfcusndg3ki",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 92,
+            "width": 451,
+            "height": 244
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "discourse-multi-ai/\n├── plugin.rb\n├── lib/\n│   └── discourse_multi_ai/\n│       ├── engine.rb\n│       └── providers/\n│           ├── base_provider.rb\n│           ├── openai_provider.rb\n│           ├── anthropic_provider.rb\n│           ├── gemini_provider.rb\n│           └── groq_provider.rb\n├── config/\n│   └── locales/\n│       └── en.yml\n├── settings.yml\n",
+          "created": "2025-05-24T15:50:41.380Z",
+          "modified": "2025-05-24T15:50:41.380Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep9fg1hjzjgbm7en",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 351,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:41.404Z",
+          "modified": "2025-05-24T15:50:41.404Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep9g36mrfj2n4mt4",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 376,
+            "width": 451,
+            "height": 40
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "---\n\n## 📁 Add These Files\n\n### `lib/discourse_multi_ai/engine.rb`",
+          "created": "2025-05-24T15:50:41.427Z",
+          "modified": "2025-05-24T15:50:41.427Z",
+          "zIndex": 2,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep9inn5pfhoj99x",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 431,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:41.519Z",
+          "modified": "2025-05-24T15:50:41.519Z",
+          "zIndex": 3,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep9iyees56b77w2l",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 456,
+            "width": 451,
+            "height": 118
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "module DiscourseMultiAi\n  class Engine < ::Rails::Engine\n    engine_name \"discourse_multi_ai\"\n    isolate_namespace DiscourseMultiAi\n  end\nend\n",
+          "created": "2025-05-24T15:50:41.530Z",
+          "modified": "2025-05-24T15:50:41.530Z",
+          "zIndex": 4,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep9j8jithhho8awg",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 589,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:41.540Z",
+          "modified": "2025-05-24T15:50:41.540Z",
+          "zIndex": 5,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep9jnpsd4w0otch9",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 614,
+            "width": 451,
+            "height": 40
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "---\n\n### `lib/discourse_multi_ai/providers/base_provider.rb`",
+          "created": "2025-05-24T15:50:41.555Z",
+          "modified": "2025-05-24T15:50:41.555Z",
+          "zIndex": 6,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep9m3maa52wdbksn",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 669,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:41.643Z",
+          "modified": "2025-05-24T15:50:41.643Z",
+          "zIndex": 7,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    },
+    {
+      "id": "mb2ep9mattlo5rllgn",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "left": 72,
+        "right": 72,
+        "top": 72,
+        "bottom": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2ep9si9vhpt9hhe5d",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 92,
+            "width": 451,
+            "height": 132
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "module DiscourseMultiAi\n  class BaseProvider\n    def self.perform_completion(prompt:, model:, api_key:, **options)\n      raise NotImplementedError, \"Subclasses must implement this\"\n    end\n  end\nend\n",
+          "created": "2025-05-24T15:50:41.874Z",
+          "modified": "2025-05-24T15:50:41.874Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep9tf0qdki28a3u2",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 239,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:41.907Z",
+          "modified": "2025-05-24T15:50:41.907Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep9tryxpgt2dk1mh",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 264,
+            "width": 451,
+            "height": 40
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "---\n\n### Example Provider – `openai_provider.rb`\n\nYou’ll duplicate this template for each provider (`gemini_provider.rb`, `groq_provider.rb`, etc.).",
+          "created": "2025-05-24T15:50:41.919Z",
+          "modified": "2025-05-24T15:50:41.919Z",
+          "zIndex": 2,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2ep9waw5qb3cxh2l",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 319,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:42.010Z",
+          "modified": "2025-05-24T15:50:42.010Z",
+          "zIndex": 3,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    },
+    {
+      "id": "mb2ep9wnqom5gn2k8p",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "left": 72,
+        "right": 72,
+        "top": 72,
+        "bottom": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2epa2uokdu3cyly3",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 92,
+            "width": 451,
+            "height": 356
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "require \"net/http\"\nrequire \"json\"\n\nmodule DiscourseMultiAi\n  class OpenAiProvider < BaseProvider\n    def self.perform_completion(prompt:, model:, api_key:, temperature: 0.7)\n      uri = URI(\"https://api.openai.com/v1/chat/completions\")\n      headers = {\n        \"Authorization\" => \"Bearer #{api_key}\",\n        \"Content-Type\" => \"application/json\"\n      }\n\n      body = {\n        model: model,\n        messages: [{ role: \"user\", content: prompt }],\n        temperature: temperature\n      }\n\n      response = Net::HTTP.post(uri, body.to_json, headers)\n      JSON.parse(response.body).dig(\"choices\", 0, \"message\", \"content\")\n    end\n  end\nend\n",
+          "created": "2025-05-24T15:50:42.246Z",
+          "modified": "2025-05-24T15:50:42.246Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epa3op4qzm5se84b",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 463,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:42.276Z",
+          "modified": "2025-05-24T15:50:42.276Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epa493sa5g27imdv",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 488,
+            "width": 451,
+            "height": 40
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "Let me know if you'd like me to prefill the Anthropic, Gemini, and Groq versions here too.\n\n---\n\n### `config/locales/en.yml`",
+          "created": "2025-05-24T15:50:42.297Z",
+          "modified": "2025-05-24T15:50:42.297Z",
+          "zIndex": 2,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epa6ttamln74jx9",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 543,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:42.389Z",
+          "modified": "2025-05-24T15:50:42.389Z",
+          "zIndex": 3,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epa74esddj8gz4xe",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 568,
+            "width": 451,
+            "height": 76
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "en:\n  site_settings:\n    multi_ai_enabled: \"Enable Multi AI Provider Plugin\"\n",
+          "created": "2025-05-24T15:50:42.400Z",
+          "modified": "2025-05-24T15:50:42.400Z",
+          "zIndex": 4,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epa7jmqdkxoq7fhh",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 659,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:42.415Z",
+          "modified": "2025-05-24T15:50:42.415Z",
+          "zIndex": 5,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    },
+    {
+      "id": "mb2epa7y21zsuc1vy6fh",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "left": 72,
+        "right": 72,
+        "top": 72,
+        "bottom": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2epae9rg3as5iw29e",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 92,
+            "width": 451,
+            "height": 40
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "---\n\n### `settings.yml`",
+          "created": "2025-05-24T15:50:42.657Z",
+          "modified": "2025-05-24T15:50:42.657Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epahup4usfkhd7lc",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 147,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:42.786Z",
+          "modified": "2025-05-24T15:50:42.786Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epai7mf4b82s1vpg",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 172,
+            "width": 451,
+            "height": 90
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "multi_ai_enabled:\n  default: false\n  client: true\n  type: bool\n",
+          "created": "2025-05-24T15:50:42.799Z",
+          "modified": "2025-05-24T15:50:42.799Z",
+          "zIndex": 2,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epaij0g95l2qmwnsh",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 277,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:42.811Z",
+          "modified": "2025-05-24T15:50:42.811Z",
+          "zIndex": 3,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epaiv7eq32f4tq7s",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 302,
+            "width": 451,
+            "height": 40
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "---\n\n## 🚀 Deployment Instructions\n\nOnce you've added the above files:\n\n1. Commit and push to GitHub:",
+          "created": "2025-05-24T15:50:42.823Z",
+          "modified": "2025-05-24T15:50:42.823Z",
+          "zIndex": 4,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epaljup9d2shox2l",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 357,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:42.919Z",
+          "modified": "2025-05-24T15:50:42.919Z",
+          "zIndex": 5,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epalv0hccf3r4v1fi",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 382,
+            "width": 451,
+            "height": 104
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "   git init\n   git remote add origin https://github.com/temnoon/discourse-multi-ai.git\n   git add .\n   git commit -m \"Initial commit of multi-provider AI plugin\"\n   git push -u origin main\n   ",
+          "created": "2025-05-24T15:50:42.931Z",
+          "modified": "2025-05-24T15:50:42.931Z",
+          "zIndex": 6,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epam9p99o39r89n9",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 501,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:42.945Z",
+          "modified": "2025-05-24T15:50:42.945Z",
+          "zIndex": 7,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epammcppczfz7cnk",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 526,
+            "width": 451,
+            "height": 40
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "2. Add this plugin to your Discourse app via:",
+          "created": "2025-05-24T15:50:42.958Z",
+          "modified": "2025-05-24T15:50:42.958Z",
+          "zIndex": 8,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epap7q3arpbnnge",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 581,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:43.051Z",
+          "modified": "2025-05-24T15:50:43.051Z",
+          "zIndex": 9,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    },
+    {
+      "id": "mb2epapp9hl0a6wgf9v",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "left": 72,
+        "right": 72,
+        "top": 72,
+        "bottom": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2epavoxquv0ohizt",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 92,
+            "width": 451,
+            "height": 118
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "   hooks:\n     after_code:\n       - exec:\n           cd: $home/plugins\n           cmd:\n             - git clone https://github.com/temnoon/discourse-multi-ai.git\n   ",
+          "created": "2025-05-24T15:50:43.284Z",
+          "modified": "2025-05-24T15:50:43.284Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epawg1sbo9cce56",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 225,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:43.312Z",
+          "modified": "2025-05-24T15:50:43.312Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epaww91nhxuud45q",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 250,
+            "width": 451,
+            "height": 40
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "3. Rebuild:",
+          "created": "2025-05-24T15:50:43.328Z",
+          "modified": "2025-05-24T15:50:43.328Z",
+          "zIndex": 2,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epazlfe2iik3payg",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 305,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:43.425Z",
+          "modified": "2025-05-24T15:50:43.425Z",
+          "zIndex": 3,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epazsl99hyko0ua",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 330,
+            "width": 451,
+            "height": 62
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "   cd /var/discourse\n   ./launcher rebuild app\n   ",
+          "created": "2025-05-24T15:50:43.432Z",
+          "modified": "2025-05-24T15:50:43.432Z",
+          "zIndex": 4,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epb04nj9aeuc9ffi",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 407,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:43.444Z",
+          "modified": "2025-05-24T15:50:43.444Z",
+          "zIndex": 5,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epb0f3720bozatz1",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 432,
+            "width": 451,
+            "height": 40
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "---\n\nWould you like me to auto-generate the full provider files for Anthropic, Gemini, and Groq too?",
+          "created": "2025-05-24T15:50:43.455Z",
+          "modified": "2025-05-24T15:50:43.455Z",
+          "zIndex": 6,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epb33edzqabisg5t",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 487,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:43.551Z",
+          "modified": "2025-05-24T15:50:43.551Z",
+          "zIndex": 7,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epb6j1t3u7tkqj9l",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 507,
+            "width": 451,
+            "height": 60
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "Successfully created text document 'Discourse-multi-ai' which will be referenced in all future messages with the unique identifier textdoc_id: '682d0ffac01c819198bd03caf3cc5e29'",
+          "created": "2025-05-24T15:50:43.675Z",
+          "modified": "2025-05-24T15:50:43.675Z",
+          "zIndex": 8,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epb9v0tklyep8tp5",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 587,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#2E7D32"
+          },
+          "content": "User:",
+          "created": "2025-05-24T15:50:43.795Z",
+          "modified": "2025-05-24T15:50:43.795Z",
+          "zIndex": 9,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    },
+    {
+      "id": "mb2epbd4xcpkd6hcv3a",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "left": 72,
+        "right": 72,
+        "top": 72,
+        "bottom": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2epbji823ra9wlm29",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 92,
+            "width": 451,
+            "height": 112
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "OK, I have this directory, with the file contents you've given me. The yml files, however, are still empty. \n\n(base) tem@MacBookPro discourse % tree\n.\n└── discourse-multi-ai\n    ├── config\n    │   └── locales\n    │       └── en.yml\n    ├── lib\n    │   └── discourse-multi-ai\n    │       ├── engine.rb\n    │       └── providers\n    │           ├── anthropic_provider.rb\n    │           ├── base_provider.rb\n    │           ├── gemini_provider.rb\n    │           ├── groq_provider.rb\n    │           └── openai_provider.rb\n    ├── plugin.rb\n    └── settings.yml\n\n7 directories, 9 files",
+          "created": "2025-05-24T15:50:44.142Z",
+          "modified": "2025-05-24T15:50:44.142Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epbngc1abhk9vz79",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 224,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:44.284Z",
+          "modified": "2025-05-24T15:50:44.284Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epbnzxpy5oanp0zc",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 249,
+            "width": 451,
+            "height": 42
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "Perfect — your folder structure is exactly right. Now, let me give you the full contents for the two YAML files you're missing: `en.yml` and `settings.yml`.\n\n---\n\n### ✅ `config/locales/en.yml`",
+          "created": "2025-05-24T15:50:44.303Z",
+          "modified": "2025-05-24T15:50:44.303Z",
+          "zIndex": 2,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epbqnarraqvopaoa",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 306,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:44.399Z",
+          "modified": "2025-05-24T15:50:44.399Z",
+          "zIndex": 3,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epbr80nlqx0ik76s",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 331,
+            "width": 451,
+            "height": 174
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "en:\n  discourse_multi_ai:\n    plugin_name: \"Multi AI Provider Plugin\"\n    plugin_description: \"Adds support for OpenAI, Anthropic, Gemini, and Groq to Discourse AI\"\n  site_settings:\n    multi_ai_enabled: \"Enable Multi AI Provider Plugin\"\n    openai_api_key: \"OpenAI API Key\"\n    anthropic_api_key: \"Anthropic API Key\"\n    gemini_api_key: \"Google Gemini API Key\"\n    groq_api_key: \"Groq API Key\"\n",
+          "created": "2025-05-24T15:50:44.420Z",
+          "modified": "2025-05-24T15:50:44.420Z",
+          "zIndex": 4,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epbrkvxyteo18jgp",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 520,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:44.432Z",
+          "modified": "2025-05-24T15:50:44.432Z",
+          "zIndex": 5,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epbrv5hwt8qxizlq",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 545,
+            "width": 451,
+            "height": 40
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "---\n\n### ✅ `settings.yml`",
+          "created": "2025-05-24T15:50:44.443Z",
+          "modified": "2025-05-24T15:50:44.443Z",
+          "zIndex": 6,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epbubmyatizcbdk",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 600,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:44.531Z",
+          "modified": "2025-05-24T15:50:44.531Z",
+          "zIndex": 7,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    },
+    {
+      "id": "mb2epbun8ywrse4wzor",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "left": 72,
+        "right": 72,
+        "top": 72,
+        "bottom": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2epc0u562lp1xrzvs",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 92,
+            "width": 451,
+            "height": 426
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "multi_ai_enabled:\n  default: false\n  client: true\n  type: bool\n\nopenai_api_key:\n  default: \"\"\n  secret: true\n  client: false\n  type: string\n\nanthropic_api_key:\n  default: \"\"\n  secret: true\n  client: false\n  type: string\n\ngemini_api_key:\n  default: \"\"\n  secret: true\n  client: false\n  type: string\n\ngroq_api_key:\n  default: \"\"\n  secret: true\n  client: false\n  type: string\n",
+          "created": "2025-05-24T15:50:44.766Z",
+          "modified": "2025-05-24T15:50:44.766Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epc1rrmv76hoqq1n",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 533,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:44.799Z",
+          "modified": "2025-05-24T15:50:44.799Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epc2bneoysq90vsp",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 558,
+            "width": 451,
+            "height": 40
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "These settings will expose your API key inputs in **Admin > Settings > Plugins**, scoped to your plugin.\n\n---\n\n## 🔄 Final Steps\n\n1. Add the YAML files to Git:",
+          "created": "2025-05-24T15:50:44.819Z",
+          "modified": "2025-05-24T15:50:44.819Z",
+          "zIndex": 2,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epc4v60pllhw8f18",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 613,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:44.911Z",
+          "modified": "2025-05-24T15:50:44.911Z",
+          "zIndex": 3,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    },
+    {
+      "id": "mb2epc567nabyizkk22",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "left": 72,
+        "right": 72,
+        "top": 72,
+        "bottom": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2epcbnnyn1bwdhg97",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 92,
+            "width": 451,
+            "height": 62
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "   git add config/locales/en.yml settings.yml\n   git commit -m \"Add plugin settings and localization\"\n   ",
+          "created": "2025-05-24T15:50:45.155Z",
+          "modified": "2025-05-24T15:50:45.155Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epcbz6mj59cij6n",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 169,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:45.167Z",
+          "modified": "2025-05-24T15:50:45.167Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epcc7ke2g0ghz0hl",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 194,
+            "width": 451,
+            "height": 40
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "2. Push to GitHub:",
+          "created": "2025-05-24T15:50:45.175Z",
+          "modified": "2025-05-24T15:50:45.175Z",
+          "zIndex": 2,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epcenag86ge6d29p",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 249,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:45.263Z",
+          "modified": "2025-05-24T15:50:45.263Z",
+          "zIndex": 3,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epcfe4e2vytckd1l",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 274,
+            "width": 451,
+            "height": 48
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "   git push\n   ",
+          "created": "2025-05-24T15:50:45.290Z",
+          "modified": "2025-05-24T15:50:45.290Z",
+          "zIndex": 4,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epcfo9ss32lsemko",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 337,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:45.300Z",
+          "modified": "2025-05-24T15:50:45.300Z",
+          "zIndex": 5,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epcfuazuhnjnqfmw",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 362,
+            "width": 451,
+            "height": 40
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "3. Rebuild Discourse on your droplet:",
+          "created": "2025-05-24T15:50:45.306Z",
+          "modified": "2025-05-24T15:50:45.306Z",
+          "zIndex": 6,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epci9rcwmc1d269",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 417,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:45.393Z",
+          "modified": "2025-05-24T15:50:45.393Z",
+          "zIndex": 7,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epcii02p2hpswsaly",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 442,
+            "width": 451,
+            "height": 62
+          },
+          "style": {
+            "fontFamily": "Courier",
+            "fontSize": 9,
+            "color": "#000000",
+            "backgroundColor": "#f5f5f5",
+            "border": "1px solid #ddd",
+            "borderRadius": "4px",
+            "padding": "8px",
+            "whiteSpace": "pre",
+            "overflow": "auto"
+          },
+          "content": "   cd /var/discourse\n   ./launcher rebuild app\n   ",
+          "created": "2025-05-24T15:50:45.402Z",
+          "modified": "2025-05-24T15:50:45.402Z",
+          "zIndex": 8,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epciq5lw14utvyyi",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 519,
+            "width": 451,
+            "height": 20
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Assistant:",
+          "created": "2025-05-24T15:50:45.410Z",
+          "modified": "2025-05-24T15:50:45.410Z",
+          "zIndex": 9,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2epciz6tt2r2oxmnn",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 544,
+            "width": 451,
+            "height": 40
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 11,
+            "color": "#000000",
+            "lineHeight": 1.4,
+            "whiteSpace": "pre-wrap"
+          },
+          "content": "---\n\nWould you now like me to help wire these provider classes into actual AI summarization or conversation features (e.g., per-category AI Curator agents)?",
+          "created": "2025-05-24T15:50:45.419Z",
+          "modified": "2025-05-24T15:50:45.419Z",
+          "zIndex": 10,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    }
+  ],
+  "styles": {
+    "fonts": [],
+    "colors": [],
+    "gradients": [],
+    "themes": []
+  },
+  "collaborators": []
+}
