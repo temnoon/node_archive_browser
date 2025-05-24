@@ -212,6 +212,38 @@ const EnhancedPdfEditor = () => {
     loadFonts();
   }, [conversationId, searchParams]);
 
+  // Debug document elements
+  useEffect(() => {
+    if (document && document.pages && document.pages.length > 0) {
+      console.log('EnhancedPdfEditor: Document elements analysis', {
+        totalPages: document.pages.length,
+        currentPage: currentPage,
+        currentPageElements: document.pages[currentPage]?.elements?.length || 0
+      });
+      
+      // Check for image elements across all pages
+      let totalImageElements = 0;
+      document.pages.forEach((page, pageIndex) => {
+        const imageElements = page.elements.filter(el => el.type === 'image');
+        totalImageElements += imageElements.length;
+        
+        if (imageElements.length > 0) {
+          console.log(`EnhancedPdfEditor: Found ${imageElements.length} image elements on page ${pageIndex + 1}`, {
+            imageElements: imageElements.map(el => ({
+              id: el.id,
+              url: el.content?.url,
+              bounds: el.bounds,
+              hasContent: !!el.content,
+              contentKeys: el.content ? Object.keys(el.content) : null
+            }))
+          });
+        }
+      });
+      
+      console.log('EnhancedPdfEditor: Total image elements in document:', totalImageElements);
+    }
+  }, [document, currentPage]);
+
   // API calls
   const apiCall = useCallback(async (endpoint, options = {}) => {
     try {
@@ -1217,17 +1249,53 @@ const EnhancedPdfEditor = () => {
     } else if (element.type === 'shape') {
       return null; // Shape styling is handled by CSS
     } else if (element.type === 'image') {
+      console.log('EnhancedPdfEditor: Rendering image element', {
+        elementId: element.id,
+        imageUrl: element.content?.url,
+        elementContent: element.content,
+        hasUrl: !!element.content?.url
+      });
+      
       return (
-        <img 
-          src={element.content?.url} 
-          alt="Conversation image"
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain',
-            borderRadius: element.style?.borderRadius || '4px'
-          }}
-        />
+        <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+          <img 
+            src={element.content?.url} 
+            alt="Conversation image"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              borderRadius: element.style?.borderRadius || '4px'
+            }}
+            onLoad={() => {
+              console.log('EnhancedPdfEditor: Image loaded successfully', {
+                elementId: element.id,
+                imageUrl: element.content?.url
+              });
+            }}
+            onError={(e) => {
+              console.error('EnhancedPdfEditor: Image failed to load', {
+                elementId: element.id,
+                imageUrl: element.content?.url,
+                error: e.target.error,
+                errorEvent: e
+              });
+            }}
+          />
+          {!element.content?.url && (
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              color: '#666',
+              fontSize: '12px',
+              textAlign: 'center'
+            }}>
+              No Image URL
+            </div>
+          )}
+        </div>
       );
     }
     return null;
