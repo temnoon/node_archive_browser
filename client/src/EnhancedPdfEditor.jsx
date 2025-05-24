@@ -548,6 +548,28 @@ const EnhancedPdfEditor = () => {
     }
   };
 
+  // Page navigation functions
+  const goToPreviousPage = () => {
+    if (currentPage > 0) {
+      setCurrentPage(currentPage - 1);
+      setSelectedElement(null); // Clear selection when changing pages
+    }
+  };
+
+  const goToNextPage = () => {
+    if (document && currentPage < document.pages.length - 1) {
+      setCurrentPage(currentPage + 1);
+      setSelectedElement(null); // Clear selection when changing pages
+    }
+  };
+
+  const goToPage = (pageNumber) => {
+    if (document && pageNumber >= 1 && pageNumber <= document.pages.length) {
+      setCurrentPage(pageNumber - 1); // Convert to 0-based index
+      setSelectedElement(null); // Clear selection when changing pages
+    }
+  };
+
   const addElement = async (elementData) => {
     if (!document || !document.pages[currentPage]) return;
     
@@ -778,20 +800,28 @@ const EnhancedPdfEditor = () => {
   );
 
   const renderCanvas = () => (
-    <Paper
-      elevation={2}
-      sx={{
-        height: 800,
-        width: '100%',
-        position: 'relative',
-        overflow: 'auto',
-        backgroundColor: '#f5f5f5',
-        backgroundImage: showGrid ? 'radial-gradient(circle, #ccc 1px, transparent 1px)' : 'none',
-        backgroundSize: showGrid ? '20px 20px' : 'auto'
-      }}
-      ref={canvasRef}
-      onClick={handleCanvasClick}
-    >
+    <Box>
+      {/* Page indicator */}
+      <Box sx={{ mb: 1, textAlign: 'center' }}>
+        <Typography variant="h6" color="text.secondary">
+          Page {currentPage + 1} {document ? `of ${document.pages.length}` : ''}
+        </Typography>
+      </Box>
+      
+      <Paper
+        elevation={2}
+        sx={{
+          height: 800,
+          width: '100%',
+          position: 'relative',
+          overflow: 'auto',
+          backgroundColor: '#f5f5f5',
+          backgroundImage: showGrid ? 'radial-gradient(circle, #ccc 1px, transparent 1px)' : 'none',
+          backgroundSize: showGrid ? '20px 20px' : 'auto'
+        }}
+        ref={canvasRef}
+        onClick={handleCanvasClick}
+      >
       {document && document.pages[currentPage] && (
         <Box
           sx={{
@@ -830,6 +860,7 @@ const EnhancedPdfEditor = () => {
         </Box>
       )}
     </Paper>
+    </Box>
   );
 
   const getElementStyles = (element) => {
@@ -1073,9 +1104,44 @@ const EnhancedPdfEditor = () => {
       <Paper elevation={1} sx={{ p: 1 }}>
         <Grid container justifyContent="space-between" alignItems="center">
           <Grid item>
-            <Typography variant="body2">
-              {document ? `Page ${currentPage + 1} of ${document.pages.length}` : 'No document'}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={goToPreviousPage}
+                disabled={!document || currentPage === 0}
+              >
+                Previous
+              </Button>
+              
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="body2">Page</Typography>
+                <TextField
+                  size="small"
+                  type="number"
+                  value={currentPage + 1}
+                  onChange={(e) => goToPage(parseInt(e.target.value))}
+                  inputProps={{ 
+                    min: 1, 
+                    max: document?.pages?.length || 1,
+                    style: { width: '60px', textAlign: 'center' }
+                  }}
+                  sx={{ width: '80px' }}
+                />
+                <Typography variant="body2">
+                  of {document ? document.pages.length : 0}
+                </Typography>
+              </Box>
+              
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={goToNextPage}
+                disabled={!document || currentPage >= (document?.pages?.length - 1)}
+              >
+                Next
+              </Button>
+            </Box>
           </Grid>
           <Grid item>
             <FormControlLabel
