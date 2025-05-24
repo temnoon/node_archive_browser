@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Error</title>
+</head>
+<body>
+<pre>Cannot POST /api/conversations/682d04c3-f424-8005-bf17-29e6f7b53dbb/export/pdf</pre>
+</body>
+</html>
