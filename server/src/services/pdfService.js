@@ -280,6 +280,112 @@ class PDFService {
   }
 
   /**
+   * Detect if content is sparse HTML (has few HTML tags) vs full HTML document
+   */
+  isSparseHtml(content) {
+    if (!content || typeof content !== 'string') return false;
+    
+    // Count HTML tags vs total content length
+    const htmlTagCount = (content.match(/<[^>]+>/g) || []).length;
+    const totalLength = content.length;
+    
+    // If less than 5% of content is HTML tags, consider it sparse
+    const htmlRatio = (htmlTagCount * 20) / totalLength; // Rough estimate
+    return htmlRatio < 0.05 && htmlTagCount < 10;
+  }
+
+  /**
+   * Process sparse HTML in markdown/text blocks
+   */
+  processSparseHtml(content) {
+    if (!this.isSparseHtml(content)) return content;
+    
+    // Allow safe HTML tags to be rendered
+    const safeTagPattern = /<(\/?)(?:hr|u|b|i|strong|em|br)(\s[^>]*)?\s*>/gi;
+    const processedContent = content.replace(safeTagPattern, (match) => match);
+    
+    return processedContent;
+  }
+
+  /**
+   * Add line numbers to code blocks
+   */
+  addLineNumbers(codeContent, language = '') {
+    const lines = codeContent.split('\n');
+    const maxLineNum = lines.length;
+    const lineNumWidth = maxLineNum.toString().length;
+    
+    return lines.map((line, index) => {
+      const lineNum = (index + 1).toString().padStart(lineNumWidth, ' ');
+      // Check if line appears to be wrapped (no logical ending)
+      const isWrapped = line.length > 80 && !line.match(/[;{}()\[\],.]$/);
+      const indicator = isWrapped ? '-' : ' ';
+      // Keep line content as plain text without HTML escaping
+      return `<div class="code-line-wrapper"><span class="line-number">${lineNum}${indicator}</span><span class="code-line">${line}</span></div>`;
+    }).join('');
+  }
+
+  /**
+   * Smart word breaking - return content as plain text without HTML tags
+   */
+  smartWordBreak(content, isCode = false) {
+    if (!content || typeof content !== 'string') return content;
+    
+    // Return content as-is without any HTML modifications
+    // Let CSS handle the wrapping naturally
+    return content;
+  }
+
+  /**
+   * Plain text word wrapping without HTML tags - for markdown and text blocks
+   */
+  wrapTextContent(content) {
+    if (!content || typeof content !== 'string') return content;
+    
+    // Return content as-is without any HTML entities or modifications
+    // Let CSS handle the wrapping naturally
+    return content;
+  }
+
+  /**
+   * Determine if content is a programming language that should get line numbers
+   */
+  isProgrammingLanguage(language, content) {
+    const programmingLanguages = [
+      'javascript', 'js', 'typescript', 'ts', 'python', 'py', 'java', 
+      'c', 'cpp', 'c++', 'csharp', 'cs', 'php', 'ruby', 'go', 'rust', 
+      'html', 'css', 'sql', 'bash', 'shell', 'sh', 'powershell', 'ps1',
+      'perl', 'swift', 'kotlin', 'scala', 'r', 'matlab', 'lua', 'dart'
+    ];
+    
+    // Check explicit language declaration
+    if (language && programmingLanguages.includes(language.toLowerCase())) {
+      return true;
+    }
+    
+    // Check content for programming patterns (but be conservative)
+    if (content && typeof content === 'string') {
+      const programmingIndicators = [
+        /function\s+\w+\s*\(/,          // function declarations
+        /\bclass\s+\w+/,                // class declarations  
+        /\bimport\s+.+\bfrom\b/,        // import statements
+        /\bfor\s*\(.+\)\s*{/,           // for loops with braces
+        /\bif\s*\(.+\)\s*{/,            // if statements with braces
+        /\w+\s*=\s*function\s*\(/,      // function assignments
+        /\breturn\s+.+;$/m,             // return statements with semicolons
+        /^#include\s*<.+>$/m,           // C/C++ includes
+        /^\s*def\s+\w+\s*\(/m,          // Python function definitions
+        /^\s*public\s+class\s+\w+/m     // Java class declarations
+      ];
+      
+      const indicatorCount = programmingIndicators.filter(pattern => pattern.test(content)).length;
+      return indicatorCount >= 2; // Require multiple indicators to be confident
+    }
+    
+    return false;
+  }
+
+  /**
    * Preprocess content to handle wide content for PDF rendering
    */
   preprocessWideContent(htmlContent) {
@@ -287,32 +393,61 @@ class PDFService {
     
     let processedContent = htmlContent;
     
-    // 1. Handle very long lines by adding word break opportunities
-    processedContent = processedContent.replace(/(\S{50,})/g, (match) => {
-      // Add word break opportunities every 50 characters for very long strings
-      return match.replace(/(.{50})/g, '$1<wbr>');
+    // 1. Handle code blocks with enhanced processing
+    processedContent = processedContent.replace(/<pre([^>]*)><code([^>]*)>([\s\S]*?)<\/code><\/pre>/gi, (match, preAttrs, codeAttrs, content) => {
+      // Extract language from code attributes
+      const languageMatch = codeAttrs.match(/class="language-([^"]+)"/);
+      const language = languageMatch ? languageMatch[1] : '';
+      
+      // Clean up content - remove extra spacing
+      let cleanContent = content
+        .replace(/\n\s*\n\s*\n/g, '\n\n')  // Reduce triple+ spacing to double
+        .replace(/^\s+|\s+$/g, '');         // Trim leading/trailing whitespace
+      
+      const lines = cleanContent.split('\n');
+      const maxLineLength = Math.max(...lines.map(line => line.replace(/<[^>]*>/g, '').length));
+      
+      // Determine if this is a programming language that should get line numbers
+      const isProgrammingCode = this.isProgrammingLanguage(language, cleanContent);
+      
+      // Add appropriate classes
+      let cssClasses = [];
+      if (maxLineLength > 80) cssClasses.push('wide-code-block');
+      if (isProgrammingCode) cssClasses.push('numbered-code-block');
+      
+      const classAttr = cssClasses.length > 0 ? ` class="${cssClasses.join(' ')}"` : '';
+      
+      // Process content based on type
+      let processedCodeContent;
+      if (isProgrammingCode) {
+        // Add line numbers and smart breaking for programming code
+        processedCodeContent = this.addLineNumbers(cleanContent, language);
+      } else {
+        // For markdown/text blocks: use plain text wrapping without HTML tags
+        processedCodeContent = this.wrapTextContent(cleanContent);
+      }
+      
+      return `<pre${preAttrs}${classAttr}><code${codeAttrs}>${processedCodeContent}</code></pre>`;
     });
     
-    // 2. Preprocess code blocks to add line wrapping classes
-    processedContent = processedContent.replace(/<pre([^>]*)>([\s\S]*?)<\/pre>/gi, (match, attrs, content) => {
+    // 2. Handle standalone pre blocks (without code tags)
+    processedContent = processedContent.replace(/<pre([^>]*)>((?:(?!<code>)[\s\S])*?)<\/pre>/gi, (match, attrs, content) => {
       const lines = content.split('\n');
       const maxLineLength = Math.max(...lines.map(line => line.replace(/<[^>]*>/g, '').length));
       
-      // Add a class for wide code blocks
+      // Clean up spacing
+      let cleanContent = content
+        .replace(/\n\s*\n\s*\n/g, '\n\n')
+        .replace(/^\s+|\s+$/g, '');
+      
+      // Check if this looks like programming code
+      const isProgrammingCode = this.isProgrammingLanguage('', cleanContent);
+      
+      // For all content types: use plain text without HTML modifications
+      cleanContent = this.wrapTextContent(cleanContent);
+      
       const wideClass = maxLineLength > 80 ? ' class="wide-code-block"' : '';
-      const updatedAttrs = attrs + wideClass;
-      
-      // Process very long lines in code blocks
-      const processedCodeContent = content.replace(/^(.{100,})$/gm, (longLine) => {
-        // For very long code lines, add subtle break opportunities at logical points
-        return longLine
-          .replace(/([,;])/g, '$1<wbr>')  // After commas and semicolons
-          .replace(/([&|])/g, '$1<wbr>')  // After operators
-          .replace(/([\[\](){}])/g, '$1<wbr>') // After brackets
-          .replace(/(\s+)/g, '$1<wbr>');  // After whitespace
-      });
-      
-      return `<pre${updatedAttrs}>${processedCodeContent}</pre>`;
+      return `<pre${attrs}${wideClass}>${cleanContent}</pre>`;
     });
     
     // 3. Handle wide tables by adding responsive classes
@@ -330,12 +465,9 @@ class PDFService {
       }
     );
     
-    // 5. Add word break opportunities to very long words in paragraphs
+    // 5. Add word break opportunities to very long words in paragraphs (word boundaries only)
     processedContent = processedContent.replace(/<p([^>]*)>([\s\S]*?)<\/p>/gi, (match, attrs, content) => {
-      const processedParagraph = content.replace(/\b(\w{30,})\b/g, (word) => {
-        // Add word break opportunities in very long words
-        return word.replace(/(.{15})/g, '$1<wbr>');
-      });
+      const processedParagraph = this.smartWordBreak(content, false);
       return `<p${attrs}>${processedParagraph}</p>`;
     });
     

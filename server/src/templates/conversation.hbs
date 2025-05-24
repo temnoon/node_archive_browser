@@ -199,11 +199,12 @@
       font-family: 'Courier New', monospace;
       font-size: 0.9em;
       page-break-inside: avoid;
-      /* Soft wrapping for PDF compatibility */
+      /* Default soft wrapping for text/markdown blocks */
       white-space: pre-wrap;
       word-wrap: break-word;
       overflow-wrap: break-word;
-      word-break: break-all;
+      word-break: normal;
+      hyphens: auto;
       max-width: 100%;
       box-sizing: border-box;
     }
@@ -367,10 +368,67 @@
       white-space: pre-wrap;
       word-wrap: break-word;
       overflow-wrap: break-word;
-      word-break: break-all;
       max-width: 100%;
       background-color: #f5f5f5;
       border-left: 3px solid #007acc;
+    }
+
+    /* Programming code blocks get aggressive word breaking */
+    .numbered-code-block.wide-code-block {
+      word-break: break-all;
+    }
+
+    /* Text/markdown blocks use gentle word wrapping */
+    pre:not(.numbered-code-block) {
+      word-break: normal;
+      hyphens: auto;
+    }
+
+    /* Numbered code blocks with line numbers */
+    .numbered-code-block {
+      line-height: 1.4;
+      background-color: #f8f9fa;
+      border: 1px solid #e9ecef;
+      padding: 0;
+    }
+
+    .numbered-code-block .code-line-wrapper {
+      display: flex;
+      min-height: 1.4em;
+    }
+
+    .numbered-code-block .line-number {
+      flex-shrink: 0;
+      width: 3em;
+      text-align: right;
+      color: #666;
+      font-size: 0.85em;
+      user-select: none;
+      font-family: 'Courier New', monospace;
+      border-right: 1px solid #ddd;
+      padding: 0 0.5em;
+      background-color: #f0f0f0;
+      box-sizing: border-box;
+    }
+
+    .numbered-code-block .code-line {
+      flex-grow: 1;
+      padding: 0 0.5em;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      font-family: 'Courier New', monospace;
+    }
+
+    /* Improved spacing for code blocks */
+    pre {
+      line-height: 1.4;
+      margin: 1em 0;
+    }
+
+    pre code {
+      line-height: inherit;
+      white-space: pre-wrap;
     }
 
     /* Responsive tables */
@@ -449,8 +507,41 @@
         white-space: pre-wrap;
         word-wrap: break-word;
         overflow-wrap: break-word;
-        word-break: break-all;
+        word-break: normal;
+        hyphens: auto;
         max-width: 100%;
+      }
+
+      /* Programming code blocks get aggressive breaking in print */
+      pre.numbered-code-block {
+        word-break: break-all;
+        hyphens: none;
+      }
+
+      /* Print-specific numbered code blocks */
+      .numbered-code-block {
+        font-size: 0.75em;
+        line-height: 1.2;
+        page-break-inside: avoid;
+      }
+
+      .numbered-code-block .code-line-wrapper {
+        display: flex;
+        page-break-inside: avoid;
+      }
+
+      .numbered-code-block .line-number {
+        font-size: 0.9em;
+        width: 2.5em;
+        background-color: #f5f5f5;
+        border-right: 1px solid #ccc;
+        flex-shrink: 0;
+      }
+
+      .numbered-code-block .code-line {
+        flex-grow: 1;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
       }
 
       /* Scale down very wide content if needed */
