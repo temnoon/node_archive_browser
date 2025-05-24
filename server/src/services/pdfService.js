@@ -214,6 +214,135 @@ class PDFService {
   }
 
   /**
+   * Detect wide content that might cause PDF rendering issues
+   */
+  detectWideContent(htmlContent) {
+    if (!htmlContent || typeof htmlContent !== 'string') return [];
+    
+    const wideContentIssues = [];
+    
+    // Detect very long lines (over 100 characters without spaces)
+    const longLinePattern = /\S{100,}/g;
+    const longLines = htmlContent.match(longLinePattern);
+    if (longLines) {
+      wideContentIssues.push({
+        type: 'long_lines',
+        count: longLines.length,
+        maxLength: Math.max(...longLines.map(line => line.length))
+      });
+    }
+    
+    // Detect code blocks that might be too wide
+    const codeBlockPattern = /<pre[^>]*>([\s\S]*?)<\/pre>/gi;
+    let codeMatch;
+    while ((codeMatch = codeBlockPattern.exec(htmlContent)) !== null) {
+      const codeContent = codeMatch[1];
+      const lines = codeContent.split('\n');
+      const maxLineLength = Math.max(...lines.map(line => line.length));
+      if (maxLineLength > 80) {
+        wideContentIssues.push({
+          type: 'wide_code_block',
+          maxLineLength: maxLineLength,
+          lineCount: lines.length
+        });
+      }
+    }
+    
+    // Detect tables with many columns
+    const tablePattern = /<table[^>]*>([\s\S]*?)<\/table>/gi;
+    let tableMatch;
+    while ((tableMatch = tablePattern.exec(htmlContent)) !== null) {
+      const tableContent = tableMatch[1];
+      const headerMatch = tableContent.match(/<tr[^>]*>([\s\S]*?)<\/tr>/i);
+      if (headerMatch) {
+        const cellCount = (headerMatch[1].match(/<t[hd][^>]*>/gi) || []).length;
+        if (cellCount > 6) {
+          wideContentIssues.push({
+            type: 'wide_table',
+            columnCount: cellCount
+          });
+        }
+      }
+    }
+    
+    // Detect very long URLs
+    const urlPattern = /https?:\/\/[^\s<>"']{50,}/gi;
+    const longUrls = htmlContent.match(urlPattern);
+    if (longUrls) {
+      wideContentIssues.push({
+        type: 'long_urls',
+        count: longUrls.length,
+        maxLength: Math.max(...longUrls.map(url => url.length))
+      });
+    }
+    
+    return wideContentIssues;
+  }
+
+  /**
+   * Preprocess content to handle wide content for PDF rendering
+   */
+  preprocessWideContent(htmlContent) {
+    if (!htmlContent || typeof htmlContent !== 'string') return htmlContent;
+    
+    let processedContent = htmlContent;
+    
+    // 1. Handle very long lines by adding word break opportunities
+    processedContent = processedContent.replace(/(\S{50,})/g, (match) => {
+      // Add word break opportunities every 50 characters for very long strings
+      return match.replace(/(.{50})/g, '$1<wbr>');
+    });
+    
+    // 2. Preprocess code blocks to add line wrapping classes
+    processedContent = processedContent.replace(/<pre([^>]*)>([\s\S]*?)<\/pre>/gi, (match, attrs, content) => {
+      const lines = content.split('\n');
+      const maxLineLength = Math.max(...lines.map(line => line.replace(/<[^>]*>/g, '').length));
+      
+      // Add a class for wide code blocks
+      const wideClass = maxLineLength > 80 ? ' class="wide-code-block"' : '';
+      const updatedAttrs = attrs + wideClass;
+      
+      // Process very long lines in code blocks
+      const processedCodeContent = content.replace(/^(.{100,})$/gm, (longLine) => {
+        // For very long code lines, add subtle break opportunities at logical points
+        return longLine
+          .replace(/([,;])/g, '$1<wbr>')  // After commas and semicolons
+          .replace(/([&|])/g, '$1<wbr>')  // After operators
+          .replace(/([\[\](){}])/g, '$1<wbr>') // After brackets
+          .replace(/(\s+)/g, '$1<wbr>');  // After whitespace
+      });
+      
+      return `<pre${updatedAttrs}>${processedCodeContent}</pre>`;
+    });
+    
+    // 3. Handle wide tables by adding responsive classes
+    processedContent = processedContent.replace(/<table([^>]*?)>/gi, (match, attrs) => {
+      return `<table${attrs} class="responsive-table">`;
+    });
+    
+    // 4. Handle very long URLs
+    processedContent = processedContent.replace(/(<a[^>]*href=")([^"]{60,})("[^>]*>)([^<]*)<\/a>/gi, 
+      (match, openTag, url, middleTag, text) => {
+        // Truncate display text for very long URLs but keep full URL in href
+        const displayText = text.length > 50 ? text.substring(0, 47) + '...' : text;
+        const processedUrl = url.replace(/([\/\-._])/g, '$1<wbr>'); // Add break opportunities
+        return `${openTag}${url}${middleTag}${displayText}</a>`;
+      }
+    );
+    
+    // 5. Add word break opportunities to very long words in paragraphs
+    processedContent = processedContent.replace(/<p([^>]*)>([\s\S]*?)<\/p>/gi, (match, attrs, content) => {
+      const processedParagraph = content.replace(/\b(\w{30,})\b/g, (word) => {
+        // Add word break opportunities in very long words
+        return word.replace(/(.{15})/g, '$1<wbr>');
+      });
+      return `<p${attrs}>${processedParagraph}</p>`;
+    });
+    
+    return processedContent;
+  }
+
+  /**
    * Extract message content (server-side version of extractMessageContent)
    */
   extractMessageContent(message) {
@@ -253,6 +382,9 @@ class PDFService {
       rawText = this.cleanFileIds(rawText);
       
       textContent = parseMarkdownGFM(rawText); // Convert markdown to HTML
+      
+      // Preprocess for wide content handling
+      textContent = this.preprocessWideContent(textContent);
     } 
     else if (content.content_type === 'multimodal_text') {
       let combinedText = '';
@@ -312,11 +444,26 @@ class PDFService {
       combinedText = this.cleanFileIds(combinedText);
       
       textContent = parseMarkdownGFM(combinedText.trim()); // Convert markdown to HTML
+      
+      // Preprocess for wide content handling
+      textContent = this.preprocessWideContent(textContent);
     }
     else if (content.content_type === 'code') {
       const language = content.language || '';
       const codeText = content.text || '';
-      textContent = '```' + language + '\n' + codeText + '\n```';
+      
+      // Create HTML for code block with proper escaping
+      const escapedCode = codeText
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+      
+      const codeHtml = `<pre><code class="language-${language}">${escapedCode}</code></pre>`;
+      
+      // Preprocess for wide content handling
+      textContent = this.preprocessWideContent(codeHtml);
     }
 
     // Handle attachments in metadata
