@@ -1,0 +1,147 @@
+{
+  "id": "mb29x89pua8xsz16qx",
+  "version": "1.0",
+  "created": "2025-05-24T13:36:55.069Z",
+  "modified": "2025-05-24T13:39:33.150Z",
+  "metadata": {
+    "title": "Collected Messages Document (1 conversations)",
+    "author": "Archive Browser",
+    "subject": "",
+    "keywords": []
+  },
+  "settings": {
+    "size": "A4",
+    "orientation": "portrait",
+    "margins": {
+      "top": 72,
+      "right": 72,
+      "bottom": 72,
+      "left": 72
+    },
+    "units": "points"
+  },
+  "pages": [
+    {
+      "id": "mb29x89punklg1coxl",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "top": 72,
+        "right": 72,
+        "bottom": 72,
+        "left": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb29x8a08i0bbd3uzoi",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 100,
+            "width": 451,
+            "height": 25
+          },
+          "style": {
+            "fontFamily": "Times-Roman",
+            "fontSize": 21,
+            "fontWeight": "bold",
+            "color": "#ff8c82"
+          },
+          "content": "Meta Philosophy Inquiry is all you need",
+          "created": "2025-05-24T13:36:55.080Z",
+          "modified": "2025-05-24T13:38:11.289Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb29ztavb31b35gd69o",
+          "type": "shape",
+          "bounds": {
+            "x": 373.73162841796875,
+            "y": 304.82354736328125,
+            "width": 100,
+            "height": 100
+          },
+          "style": {
+            "fill": "#e3f2fd",
+            "stroke": "#2196f3",
+            "strokeWidth": 2
+          },
+          "content": {
+            "shape": "circle"
+          },
+          "created": "2025-05-24T13:38:55.639Z",
+          "modified": "2025-05-24T13:38:55.639Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb29zx1tob0r0ljeif",
+          "type": "shape",
+          "bounds": {
+            "x": 310.73162841796875,
+            "y": 465.82354736328125,
+            "width": 100,
+            "height": 100
+          },
+          "style": {
+            "fill": "#e3f2fd",
+            "stroke": "#2196f3",
+            "strokeWidth": 2
+          },
+          "content": {
+            "shape": "rectangle"
+          },
+          "created": "2025-05-24T13:39:00.498Z",
+          "modified": "2025-05-24T13:39:00.498Z",
+          "zIndex": 2,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2a00d6b21cyhit3e",
+          "type": "text",
+          "bounds": {
+            "x": 174.73162841796875,
+            "y": 252.82354736328125,
+            "width": 200,
+            "height": 40
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 12,
+            "fontWeight": "normal",
+            "fontStyle": "normal",
+            "color": "#000000",
+            "textAlign": "left"
+          },
+          "content": "This is just some text",
+          "created": "2025-05-24T13:39:04.794Z",
+          "modified": "2025-05-24T13:39:19.505Z",
+          "zIndex": 3,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    }
+  ],
+  "styles": {
+    "fonts": [],
+    "colors": [],
+    "gradients": [],
+    "themes": []
+  },
+  "collaborators": []
+}

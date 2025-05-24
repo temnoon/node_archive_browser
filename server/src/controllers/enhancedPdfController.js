@@ -615,6 +615,12 @@ class EnhancedPdfController {
       
       const conversationData = await conversationResponse.json();
       
+      console.log('Enhanced PDF: Loaded conversation data', {
+        conversationId,
+        title: conversationData.title,
+        messageCount: conversationData.messages?.length || 0
+      });
+      
       // Create document with conversation title
       const document = await this.pdfService.createDocument({
         title: conversationData.title || `Conversation ${conversationId}`,
@@ -625,17 +631,41 @@ class EnhancedPdfController {
       
       // Process messages and add as text elements
       if (conversationData.messages && conversationData.messages.length > 0) {
+        console.log('Enhanced PDF: Processing messages', {
+          messageCount: conversationData.messages.length
+        });
         let yPosition = 100; // Start position
         const pageWidth = 595; // A4 width in points
         const margins = { left: 72, right: 72, top: 72, bottom: 72 };
         const contentWidth = pageWidth - margins.left - margins.right;
         
         for (const message of conversationData.messages) {
+          console.log('Enhanced PDF: Processing message', {
+            messageId: message.id,
+            hasContent: !!message.content,
+            hasParts: !!(message.content && message.content.parts),
+            partsLength: message.content?.parts?.length || 0,
+            authorRole: message.author?.role
+          });
+          
           if (message.content && message.content.parts) {
             for (const part of message.content.parts) {
+              console.log('Enhanced PDF: Processing message part', {
+                partType: typeof part,
+                partLength: typeof part === 'string' ? part.length : 0,
+                hasContent: typeof part === 'string' && part.trim().length > 0
+              });
+              
               if (typeof part === 'string' && part.trim()) {
                 // Add role header (User/Assistant)
                 const roleText = message.author?.role === 'user' ? 'User:' : 'Assistant:';
+                console.log('Enhanced PDF: Adding role header element', {
+                  roleText,
+                  yPosition,
+                  documentId: document.id,
+                  pageId: document.pages[0].id
+                });
+                
                 await this.pdfService.addElement(document.id, document.pages[0].id, {
                   type: 'text',
                   content: roleText,
@@ -651,6 +681,13 @@ class EnhancedPdfController {
                 
                 // Add message content
                 const messageHeight = Math.max(50, part.length / 80 * 15);
+                console.log('Enhanced PDF: Adding message content element', {
+                  contentLength: part.trim().length,
+                  messageHeight,
+                  yPosition,
+                  contentPreview: part.trim().substring(0, 100) + '...'
+                });
+                
                 await this.pdfService.addElement(document.id, document.pages[0].id, {
                   type: 'text',
                   content: part.trim(),

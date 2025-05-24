@@ -47,6 +47,7 @@ export default function ConversationControls({
 
   // Document builder context
   const documentBuilder = useDocumentBuilder();
+  const collectionStats = documentBuilder.getStats();
   
   const {
     selectionMode = false,
@@ -61,17 +62,46 @@ export default function ConversationControls({
 
   // Helper to get actual message objects from selected IDs
   const getSelectedMessageObjects = () => {
-    if (!selectedMessages || selectedMessages.length === 0) return [];
+    console.log('ConversationControls: getSelectedMessageObjects called', {
+      selectedMessages,
+      selectedMessagesLength: selectedMessages?.length,
+      messagesLength: messages?.length,
+      selectionMode,
+      selectedCount
+    });
+    
+    if (!selectedMessages || selectedMessages.length === 0) {
+      console.log('ConversationControls: No selected messages found');
+      return [];
+    }
     const selectedIds = new Set(selectedMessages);
-    return messages.filter(msg => selectedIds.has(msg.id));
+    const messageObjects = messages.filter(msg => selectedIds.has(msg.id));
+    
+    console.log('ConversationControls: Filtered message objects', {
+      selectedIds: Array.from(selectedIds),
+      messageObjectsFound: messageObjects.length,
+      messageObjects: messageObjects.map(m => ({ id: m.id, author: m.message?.author?.role }))
+    });
+    
+    return messageObjects;
   };
 
   // Enhanced PDF Editor navigation
   const handleEnhancedPdfEditor = () => {
+    console.log('ConversationControls: handleEnhancedPdfEditor called', {
+      selectionMode,
+      selectedMessagesLength: selectedMessages?.length,
+      selectedCount,
+      conversationId,
+      conversationTitle: conversationData?.title
+    });
+    
     if (selectionMode && selectedMessages.length > 0) {
+      console.log('ConversationControls: In selection mode with messages, getting objects...');
       // Get actual message objects from IDs
       const messageObjects = getSelectedMessageObjects();
       if (messageObjects.length > 0) {
+        console.log('ConversationControls: Adding messages to builder and creating document');
         // Add selected messages to document builder and navigate
         documentBuilder.addSelectedMessages(
           conversationId, 
@@ -79,8 +109,11 @@ export default function ConversationControls({
           messageObjects
         );
         documentBuilder.createDocument();
+      } else {
+        console.warn('ConversationControls: No message objects found for Enhanced PDF Editor');
       }
     } else {
+      console.log('ConversationControls: Single conversation mode, navigating directly');
       // Navigate to single conversation import
       navigate(`/pdf-editor/${conversationId}`);
     }
@@ -88,22 +121,49 @@ export default function ConversationControls({
 
   // Add selected messages to collection without navigating
   const handleAddToCollection = () => {
+    console.log('ConversationControls: handleAddToCollection called', {
+      selectionMode,
+      selectedMessagesLength: selectedMessages?.length,
+      selectedCount,
+      conversationId,
+      conversationTitle: conversationData?.title
+    });
+    
     if (selectionMode && selectedMessages.length > 0) {
       // Get actual message objects from IDs
       const messageObjects = getSelectedMessageObjects();
+      console.log('ConversationControls: Got message objects for collection', {
+        messageObjectsCount: messageObjects.length
+      });
+      
       if (messageObjects.length > 0) {
         documentBuilder.addSelectedMessages(
           conversationId, 
           conversationData.title || `Conversation ${conversationId}`, 
           messageObjects
         );
+        console.log('ConversationControls: Messages added to collection, clearing selection');
         clearSelection();
+      } else {
+        console.warn('ConversationControls: No message objects found despite having selected messages');
       }
+    } else {
+      console.warn('ConversationControls: Cannot add to collection - not in selection mode or no messages selected');
     }
   };
   
   return (
     <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+      {/* Collection Status Indicator */}
+      {collectionStats.totalMessages > 0 && (
+        <Chip 
+          label={`${collectionStats.totalMessages} messages collected`}
+          color="secondary"
+          size="small"
+          sx={{ fontWeight: 'bold' }}
+        />
+      )}
+      
       {/* Media Gallery Button */}
       {hasMedia && (
         <Button 
