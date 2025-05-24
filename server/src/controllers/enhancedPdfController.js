@@ -1,6 +1,6 @@
 const EnhancedPdfService = require('../services/enhancedPdfService');
 const FontManager = require('../services/fontManager');
-const multer = require('multer');
+// const multer = require('multer'); // Temporarily disabled due to Node.js compatibility
 const path = require('path');
 const fs = require('fs-extra');
 
@@ -12,30 +12,13 @@ class EnhancedPdfController {
   constructor() {
     this.pdfService = new EnhancedPdfService();
     this.fontManager = new FontManager();
-    this.setupMulter();
+    // this.setupMulter(); // Temporarily disabled
     this.setupEventHandlers();
   }
 
-  setupMulter() {
-    this.upload = multer({
-      storage: multer.memoryStorage(),
-      limits: {
-        fileSize: 10 * 1024 * 1024, // 10MB limit
-        files: 1
-      },
-      fileFilter: (req, file, cb) => {
-        const allowedTypes = ['font/ttf', 'font/otf', 'application/font-woff', 'application/font-woff2'];
-        const allowedExtensions = ['.ttf', '.otf', '.woff', '.woff2'];
-        const ext = path.extname(file.originalname).toLowerCase();
-        
-        if (allowedTypes.includes(file.mimetype) || allowedExtensions.includes(ext)) {
-          cb(null, true);
-        } else {
-          cb(new Error('Invalid font file type. Only TTF, OTF, WOFF, and WOFF2 files are allowed.'));
-        }
-      }
-    });
-  }
+  // setupMulter() {
+  //   // Temporarily disabled due to Node.js compatibility issues
+  // }
 
   setupEventHandlers() {
     // Listen for real-time events from PDF service
@@ -374,35 +357,9 @@ class EnhancedPdfController {
 
   // POST /api/enhanced-pdf/fonts/custom
   uploadCustomFont = async (req, res) => {
-    this.upload.single('font')(req, res, async (err) => {
-      if (err) {
-        return res.status(400).json({
-          success: false,
-          error: err.message
-        });
-      }
-
-      try {
-        const { buffer, originalname } = req.file;
-        const { fontName, metadata = {} } = req.body;
-        
-        const fontData = await this.fontManager.embedCustomFont(
-          buffer, 
-          fontName || path.parse(originalname).name,
-          metadata
-        );
-        
-        res.status(201).json({
-          success: true,
-          font: fontData,
-          message: 'Custom font uploaded successfully'
-        });
-      } catch (error) {
-        res.status(400).json({
-          success: false,
-          error: error.message
-        });
-      }
+    res.status(501).json({
+      success: false,
+      error: 'Custom font upload temporarily disabled. Coming soon!'
     });
   };
 

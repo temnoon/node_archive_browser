@@ -8,6 +8,7 @@ import ArchiveImportWizard from './ArchiveImportWizard.jsx';
 import MediaGallery from './MediaGallery.jsx';
 import ParserInfoPage from './ParserInfoPage.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
+import EnhancedPdfEditor from './EnhancedPdfEditor.jsx';
 
 export default function App() {
   const [search, setSearch] = useState('');
@@ -127,6 +128,22 @@ export default function App() {
                 >
                   Import Archive
                 </Button>
+                <Button 
+                  color="inherit" 
+                  component={Link} 
+                  to="/pdf-editor"
+                  sx={{ 
+                    ml: 2, 
+                    transition: 'color 0.4s ease',
+                    '&:hover': {
+                      color: 'rgba(255, 255, 240, 0.85)', // Soft off-white with slight yellow tint
+                      backgroundColor: 'transparent'
+                    }
+                  }}
+                  onClick={handleNavigation}
+                >
+                  PDF Editor
+                </Button>
               </>
             )}
           </Toolbar>
@@ -192,6 +209,19 @@ export default function App() {
               >
                 <ListItemText primary="Import Archive" />
               </ListItem>
+              <ListItem 
+                component={Link} 
+                to="/pdf-editor" 
+                onClick={handleNavigation}
+                sx={{
+                  transition: 'background-color 0.4s ease',
+                  '&:hover': {
+                    backgroundColor: 'rgba(25, 118, 210, 0.12)',
+                  }
+                }}
+              >
+                <ListItemText primary="PDF Editor" />
+              </ListItem>
             </List>
           </Box>
         </Drawer>
@@ -215,6 +245,14 @@ export default function App() {
             <Route
               path="/import"
               element={<ArchiveImportWizard />}
+            />
+            <Route
+              path="/pdf-editor"
+              element={<EnhancedPdfEditor />}
+            />
+            <Route
+              path="/pdf-editor/:conversationId"
+              element={<EnhancedPdfEditor />}
             />
             <Route
               path="/media"

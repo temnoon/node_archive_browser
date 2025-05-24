@@ -56,6 +56,7 @@ const gizmoController = require('./src/controllers/gizmoController');
 const parserController = require('./src/controllers/parserController');
 const archiveController = require('./src/controllers/archiveController');
 const pdfController = require('./src/controllers/pdfController');
+const enhancedPdfRoutes = require('./src/routes/enhancedPdfRoutes');
 
 // Import services
 const archiveService = require('./src/services/archiveService');
@@ -160,6 +161,9 @@ app.post('/api/pdf/test/:id', pdfController.testSimpleExport);
 app.get('/api/pdf/test/:id', pdfController.testSimpleExport); // Add GET route for testing
 app.post('/api/pdf/debug/:id', pdfController.testDebugExport);
 app.get('/api/pdf/debug/:id', pdfController.testDebugExport); // Add GET route for debugging
+
+// Enhanced PDF Editor routes
+app.use('/api/enhanced-pdf', enhancedPdfRoutes);
 
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, '../client/dist')));

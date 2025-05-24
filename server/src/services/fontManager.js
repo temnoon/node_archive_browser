@@ -48,6 +48,11 @@ class FontManager extends EventEmitter {
 
     for (const fontPath of systemFonts) {
       try {
+        // Skip if fontPath is not a string
+        if (typeof fontPath !== 'string') {
+          continue;
+        }
+          
         const fontData = await this.loadFontFile(fontPath);
         if (fontData) {
           this.fonts.set(fontData.familyName, {
@@ -127,9 +132,16 @@ class FontManager extends EventEmitter {
     const fontExtensions = ['.ttf', '.otf', '.woff', '.woff2'];
 
     try {
+      // Ensure dirPath is valid
+      if (!dirPath || typeof dirPath !== 'string') {
+        return fontFiles;
+      }
+      
       const entries = fs.readdirSync(dirPath, { withFileTypes: true });
       
       for (const entry of entries) {
+        if (!entry || !entry.name) continue;
+        
         const fullPath = path.join(dirPath, entry.name);
         
         if (entry.isDirectory()) {
@@ -145,11 +157,18 @@ class FontManager extends EventEmitter {
       console.warn(`Error scanning font directory ${dirPath}:`, error.message);
     }
 
-    return fontFiles;
+    return fontFiles.filter(path => typeof path === 'string');
   }
+</edits>
 
   async loadFontFile(fontPath) {
     try {
+      // Ensure fontPath is a string and not a buffer
+      if (typeof fontPath !== 'string') {
+        console.warn(`Invalid font path type: ${typeof fontPath}, skipping`);
+        return null;
+      }
+      
       const fontBuffer = await fs.readFile(fontPath);
       const font = fontkit.open(fontBuffer);
       
