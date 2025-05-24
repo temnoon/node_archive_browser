@@ -294,30 +294,32 @@ const EnhancedPdfEditor = () => {
         console.log('EnhancedPdfEditor: Processing messages for conversation', {
           conversationId,
           messageCount: convData.messages.length,
-          messages: convData.messages.map(m => ({
+          messages: convData.messages.slice(0, 3).map(m => ({
             id: m.id,
             hasContent: !!m.content,
             contentType: typeof m.content,
             hasParts: !!(m.content && m.content.parts),
             partsLength: m.content?.parts?.length,
-            authorRole: m.author?.role
+            authorRole: m.author?.role,
+            actualContent: JSON.stringify(m.content, null, 2),
+            messageStructure: Object.keys(m)
           }))
         });
         
         for (const message of convData.messages) {
           console.log('EnhancedPdfEditor: Processing individual message', {
             messageId: message.id,
-            hasContent: !!message.content,
-            contentStructure: message.content ? Object.keys(message.content) : null,
-            hasParts: !!(message.content && message.content.parts),
-            partsCount: message.content?.parts?.length || 0,
-            parts: message.content?.parts?.slice(0, 2), // First 2 parts for debugging
-            authorRole: message.author?.role
+            hasContent: !!message.message?.content,
+            contentStructure: message.message?.content ? Object.keys(message.message.content) : null,
+            hasParts: !!(message.message?.content && message.message.content.parts),
+            partsCount: message.message?.content?.parts?.length || 0,
+            parts: message.message?.content?.parts?.slice(0, 2), // First 2 parts for debugging
+            authorRole: message.message?.author?.role
           });
           
-          if (message.content && message.content.parts) {
+          if (message.message?.content && message.message.content.parts) {
             console.log('EnhancedPdfEditor: Message has content and parts, processing...');
-            for (const part of message.content.parts) {
+            for (const part of message.message.content.parts) {
               console.log('EnhancedPdfEditor: Processing message part', {
                 partType: typeof part,
                 isString: typeof part === 'string',
@@ -328,7 +330,7 @@ const EnhancedPdfEditor = () => {
               
               if (typeof part === 'string' && part.trim()) {
                 // Add role header
-                const roleText = message.author?.role === 'user' ? 'User:' : 'Assistant:';
+                const roleText = message.message?.author?.role === 'user' ? 'User:' : 'Assistant:';
                 try {
                   console.log('EnhancedPdfEditor: Adding role header element', {
                     roleText,
@@ -347,7 +349,7 @@ const EnhancedPdfEditor = () => {
                         fontFamily: 'Helvetica',
                         fontSize: 12,
                         fontWeight: 'bold',
-                        color: message.author?.role === 'user' ? '#2E7D32' : '#1976D2'
+                        color: message.message?.author?.role === 'user' ? '#2E7D32' : '#1976D2'
                       }
                     })
                   });

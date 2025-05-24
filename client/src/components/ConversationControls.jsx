@@ -80,7 +80,16 @@ export default function ConversationControls({
     console.log('ConversationControls: Filtered message objects', {
       selectedIds: Array.from(selectedIds),
       messageObjectsFound: messageObjects.length,
-      messageObjects: messageObjects.map(m => ({ id: m.id, author: m.message?.author?.role }))
+      messageObjects: messageObjects.slice(0, 3).map(m => ({ 
+        id: m.id, 
+        author: m.message?.author?.role,
+        messageStructure: Object.keys(m),
+        hasMessage: !!m.message,
+        messageContent: m.message?.content ? Object.keys(m.message.content) : null,
+        hasParts: !!(m.message?.content?.parts),
+        partsLength: m.message?.content?.parts?.length,
+        actualMessage: JSON.stringify(m, null, 2).substring(0, 500) + '...'
+      }))
     });
     
     return messageObjects;
