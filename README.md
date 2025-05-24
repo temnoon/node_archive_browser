@@ -8,6 +8,7 @@ A flexible browser for AI conversation archives with import/explode functionalit
 - 📝 **Rich Message Display**: View messages with proper markdown rendering and syntax highlighting
 - 🖼️ **Media Support**: Display images, audio, and video attachments inline
 - 🔎 **Search & Filter**: Search across conversations with date filtering and media filtering
+- 📄 **PDF Export**: Export conversations to high-quality PDFs with LaTeX math rendering
 - 📥 **Import Wizard**: Convert ChatGPT/OpenAI exports into browsable archives
 - 📁 **Archive Management**: Switch between different archive locations easily
 
@@ -102,6 +103,169 @@ If you already have a processed archive:
 - View all media files from your conversations in a gallery format
 - Organized by conversation with proper navigation
 
+## PDF Export
+
+The Archive Browser includes a powerful PDF export feature that converts conversations into professional, printable documents with full LaTeX math rendering.
+
+### Accessing PDF Export
+
+1. **From Conversation View**: Click the "Export PDF" button in the conversation controls
+2. **Export Options**: Choose from multiple layout and filtering options
+3. **Download**: Generated PDFs are automatically downloaded to your browser's download folder
+
+### Export Features
+
+#### Layout Options
+- **Format**: A4, Letter, Legal page sizes
+- **Margins**: Customizable margins (0.5in to 2in)
+- **Orientation**: Portrait or landscape
+- **Headers/Footers**: Optional page numbering and titles
+
+#### Content Filtering
+- **Message Selection**: Export all messages or filter by:
+  - Message author (user, assistant, system)
+  - Date range
+  - Message type
+- **Content Types**: Include/exclude:
+  - Tool messages and outputs
+  - Media attachments
+  - System messages
+
+#### Advanced Features
+- **LaTeX Math Rendering**: Full support for mathematical expressions
+  - Display math: `\[...\]` and `$$...$$`
+  - Inline math: `\(...\)` and `$...$`
+  - Complex equations, matrices, integrals, and symbols
+- **Markdown Formatting**: Proper rendering of:
+  - Headers, bold, italic, strikethrough
+  - Code blocks and inline code
+  - Lists (ordered and unordered)
+  - Links and tables
+- **Media Integration**: Embedded images with proper scaling
+- **Clean Output**: Automatic filtering of internal file references
+
+### PDF Export Dialog Options
+
+#### Layout Tab
+```
+Format: [A4 ▼] [Portrait ▼]
+Margins: Top [1in] Right [1in] Bottom [1in] Left [1in]
+□ Include page headers
+□ Include page numbers
+```
+
+#### Content Tab
+```
+Messages to Include:
+□ User messages
+□ Assistant messages  
+□ System messages
+□ Tool outputs
+
+Content Filtering:
+□ Hide tool messages
+□ Include media attachments
+Date Range: [Start Date] to [End Date]
+```
+
+#### Style Tab
+```
+Font Size: [12pt ▼]
+Line Spacing: [1.2 ▼]
+□ Syntax highlighting for code
+□ Mathematical expressions
+```
+
+### Supported Content Types
+
+- **Text Messages**: Full markdown with LaTeX support
+- **Code Blocks**: Syntax-highlighted programming code
+- **Mathematical Expressions**: Rendered using MathJax
+- **Images**: Embedded with proper scaling and captions
+- **Lists and Tables**: Properly formatted structures
+- **Mixed Content**: Seamless integration of all content types
+
+### LaTeX Math Support
+
+The PDF export fully supports LaTeX mathematical notation:
+
+#### Display Math (Block Equations)
+```latex
+\[
+E = mc^2
+\]
+
+$$
+\nabla \cdot \mathbf{E} = \frac{\rho}{\varepsilon_0}
+$$
+```
+
+#### Inline Math
+```latex
+The equation \( E = mc^2 \) or $E = mc^2$ represents mass-energy equivalence.
+```
+
+#### Complex Expressions
+- Fractions: `\frac{a}{b}`
+- Integrals: `\int_{-\infty}^{\infty} f(x) dx`
+- Matrices: `\begin{pmatrix} a & b \\ c & d \end{pmatrix}`
+- Greek letters: `\alpha, \beta, \gamma`
+- Special symbols: `\nabla, \partial, \infty`
+
+### Technical Details
+
+#### PDF Generation
+- **Engine**: Puppeteer with Chromium for high-quality rendering
+- **MathJax**: Version 3 for mathematical expression rendering
+- **Output**: PDF/A compatible for archival and accessibility
+- **Size**: Optimized compression for reasonable file sizes
+
+#### Browser Compatibility
+- **Chrome/Chromium**: Full support
+- **Firefox**: Full support
+- **Safari**: Full support
+- **Edge**: Full support
+
+#### Adobe Acrobat Compatibility
+- Enhanced PDF metadata for Adobe Reader compatibility
+- Tagged PDF structure for accessibility
+- Standard PDF format for cross-platform viewing
+
+### Troubleshooting PDF Export
+
+#### Common Issues
+
+**PDF Won't Generate**
+- Ensure server dependencies are installed: `npm install` in server directory
+- Check that Chromium is available (automatically installed with Puppeteer)
+- Verify sufficient disk space for temporary files
+
+**LaTeX Not Rendering**
+- Mathematical expressions should use proper LaTeX delimiters
+- Check browser console for MathJax loading errors
+- Ensure internet connection for MathJax CDN (first load)
+
+**Adobe Acrobat Issues**
+- PDFs are optimized for Adobe compatibility
+- If PDF won't open, try another PDF viewer first
+- Check for Adobe Reader updates
+
+**Large File Sizes**
+- Use content filtering to reduce export size
+- Consider splitting long conversations into multiple PDFs
+- Exclude media attachments if not needed
+
+**Missing Content**
+- Check message filtering settings in export dialog
+- Verify date range includes desired messages
+- Ensure tool messages are included if needed
+
+#### Performance Tips
+
+- **Large Conversations**: Use date filtering for conversations with 100+ messages
+- **Media Heavy**: Consider excluding images for text-only exports
+- **Multiple Exports**: Process one conversation at a time for best performance
+
 ## Import Wizard Configuration
 
 ### Archive Structure Customization
@@ -152,6 +316,9 @@ your-archive/
 - **"Invalid Archive"**: Ensure the directory contains conversation folders with `conversation.json` files
 - **Media Not Loading**: Check that media files exist in the expected locations
 - **Import Fails**: Verify the source export is a valid ChatGPT/OpenAI export
+- **PDF Export Fails**: Ensure server is running and Puppeteer dependencies are installed
+- **LaTeX Not Rendering in PDF**: Check mathematical expressions use proper delimiters (`\[...\]`, `\(...\)`, `$...$`)
+- **PDF Too Large**: Use content filtering to reduce size or split long conversations
 
 ### Getting Help
 
@@ -203,6 +370,7 @@ node-archive-browser/
 ## Future Enhancements
 
 - Anthropic/Claude conversation support
-- Enhanced export functionality
+- Batch PDF export for multiple conversations
 - Advanced search capabilities
+- Custom PDF themes and styling
 - Electron desktop app features
