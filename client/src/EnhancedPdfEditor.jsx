@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useParams } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -75,7 +76,8 @@ import {
   LockOpen as LockOpenIcon
 } from '@mui/icons-material';
 
-const EnhancedPdfEditor = ({ conversationId }) => {
+const EnhancedPdfEditor = () => {
+  const { conversationId } = useParams();
   // Core state
   const [document, setDocument] = useState(null);
   const [currentPage, setCurrentPage] = useState(0);

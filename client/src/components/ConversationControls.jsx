@@ -4,7 +4,8 @@ import {
   PictureAsPdf as PdfIcon, 
   CheckBox as SelectIcon,
   CheckBoxOutlineBlank as UnselectIcon,
-  Clear as ClearIcon
+  Clear as ClearIcon,
+  Edit as EditIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useMessageSelection } from '../context/MessageSelectionContext';
@@ -49,6 +50,11 @@ export default function ConversationControls({
     selectUserMessages = () => {},
     selectAssistantMessages = () => {}
   } = selection || {};
+
+  // Enhanced PDF Editor navigation
+  const handleEnhancedPdfEditor = () => {
+    navigate(`/pdf-editor/${conversationId}`);
+  };
   
   return (
     <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -71,6 +77,14 @@ export default function ConversationControls({
             onClick={() => onPdfExport && onPdfExport('conversation')}
           >
             Export PDF
+          </Button>
+          <Button
+            startIcon={<EditIcon />}
+            onClick={handleEnhancedPdfEditor}
+            variant="contained"
+            color="primary"
+          >
+            Enhanced PDF Editor
           </Button>
           <Button
             startIcon={<SelectIcon />}
