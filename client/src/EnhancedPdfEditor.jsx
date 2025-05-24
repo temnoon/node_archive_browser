@@ -253,20 +253,41 @@ const EnhancedPdfEditor = () => {
       // Add content for each conversation
       for (const [conversationId, convData] of Object.entries(messagesByConversation)) {
         // Add conversation title
-        await apiCall(`/documents/${response.document.id}/pages/${response.document.pages[0].id}/elements`, {
-          method: 'POST',
-          body: JSON.stringify({
-            type: 'text',
-            content: convData.title,
-            bounds: { x: margins.left, y: yPosition, width: contentWidth, height: 25 },
-            style: {
-              fontFamily: 'Helvetica',
-              fontSize: 16,
-              fontWeight: 'bold',
-              color: '#1976D2'
-            }
-          })
-        });
+        try {
+          console.log('EnhancedPdfEditor: Adding conversation title element', {
+            conversationId,
+            title: convData.title,
+            yPosition,
+            documentId: response.document.id,
+            pageId: response.document.pages[0].id
+          });
+          
+          const titleResponse = await apiCall(`/documents/${response.document.id}/pages/${response.document.pages[0].id}/elements`, {
+            method: 'POST',
+            body: JSON.stringify({
+              type: 'text',
+              content: convData.title,
+              bounds: { x: margins.left, y: yPosition, width: contentWidth, height: 25 },
+              style: {
+                fontFamily: 'Helvetica',
+                fontSize: 16,
+                fontWeight: 'bold',
+                color: '#1976D2'
+              }
+            })
+          });
+          
+          console.log('EnhancedPdfEditor: Conversation title element added successfully', {
+            response: titleResponse,
+            success: titleResponse.success
+          });
+        } catch (error) {
+          console.error('EnhancedPdfEditor: Failed to add conversation title element', {
+            error: error.message,
+            conversationId,
+            title: convData.title
+          });
+        }
         yPosition += 35;
 
         // Add messages
@@ -276,37 +297,79 @@ const EnhancedPdfEditor = () => {
               if (typeof part === 'string' && part.trim()) {
                 // Add role header
                 const roleText = message.author?.role === 'user' ? 'User:' : 'Assistant:';
-                await apiCall(`/documents/${response.document.id}/pages/${response.document.pages[0].id}/elements`, {
-                  method: 'POST',
-                  body: JSON.stringify({
-                    type: 'text',
-                    content: roleText,
-                    bounds: { x: margins.left, y: yPosition, width: contentWidth, height: 20 },
-                    style: {
-                      fontFamily: 'Helvetica',
-                      fontSize: 12,
-                      fontWeight: 'bold',
-                      color: message.author?.role === 'user' ? '#2E7D32' : '#1976D2'
-                    }
-                  })
-                });
+                try {
+                  console.log('EnhancedPdfEditor: Adding role header element', {
+                    roleText,
+                    messageId: message.id,
+                    authorRole: message.author?.role,
+                    yPosition
+                  });
+                  
+                  const roleResponse = await apiCall(`/documents/${response.document.id}/pages/${response.document.pages[0].id}/elements`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                      type: 'text',
+                      content: roleText,
+                      bounds: { x: margins.left, y: yPosition, width: contentWidth, height: 20 },
+                      style: {
+                        fontFamily: 'Helvetica',
+                        fontSize: 12,
+                        fontWeight: 'bold',
+                        color: message.author?.role === 'user' ? '#2E7D32' : '#1976D2'
+                      }
+                    })
+                  });
+                  
+                  console.log('EnhancedPdfEditor: Role header element added successfully', {
+                    response: roleResponse,
+                    success: roleResponse.success
+                  });
+                } catch (error) {
+                  console.error('EnhancedPdfEditor: Failed to add role header element', {
+                    error: error.message,
+                    roleText,
+                    messageId: message.id
+                  });
+                }
                 yPosition += 20;
 
                 // Add message content
                 const messageHeight = Math.max(40, part.length / 100 * 12);
-                await apiCall(`/documents/${response.document.id}/pages/${response.document.pages[0].id}/elements`, {
-                  method: 'POST',
-                  body: JSON.stringify({
-                    type: 'text',
-                    content: part.trim(),
-                    bounds: { x: margins.left, y: yPosition, width: contentWidth, height: messageHeight },
-                    style: {
-                      fontFamily: 'Helvetica',
-                      fontSize: 10,
-                      color: '#000000'
-                    }
-                  })
-                });
+                try {
+                  console.log('EnhancedPdfEditor: Adding message content element', {
+                    messageId: message.id,
+                    contentLength: part.trim().length,
+                    messageHeight,
+                    yPosition,
+                    contentPreview: part.trim().substring(0, 100) + '...'
+                  });
+                  
+                  const contentResponse = await apiCall(`/documents/${response.document.id}/pages/${response.document.pages[0].id}/elements`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                      type: 'text',
+                      content: part.trim(),
+                      bounds: { x: margins.left, y: yPosition, width: contentWidth, height: messageHeight },
+                      style: {
+                        fontFamily: 'Helvetica',
+                        fontSize: 10,
+                        color: '#000000'
+                      }
+                    })
+                  });
+                  
+                  console.log('EnhancedPdfEditor: Message content element added successfully', {
+                    response: contentResponse,
+                    success: contentResponse.success,
+                    elementId: contentResponse.element?.id
+                  });
+                } catch (error) {
+                  console.error('EnhancedPdfEditor: Failed to add message content element', {
+                    error: error.message,
+                    messageId: message.id,
+                    contentLength: part.trim().length
+                  });
+                }
                 yPosition += messageHeight + 15;
               }
             }
@@ -316,9 +379,29 @@ const EnhancedPdfEditor = () => {
       }
 
       // Get updated document
-      const updatedDoc = await apiCall(`/documents/${response.document.id}`);
-      setDocument(updatedDoc.document);
-      setSuccess(`Document created with ${collectedMessages.length} messages from ${collectedConversations.length} conversations`);
+      try {
+        console.log('EnhancedPdfEditor: Fetching updated document after element creation');
+        const updatedDoc = await apiCall(`/documents/${response.document.id}`);
+        console.log('EnhancedPdfEditor: Updated document fetched', {
+          documentId: updatedDoc.document.id,
+          elementsCount: updatedDoc.document.pages[0]?.elements?.length || 0,
+          elements: updatedDoc.document.pages[0]?.elements?.map(e => ({
+            id: e.id,
+            type: e.type,
+            content: e.content?.substring(0, 50) + '...'
+          })) || []
+        });
+        setDocument(updatedDoc.document);
+        setSuccess(`Document created with ${collectedMessages.length} messages from ${collectedConversations.length} conversations`);
+      } catch (error) {
+        console.error('EnhancedPdfEditor: Failed to fetch updated document', {
+          error: error.message,
+          documentId: response.document.id
+        });
+        // Still set the original document if update fetch fails
+        setDocument(response.document);
+        setSuccess(`Document created with ${collectedMessages.length} messages (may need refresh)`);
+      }
       
       // Clear collected messages
       console.log('EnhancedPdfEditor: Clearing sessionStorage after successful import');
@@ -802,7 +885,7 @@ const EnhancedPdfEditor = () => {
             {document.pages[currentPage].elements.map((element, index) => (
               <ListItem
                 key={element.id}
-                button
+                component="button"
                 selected={selectedElement?.id === element.id}
                 onClick={() => setSelectedElement(element)}
               >
