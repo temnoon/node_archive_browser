@@ -1,0 +1,78 @@
+{
+  "id": "mb2bzuddgad2lszmvec",
+  "version": "1.0",
+  "created": "2025-05-24T14:34:56.257Z",
+  "modified": "2025-05-24T14:35:10.943Z",
+  "metadata": {
+    "title": "New Document",
+    "author": "Archive Browser",
+    "subject": "",
+    "keywords": []
+  },
+  "settings": {
+    "size": "A4",
+    "orientation": "portrait",
+    "margins": {
+      "top": 72,
+      "right": 72,
+      "bottom": 72,
+      "left": 72
+    },
+    "units": "points"
+  },
+  "pages": [
+    {
+      "id": "mb2bzuddaxs9osvmfch",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "top": 72,
+        "right": 72,
+        "bottom": 72,
+        "left": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2c05pa80c82v3jtkb",
+          "type": "shape",
+          "bounds": {
+            "x": 113.73162841796875,
+            "y": 86.82354736328125,
+            "width": 100,
+            "height": 100
+          },
+          "style": {
+            "fill": "#e3f2fd",
+            "stroke": "#2196f3",
+            "strokeWidth": 2
+          },
+          "content": {
+            "shape": "rectangle"
+          },
+          "created": "2025-05-24T14:35:10.942Z",
+          "modified": "2025-05-24T14:35:10.943Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    }
+  ],
+  "styles": {
+    "fonts": [],
+    "colors": [],
+    "gradients": [],
+    "themes": []
+  },
+  "collaborators": []
+}

@@ -291,9 +291,41 @@ const EnhancedPdfEditor = () => {
         yPosition += 35;
 
         // Add messages
+        console.log('EnhancedPdfEditor: Processing messages for conversation', {
+          conversationId,
+          messageCount: convData.messages.length,
+          messages: convData.messages.map(m => ({
+            id: m.id,
+            hasContent: !!m.content,
+            contentType: typeof m.content,
+            hasParts: !!(m.content && m.content.parts),
+            partsLength: m.content?.parts?.length,
+            authorRole: m.author?.role
+          }))
+        });
+        
         for (const message of convData.messages) {
+          console.log('EnhancedPdfEditor: Processing individual message', {
+            messageId: message.id,
+            hasContent: !!message.content,
+            contentStructure: message.content ? Object.keys(message.content) : null,
+            hasParts: !!(message.content && message.content.parts),
+            partsCount: message.content?.parts?.length || 0,
+            parts: message.content?.parts?.slice(0, 2), // First 2 parts for debugging
+            authorRole: message.author?.role
+          });
+          
           if (message.content && message.content.parts) {
+            console.log('EnhancedPdfEditor: Message has content and parts, processing...');
             for (const part of message.content.parts) {
+              console.log('EnhancedPdfEditor: Processing message part', {
+                partType: typeof part,
+                isString: typeof part === 'string',
+                hasContent: typeof part === 'string' && part.trim().length > 0,
+                partLength: typeof part === 'string' ? part.length : 'not string',
+                partPreview: typeof part === 'string' ? part.substring(0, 100) + '...' : part
+              });
+              
               if (typeof part === 'string' && part.trim()) {
                 // Add role header
                 const roleText = message.author?.role === 'user' ? 'User:' : 'Assistant:';
@@ -901,7 +933,13 @@ const EnhancedPdfEditor = () => {
                 </ListItemIcon>
                 <ListItemText
                   primary={`${element.type} ${index + 1}`}
-                  secondary={element.content?.substring(0, 30) + '...'}
+                  secondary={
+                    element.type === 'text' 
+                      ? (typeof element.content === 'string' ? element.content.substring(0, 30) + '...' : 'Text element')
+                      : element.type === 'shape' 
+                      ? (element.content?.shape || 'Shape')
+                      : 'Element'
+                  }
                   sx={{ 
                     '& .MuiListItemText-primary': { color: '#000000' },
                     '& .MuiListItemText-secondary': { color: '#666666' }

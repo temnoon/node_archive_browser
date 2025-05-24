@@ -1,0 +1,99 @@
+{
+  "id": "mb2c76jeafuwz4xvsk9",
+  "version": "1.0",
+  "created": "2025-05-24T14:40:38.618Z",
+  "modified": "2025-05-24T14:40:38.643Z",
+  "metadata": {
+    "title": "Collected Messages Document (2 conversations)",
+    "author": "Archive Browser",
+    "subject": "",
+    "keywords": []
+  },
+  "settings": {
+    "size": "A4",
+    "orientation": "portrait",
+    "margins": {
+      "top": 72,
+      "right": 72,
+      "bottom": 72,
+      "left": 72
+    },
+    "units": "points"
+  },
+  "pages": [
+    {
+      "id": "mb2c76jed79yxkklrzk",
+      "size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "top": 72,
+        "right": 72,
+        "bottom": 72,
+        "left": 72
+      },
+      "background": {
+        "color": "#ffffff"
+      },
+      "elements": [
+        {
+          "id": "mb2c76jypsyo9tfyica",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 100,
+            "width": 451,
+            "height": 25
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 16,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Ollama Cloudflare Tunnel Setup",
+          "created": "2025-05-24T14:40:38.638Z",
+          "modified": "2025-05-24T14:40:38.638Z",
+          "zIndex": 0,
+          "locked": false,
+          "visible": true
+        },
+        {
+          "id": "mb2c76k37zel47zkxxn",
+          "type": "text",
+          "bounds": {
+            "x": 72,
+            "y": 165,
+            "width": 451,
+            "height": 25
+          },
+          "style": {
+            "fontFamily": "Helvetica",
+            "fontSize": 16,
+            "fontWeight": "bold",
+            "color": "#1976D2"
+          },
+          "content": "Logo Design Request",
+          "created": "2025-05-24T14:40:38.643Z",
+          "modified": "2025-05-24T14:40:38.643Z",
+          "zIndex": 1,
+          "locked": false,
+          "visible": true
+        }
+      ],
+      "grid": {
+        "enabled": false,
+        "size": 12,
+        "color": "#e0e0e0",
+        "snap": true
+      },
+      "guides": []
+    }
+  ],
+  "styles": {
+    "fonts": [],
+    "colors": [],
+    "gradients": [],
+    "themes": []
+  },
+  "collaborators": []
+}

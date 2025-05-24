@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import { AppBar, Toolbar, Typography, Container, Box, TextField, GlobalStyles, Button, CssBaseline, useMediaQuery, IconButton, Drawer, List, ListItem, ListItemText, ListItemIcon, Divider } from '@mui/material';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
 import ConversationView from './ConversationView.jsx';
 import ConversationSearchTable from './ConversationSearchTable.jsx';
 import ArchiveImportWizard from './ArchiveImportWizard.jsx';
@@ -16,6 +16,7 @@ export default function App() {
   const [perPage, setPerPage] = useState(10);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMobile = useMediaQuery('(max-width:899px)');
+  const navigate = useNavigate();
   
   // Close mobile menu when route changes
   const handleNavigation = () => {
@@ -132,8 +133,6 @@ export default function App() {
                 </Button>
                 <Button 
                   color="inherit" 
-                  component={Link} 
-                  to="/pdf-editor"
                   sx={{ 
                     ml: 2, 
                     transition: 'color 0.4s ease',
@@ -142,7 +141,16 @@ export default function App() {
                       backgroundColor: 'transparent'
                     }
                   }}
-                  onClick={handleNavigation}
+                  onClick={() => {
+                    // Check if there are collected messages
+                    const collectedMessages = sessionStorage.getItem('documentBuilder_messages');
+                    if (collectedMessages && JSON.parse(collectedMessages).length > 0) {
+                      navigate('/pdf-editor?source=collected');
+                    } else {
+                      navigate('/pdf-editor');
+                    }
+                    handleNavigation();
+                  }}
                 >
                   PDF Editor
                 </Button>
@@ -216,12 +224,20 @@ export default function App() {
                 <ListItemText primary="Import Archive" />
               </ListItem>
               <ListItem 
-                component={Link} 
-                to="/pdf-editor" 
-                onClick={handleNavigation}
+                onClick={() => {
+                  // Check if there are collected messages
+                  const collectedMessages = sessionStorage.getItem('documentBuilder_messages');
+                  if (collectedMessages && JSON.parse(collectedMessages).length > 0) {
+                    navigate('/pdf-editor?source=collected');
+                  } else {
+                    navigate('/pdf-editor');
+                  }
+                  handleNavigation();
+                }}
                 button={false}
                 sx={{
                   transition: 'background-color 0.4s ease',
+                  cursor: 'pointer',
                   '&:hover': {
                     backgroundColor: 'rgba(25, 118, 210, 0.12)',
                   }
