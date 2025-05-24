@@ -365,10 +365,234 @@ const EnhancedPdfEditor = () => {
                 isString: typeof part === 'string',
                 hasContent: typeof part === 'string' && part.trim().length > 0,
                 partLength: typeof part === 'string' ? part.length : 'not string',
-                partPreview: typeof part === 'string' ? part.substring(0, 100) + '...' : part
+                partPreview: typeof part === 'string' ? part.substring(0, 100) + '...' : part,
+                isImageAsset: part && typeof part === 'object' && part.content_type === 'image_asset_pointer',
+                hasAssetPointer: part && typeof part === 'object' && part.asset_pointer
               });
               
-              if (typeof part === 'string' && part.trim()) {
+              // Handle image content
+              if (part && typeof part === 'object' && part.content_type === 'image_asset_pointer' && part.asset_pointer) {
+                try {
+                  const imageHeight = 200; // Standard image height
+                  await createNewPageIfNeeded(imageHeight + 30);
+                  
+                  console.log('EnhancedPdfEditor: Adding image element', {
+                    messageId: message.id,
+                    imageUrl: part.asset_pointer.url,
+                    imageWidth: part.asset_pointer.width,
+                    imageHeight: part.asset_pointer.height,
+                    yPosition,
+                    currentPageIndex
+                  });
+                  
+                  const imageResponse = await apiCall(`/documents/${response.document.id}/pages/${response.document.pages[currentPageIndex].id}/elements`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                      type: 'image',
+                      content: {
+                        url: part.asset_pointer.url,
+                        originalWidth: part.asset_pointer.width,
+                        originalHeight: part.asset_pointer.height
+                      },
+                      bounds: { 
+                        x: margins.left, 
+                        y: yPosition, 
+                        width: Math.min(contentWidth, part.asset_pointer.width || 400),
+                        height: imageHeight 
+                      },
+                      style: {
+                        border: '1px solid #ddd',
+                        borderRadius: '4px'
+                      }
+                    })
+                  });
+                  
+                  console.log('EnhancedPdfEditor: Image element added successfully', {
+                    response: imageResponse,
+                    success: imageResponse.success,
+                    elementId: imageResponse.element?.id
+                  });
+
+                  yPosition += imageHeight + 15;
+                  
+                } catch (error) {
+                  console.error('EnhancedPdfEditor: Failed to add image element', {
+                    error: error.message,
+                    messageId: message.id,
+                    imageUrl: part.asset_pointer?.url
+                  });
+                }
+              }
+              // Handle code blocks
+              else if (typeof part === 'string' && part.trim() && (part.includes('```') || part.match(/^\s*```/m))) {
+                try {
+                  // Detect and process code blocks
+                  const codeBlockRegex = /```(\w+)?\n?([\s\S]*?)```/g;
+                  const parts = [];
+                  let lastIndex = 0;
+                  let match;
+                  
+                  while ((match = codeBlockRegex.exec(part)) !== null) {
+                    // Add text before code block
+                    if (match.index > lastIndex) {
+                      const textBefore = part.substring(lastIndex, match.index).trim();
+                      if (textBefore) {
+                        parts.push({ type: 'text', content: textBefore });
+                      }
+                    }
+                    
+                    // Add code block
+                    const language = match[1] || 'text';
+                    const codeContent = match[2];
+                    parts.push({ type: 'code', content: codeContent, language });
+                    
+                    lastIndex = match.index + match[0].length;
+                  }
+                  
+                  // Add remaining text after last code block
+                  if (lastIndex < part.length) {
+                    const textAfter = part.substring(lastIndex).trim();
+                    if (textAfter) {
+                      parts.push({ type: 'text', content: textAfter });
+                    }
+                  }
+                  
+                  // If no code blocks found, treat as regular text
+                  if (parts.length === 0) {
+                    parts.push({ type: 'text', content: part.trim() });
+                  }
+                  
+                  // Process each part
+                  for (const partItem of parts) {
+                    if (partItem.type === 'code') {
+                      // Add role header for code blocks
+                      const roleText = message.message?.author?.role === 'user' ? 'User:' : 'Assistant:';
+                      await createNewPageIfNeeded(25);
+                      
+                      const roleResponse = await apiCall(`/documents/${response.document.id}/pages/${response.document.pages[currentPageIndex].id}/elements`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                          type: 'text',
+                          content: roleText,
+                          bounds: { x: margins.left, y: yPosition, width: contentWidth, height: 20 },
+                          style: {
+                            fontFamily: 'Helvetica',
+                            fontSize: 12,
+                            fontWeight: 'bold',
+                            color: message.message?.author?.role === 'user' ? '#2E7D32' : '#1976D2'
+                          }
+                        })
+                      });
+                      yPosition += 25;
+                      
+                      // Calculate code block height
+                      const codeLines = partItem.content.split('\n');
+                      const codeHeight = Math.max(40, codeLines.length * 14 + 20);
+                      
+                      await createNewPageIfNeeded(codeHeight + 20);
+                      
+                      console.log('EnhancedPdfEditor: Adding code block element', {
+                        messageId: message.id,
+                        language: partItem.language,
+                        lineCount: codeLines.length,
+                        codeHeight,
+                        yPosition,
+                        currentPageIndex
+                      });
+                      
+                      const codeResponse = await apiCall(`/documents/${response.document.id}/pages/${response.document.pages[currentPageIndex].id}/elements`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                          type: 'text',
+                          content: partItem.content,
+                          bounds: { x: margins.left, y: yPosition, width: contentWidth, height: codeHeight },
+                          style: {
+                            fontFamily: 'Courier',
+                            fontSize: 9,
+                            color: '#000000',
+                            backgroundColor: '#f5f5f5',
+                            border: '1px solid #ddd',
+                            borderRadius: '4px',
+                            padding: '8px',
+                            whiteSpace: 'pre',
+                            overflow: 'auto'
+                          }
+                        })
+                      });
+                      
+                      console.log('EnhancedPdfEditor: Code block element added successfully', {
+                        response: codeResponse,
+                        success: codeResponse.success,
+                        elementId: codeResponse.element?.id,
+                        language: partItem.language
+                      });
+
+                      yPosition += codeHeight + 15;
+                      
+                    } else if (partItem.type === 'text') {
+                      // Process as regular text (reuse existing text processing logic)
+                      const roleText = message.message?.author?.role === 'user' ? 'User:' : 'Assistant:';
+                      await createNewPageIfNeeded(25);
+                      
+                      const roleResponse = await apiCall(`/documents/${response.document.id}/pages/${response.document.pages[currentPageIndex].id}/elements`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                          type: 'text',
+                          content: roleText,
+                          bounds: { x: margins.left, y: yPosition, width: contentWidth, height: 20 },
+                          style: {
+                            fontFamily: 'Helvetica',
+                            fontSize: 12,
+                            fontWeight: 'bold',
+                            color: message.message?.author?.role === 'user' ? '#2E7D32' : '#1976D2'
+                          }
+                        })
+                      });
+                      yPosition += 25;
+                      
+                      // Process paragraphs in text content
+                      const paragraphs = partItem.content.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+                      
+                      for (let paragraphIndex = 0; paragraphIndex < paragraphs.length; paragraphIndex++) {
+                        const paragraph = paragraphs[paragraphIndex].trim();
+                        if (!paragraph) continue;
+
+                        const estimatedLines = Math.ceil(paragraph.length / 80);
+                        const paragraphHeight = Math.max(25, estimatedLines * 12);
+                        
+                        await createNewPageIfNeeded(paragraphHeight + 15);
+                        
+                        const contentResponse = await apiCall(`/documents/${response.document.id}/pages/${response.document.pages[currentPageIndex].id}/elements`, {
+                          method: 'POST',
+                          body: JSON.stringify({
+                            type: 'text',
+                            content: paragraph,
+                            bounds: { x: margins.left, y: yPosition, width: contentWidth, height: paragraphHeight },
+                            style: {
+                              fontFamily: 'Helvetica',
+                              fontSize: 11,
+                              color: '#000000',
+                              lineHeight: 1.4
+                            }
+                          })
+                        });
+
+                        yPosition += paragraphHeight + 10;
+                      }
+                      yPosition += 10;
+                    }
+                  }
+                  
+                } catch (error) {
+                  console.error('EnhancedPdfEditor: Failed to process code block content', {
+                    error: error.message,
+                    messageId: message.id,
+                    contentLength: part.length
+                  });
+                }
+              }
+              // Handle regular text content
+              else if (typeof part === 'string' && part.trim()) {
                 // Add role header
                 const roleText = message.message?.author?.role === 'user' ? 'User:' : 'Assistant:';
                 try {
