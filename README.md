@@ -1,6 +1,6 @@
 # Node Archive Browser
 
-A flexible browser for AI conversation archives with import/explode functionality. This tool allows you to view and manage ChatGPT/OpenAI conversation exports with a user-friendly web interface.
+A flexible browser for AI conversation archives with import/explode functionality. This tool allows you to view and manage ChatGPT/OpenAI and Claude/Anthropic conversation exports with a user-friendly web interface.
 
 ## Features
 
@@ -9,7 +9,7 @@ A flexible browser for AI conversation archives with import/explode functionalit
 - 🖼️ **Media Support**: Display images, audio, and video attachments inline
 - 🔎 **Search & Filter**: Search across conversations with date filtering and media filtering
 - 📄 **PDF Export**: Export conversations to high-quality PDFs with LaTeX math rendering
-- 📥 **Import Wizard**: Convert ChatGPT/OpenAI exports into browsable archives
+- 📥 **Import Wizard**: Convert ChatGPT/OpenAI and Claude exports into browsable archives
 - 📁 **Archive Management**: Switch between different archive locations easily
 
 ## Quick Start
@@ -17,7 +17,7 @@ A flexible browser for AI conversation archives with import/explode functionalit
 ### Prerequisites
 
 - Node.js 16+ and npm
-- A ChatGPT/OpenAI conversation export (optional, for importing)
+- A ChatGPT/OpenAI or Claude conversation export (optional, for importing)
 
 ### Installation
 
@@ -74,10 +74,28 @@ A flexible browser for AI conversation archives with import/explode functionalit
 1. Export your ChatGPT conversations from OpenAI
 2. Unzip the export file
 3. In the Archive Browser, click "IMPORT ARCHIVE"
-4. Follow the Import Wizard to process your conversations
-5. The archive location will be automatically set after import
+4. Select "OpenAI" as the archive type
+5. Follow the Import Wizard to process your conversations
+6. The archive location will be automatically set after import
 
-### Option 2: Use Existing Archive
+### Option 2: Import a Claude Export
+
+1. Export your Claude conversations from Anthropic
+2. Unzip the export file (should contain `conversations.json`)
+3. In the Archive Browser, click "IMPORT ARCHIVE"
+4. Select "Claude" as the archive type
+5. Configure import settings:
+   - **Source Directory**: Path to your unzipped Claude export
+   - **Use Message References**: Recommended for better performance
+   - **Archive Name**: Name for your processed archive
+6. Follow the Import Wizard to process your conversations
+7. The system will:
+   - Convert Claude format to browser-compatible format
+   - Extract any embedded base64 images to separate files
+   - Create individual message files for efficient loading
+   - Generate proper conversation metadata
+
+### Option 3: Use Existing Archive
 
 If you already have a processed archive:
 
@@ -276,10 +294,20 @@ The equation \( E = mc^2 \) or $E = mc^2$ represents mass-energy equivalence.
 
 ### Supported Import Sources
 
-- ChatGPT/OpenAI conversation exports
-- Various media file formats (images, audio, video)
-- DALL-E generated content
-- User uploaded files
+- **ChatGPT/OpenAI conversation exports** - Full support for all ChatGPT export formats
+- **Claude/Anthropic conversation exports** - Complete format conversion with base64 image extraction
+- **Various media file formats** - Images, audio, video with automatic organization
+- **DALL-E generated content** - AI-generated images and creative content
+- **User uploaded files** - Personal files attached to conversations
+
+#### Claude Import Features
+
+- **Format Conversion**: Automatic conversion from Claude's `chat_messages` format to browser-compatible structure
+- **Role Mapping**: Converts Claude roles (`human`/`assistant`) to standard format (`user`/`assistant`)
+- **Base64 Image Extraction**: Embedded images are extracted and saved as separate media files
+- **Timestamp Conversion**: ISO timestamps converted to Unix format for consistency
+- **Individual Message Files**: Creates separate JSON files for each message for efficient loading
+- **Metadata Preservation**: Maintains original Claude metadata while adding compatibility fields
 
 ## Archive Management
 
@@ -315,7 +343,11 @@ your-archive/
 - **"Directory Not Found"**: Check that the archive path is correct and accessible
 - **"Invalid Archive"**: Ensure the directory contains conversation folders with `conversation.json` files
 - **Media Not Loading**: Check that media files exist in the expected locations
-- **Import Fails**: Verify the source export is a valid ChatGPT/OpenAI export
+- **Import Fails**: Verify the source export is a valid ChatGPT/OpenAI or Claude export
+- **Claude Import Issues**: 
+  - Ensure the Claude export contains `conversations.json` file
+  - Check that the source directory is the unzipped Claude export folder
+  - Verify sufficient disk space for message file creation and base64 image extraction
 - **PDF Export Fails**: Ensure server is running and Puppeteer dependencies are installed
 - **LaTeX Not Rendering in PDF**: Check mathematical expressions use proper delimiters (`\[...\]`, `\(...\)`, `$...$`)
 - **PDF Too Large**: Use content filtering to reduce size or split long conversations
@@ -369,7 +401,6 @@ node-archive-browser/
 
 ## Future Enhancements
 
-- Anthropic/Claude conversation support
 - Batch PDF export for multiple conversations
 - Advanced search capabilities
 - Custom PDF themes and styling
