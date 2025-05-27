@@ -1,8 +1,10 @@
 const EnhancedPdfService = require('../services/enhancedPdfService');
 const FontManager = require('../services/fontManager');
+// const ContentLayoutEngine = require('../services/contentLayoutEngine'); // Temporarily disabled
 // const multer = require('multer'); // Temporarily disabled due to Node.js compatibility
 const path = require('path');
 const fs = require('fs-extra');
+const crypto = require('crypto');
 
 /**
  * Enhanced PDF Editor API Controller
@@ -10,10 +12,12 @@ const fs = require('fs-extra');
  */
 class EnhancedPdfController {
   constructor() {
+    console.log('EnhancedPdfController: Initializing controller...');
     this.pdfService = new EnhancedPdfService();
     this.fontManager = new FontManager();
     // this.setupMulter(); // Temporarily disabled
     this.setupEventHandlers();
+    console.log('EnhancedPdfController: Controller initialized successfully');
   }
 
   // setupMulter() {
@@ -42,11 +46,185 @@ class EnhancedPdfController {
   }
 
   /**
+   * Image Processing Endpoints
+   */
+
+  // POST /api/enhanced-pdf/images/proxy
+  async proxyImage(req, res) {
+    console.log('EnhancedPdfController: proxyImage method called');
+    console.log('EnhancedPdfController: Request body:', req.body);
+    console.log('EnhancedPdfController: Request headers:', req.headers);
+    
+    try {
+      const { url } = req.body;
+      
+      if (!url) {
+        console.log('EnhancedPdfController: No URL provided in request');
+        return res.status(400).json({
+          success: false,
+          error: 'Image URL is required'
+        });
+      }
+
+      console.log('EnhancedPdfController: Proxying image URL:', url);
+      
+      // Download and cache the image
+      const localPath = await this.pdfService.downloadAndCacheImage(url);
+      
+      if (!localPath) {
+        return res.status(404).json({
+          success: false,
+          error: 'Failed to download image'
+        });
+      }
+
+      // Generate a hash for the URL to create a consistent identifier
+      const urlHash = crypto.createHash('md5').update(url).digest('hex');
+      
+      res.json({
+        success: true,
+        data: {
+          originalUrl: url,
+          imageId: urlHash,
+          localPath: localPath,
+          proxyUrl: `/api/enhanced-pdf/images/${urlHash}`
+        }
+      });
+    } catch (error) {
+      console.error('Error proxying image:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  // GET /api/enhanced-pdf/images/:imageId
+  async serveImage(req, res) {
+    try {
+      const { imageId } = req.params;
+      
+      // Find the cached image
+      const cacheKey = `image_${imageId}`;
+      const imagePath = this.pdfService.imageCache.get(cacheKey);
+      
+      if (!imagePath || !(await fs.pathExists(imagePath))) {
+        return res.status(404).json({
+          success: false,
+          error: 'Image not found'
+        });
+      }
+
+      // Determine content type from file extension
+      const ext = path.extname(imagePath).toLowerCase();
+      let contentType = 'image/jpeg';
+      if (ext === '.png') contentType = 'image/png';
+      else if (ext === '.gif') contentType = 'image/gif';
+      else if (ext === '.webp') contentType = 'image/webp';
+      else if (ext === '.svg') contentType = 'image/svg+xml';
+
+      // Set appropriate headers
+      res.set({
+        'Content-Type': contentType,
+        'Cache-Control': 'public, max-age=31536000', // Cache for 1 year
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept'
+      });
+
+      // Stream the image file
+      const imageStream = fs.createReadStream(imagePath);
+      imageStream.pipe(res);
+      
+    } catch (error) {
+      console.error('Error serving image:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  // POST /api/enhanced-pdf/images/process
+  async processImageElement(req, res) {
+    try {
+      const { element } = req.body;
+      
+      if (!element || element.type !== 'image') {
+        return res.status(400).json({
+          success: false,
+          error: 'Valid image element is required'
+        });
+      }
+
+      console.log('Processing image element:', element.id);
+      
+      // Process the image element
+      const processedElement = await this.pdfService.processImageElement(element);
+      
+      res.json({
+        success: true,
+        data: {
+          element: processedElement
+        }
+      });
+    } catch (error) {
+      console.error('Error processing image element:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  // GET /api/enhanced-pdf/images/:imageId/base64
+  async getImageAsBase64(req, res) {
+    try {
+      const { imageId } = req.params;
+      
+      // Find the cached image
+      const cacheKey = `image_${imageId}`;
+      const imagePath = this.pdfService.imageCache.get(cacheKey);
+      
+      if (!imagePath || !(await fs.pathExists(imagePath))) {
+        return res.status(404).json({
+          success: false,
+          error: 'Image not found'
+        });
+      }
+
+      // Convert to base64
+      const base64Data = await this.pdfService.imageToBase64(imagePath);
+      
+      if (!base64Data) {
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to convert image to base64'
+        });
+      }
+
+      res.json({
+        success: true,
+        data: {
+          imageId: imageId,
+          base64: base64Data,
+          size: (await fs.stat(imagePath)).size
+        }
+      });
+    } catch (error) {
+      console.error('Error converting image to base64:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  /**
    * Document Management Endpoints
    */
 
   // POST /api/enhanced-pdf/documents
-  createDocument = async (req, res) => {
+  async createDocument(req, res) {
     try {
       const options = req.body;
       const document = await this.pdfService.createDocument(options);
@@ -62,10 +240,10 @@ class EnhancedPdfController {
         error: error.message
       });
     }
-  };
+  }
 
   // GET /api/enhanced-pdf/documents/:id
-  getDocument = async (req, res) => {
+  async getDocument(req, res) {
     try {
       const { id } = req.params;
       const document = await this.pdfService.loadDocument(id);
@@ -80,10 +258,10 @@ class EnhancedPdfController {
         error: error.message
       });
     }
-  };
+  }
 
   // PUT /api/enhanced-pdf/documents/:id
-  updateDocument = async (req, res) => {
+  async updateDocument(req, res) {
     try {
       const { id } = req.params;
       const updates = req.body;
@@ -106,10 +284,10 @@ class EnhancedPdfController {
         error: error.message
       });
     }
-  };
+  }
 
   // DELETE /api/enhanced-pdf/documents/:id
-  deleteDocument = async (req, res) => {
+  async deleteDocument(req, res) {
     try {
       const { id } = req.params;
       await this.pdfService.deleteDocument(id);
@@ -124,10 +302,10 @@ class EnhancedPdfController {
         error: error.message
       });
     }
-  };
+  }
 
   // GET /api/enhanced-pdf/documents/:id/state
-  getDocumentState = async (req, res) => {
+  async getDocumentState(req, res) {
     try {
       const { id } = req.params;
       const state = await this.pdfService.getDocumentState(id);
@@ -142,14 +320,14 @@ class EnhancedPdfController {
         error: error.message
       });
     }
-  };
+  }
 
   /**
    * Page Management Endpoints
    */
 
   // POST /api/enhanced-pdf/documents/:id/pages
-  addPage = async (req, res) => {
+  async addPage(req, res) {
     try {
       const { id } = req.params;
       const pageSettings = req.body;
@@ -167,10 +345,10 @@ class EnhancedPdfController {
         error: error.message
       });
     }
-  };
+  }
 
   // DELETE /api/enhanced-pdf/documents/:id/pages/:pageId
-  deletePage = async (req, res) => {
+  async deletePage(req, res) {
     try {
       const { id, pageId } = req.params;
       await this.pdfService.deletePage(id, pageId);
@@ -185,14 +363,14 @@ class EnhancedPdfController {
         error: error.message
       });
     }
-  };
+  }
 
   /**
    * Element Management Endpoints
    */
 
   // POST /api/enhanced-pdf/documents/:id/pages/:pageId/elements
-  addElement = async (req, res) => {
+  async addElement(req, res) {
     try {
       const { id, pageId } = req.params;
       const elementData = req.body;
@@ -210,10 +388,10 @@ class EnhancedPdfController {
         error: error.message
       });
     }
-  };
+  }
 
   // PUT /api/enhanced-pdf/documents/:id/pages/:pageId/elements/:elementId
-  updateElement = async (req, res) => {
+  async updateElement(req, res) {
     try {
       const { id, pageId, elementId } = req.params;
       const updates = req.body;
@@ -231,10 +409,10 @@ class EnhancedPdfController {
         error: error.message
       });
     }
-  };
+  }
 
   // DELETE /api/enhanced-pdf/documents/:id/pages/:pageId/elements/:elementId
-  deleteElement = async (req, res) => {
+  async deleteElement(req, res) {
     try {
       const { id, pageId, elementId } = req.params;
       await this.pdfService.deleteElement(id, pageId, elementId);
@@ -249,14 +427,14 @@ class EnhancedPdfController {
         error: error.message
       });
     }
-  };
+  }
 
   /**
    * Font Management Endpoints
    */
 
   // GET /api/enhanced-pdf/fonts
-  getFonts = async (req, res) => {
+  async getFonts(req, res) {
     try {
       const { type, search, category, limit } = req.query;
       let fonts;
@@ -301,10 +479,10 @@ class EnhancedPdfController {
         error: error.message
       });
     }
-  };
+  }
 
   // GET /api/enhanced-pdf/fonts/:fontFamily
-  getFontDetails = async (req, res) => {
+  async getFontDetails(req, res) {
     try {
       const { fontFamily } = req.params;
       const fontData = this.fontManager.getFontData(fontFamily);
@@ -326,10 +504,10 @@ class EnhancedPdfController {
         error: error.message
       });
     }
-  };
+  }
 
   // POST /api/enhanced-pdf/fonts/web
-  loadWebFont = async (req, res) => {
+  async loadWebFont(req, res) {
     try {
       const { fontFamily, variants = ['regular'], provider = 'google' } = req.body;
       
@@ -353,18 +531,18 @@ class EnhancedPdfController {
         error: error.message
       });
     }
-  };
+  }
 
   // POST /api/enhanced-pdf/fonts/custom
-  uploadCustomFont = async (req, res) => {
+  async uploadCustomFont(req, res) {
     res.status(501).json({
       success: false,
       error: 'Custom font upload temporarily disabled. Coming soon!'
     });
-  };
+  }
 
   // DELETE /api/enhanced-pdf/fonts/custom/:fontName
-  deleteCustomFont = async (req, res) => {
+  async deleteCustomFont(req, res) {
     try {
       const { fontName } = req.params;
       await this.fontManager.removeCustomFont(fontName);
@@ -379,10 +557,10 @@ class EnhancedPdfController {
         error: error.message
       });
     }
-  };
+  }
 
   // GET /api/enhanced-pdf/fonts/stats
-  getFontStats = async (req, res) => {
+  async getFontStats(req, res) {
     try {
       const stats = this.fontManager.getStats();
       
@@ -396,14 +574,14 @@ class EnhancedPdfController {
         error: error.message
       });
     }
-  };
+  }
 
   /**
    * Typography Endpoints
    */
 
   // POST /api/enhanced-pdf/typography/metrics
-  calculateTextMetrics = async (req, res) => {
+  async calculateTextMetrics(req, res) {
     try {
       const { text, fontFamily, fontSize, options = {} } = req.body;
       
@@ -426,10 +604,10 @@ class EnhancedPdfController {
         error: error.message
       });
     }
-  };
+  }
 
   // POST /api/enhanced-pdf/typography/features
-  applyOpenTypeFeatures = async (req, res) => {
+  async applyOpenTypeFeatures(req, res) {
     try {
       const { text, fontFamily, features = {} } = req.body;
       
@@ -454,14 +632,14 @@ class EnhancedPdfController {
         error: error.message
       });
     }
-  };
+  }
 
   /**
    * Export Endpoints
    */
 
   // POST /api/enhanced-pdf/documents/:id/export
-  exportDocument = async (req, res) => {
+  async exportDocument(req, res) {
     try {
       const { id } = req.params;
       const { format = 'pdf', options = {} } = req.body;
@@ -482,10 +660,10 @@ class EnhancedPdfController {
         error: error.message
       });
     }
-  };
+  }
 
-  // POST /api/enhanced-pdf/documents/:id/preview
-  generatePreview = async (req, res) => {
+  // GET /api/enhanced-pdf/documents/:id/preview
+  async generatePreview(req, res) {
     try {
       const { id } = req.params;
       const { pageIndex = 0, resolution = 150 } = req.query;
@@ -509,14 +687,14 @@ class EnhancedPdfController {
         error: error.message
       });
     }
-  };
+  }
 
   /**
    * Template Endpoints
    */
 
   // POST /api/enhanced-pdf/templates
-  createTemplate = async (req, res) => {
+  async createTemplate(req, res) {
     try {
       const { name, templateData } = req.body;
       
@@ -540,10 +718,10 @@ class EnhancedPdfController {
         error: error.message
       });
     }
-  };
+  }
 
   // POST /api/enhanced-pdf/documents/:id/apply-template
-  applyTemplate = async (req, res) => {
+  async applyTemplate(req, res) {
     try {
       const { id } = req.params;
       const { templateName, data = {} } = req.body;
@@ -568,14 +746,14 @@ class EnhancedPdfController {
         error: error.message
       });
     }
-  };
+  }
 
   /**
    * Real-time Editing Endpoints
    */
 
   // POST /api/enhanced-pdf/documents/:id/operations
-  applyOperation = async (req, res) => {
+  async applyOperation(req, res) {
     try {
       const { id } = req.params;
       const operation = req.body;
@@ -593,14 +771,14 @@ class EnhancedPdfController {
         error: error.message
       });
     }
-  };
+  }
 
   /**
-   * Integration with Existing Archive Browser
+   * Integration Endpoints
    */
 
   // POST /api/enhanced-pdf/from-conversation/:conversationId
-  createFromConversation = async (req, res) => {
+  async createFromConversation(req, res) {
     try {
       const { conversationId } = req.params;
       const { template = 'conversation', options = {} } = req.body;
@@ -629,7 +807,7 @@ class EnhancedPdfController {
         ...options
       });
       
-      // Process messages and add as text elements
+      // Process messages and add as text elements (simplified version)
       if (conversationData.messages && conversationData.messages.length > 0) {
         console.log('Enhanced PDF: Processing messages', {
           messageCount: conversationData.messages.length
@@ -639,79 +817,67 @@ class EnhancedPdfController {
         const margins = { left: 72, right: 72, top: 72, bottom: 72 };
         const contentWidth = pageWidth - margins.left - margins.right;
         
+        let elementsAdded = 0;
         for (const message of conversationData.messages) {
-          console.log('Enhanced PDF: Processing message', {
-            messageId: message.id,
-            hasContent: !!message.content,
-            hasParts: !!(message.content && message.content.parts),
-            partsLength: message.content?.parts?.length || 0,
-            authorRole: message.author?.role
-          });
-          
-          if (message.content && message.content.parts) {
-            for (const part of message.content.parts) {
-              console.log('Enhanced PDF: Processing message part', {
-                partType: typeof part,
-                partLength: typeof part === 'string' ? part.length : 0,
-                hasContent: typeof part === 'string' && part.trim().length > 0
-              });
-              
-              if (typeof part === 'string' && part.trim()) {
-                // Add role header (User/Assistant)
-                const roleText = message.author?.role === 'user' ? 'User:' : 'Assistant:';
-                console.log('Enhanced PDF: Adding role header element', {
-                  roleText,
-                  yPosition,
-                  documentId: document.id,
-                  pageId: document.pages[0].id
-                });
-                
-                await this.pdfService.addElement(document.id, document.pages[0].id, {
-                  type: 'text',
-                  content: roleText,
-                  bounds: { x: margins.left, y: yPosition, width: contentWidth, height: 20 },
-                  style: {
-                    fontFamily: 'Helvetica',
-                    fontSize: 14,
-                    fontWeight: 'bold',
-                    color: message.author?.role === 'user' ? '#2E7D32' : '#1976D2'
+          try {
+            if (message.message?.content && message.message.content.parts) {
+              for (const part of message.message.content.parts) {
+                if (typeof part === 'string' && part.trim()) {
+                  // Skip system messages with empty content
+                  if (message.message.author?.role === 'system' && part.trim().length === 0) {
+                    continue;
                   }
-                });
-                yPosition += 25;
-                
-                // Add message content
-                const messageHeight = Math.max(50, part.length / 80 * 15);
-                console.log('Enhanced PDF: Adding message content element', {
-                  contentLength: part.trim().length,
-                  messageHeight,
-                  yPosition,
-                  contentPreview: part.trim().substring(0, 100) + '...'
-                });
-                
-                await this.pdfService.addElement(document.id, document.pages[0].id, {
-                  type: 'text',
-                  content: part.trim(),
-                  bounds: { x: margins.left, y: yPosition, width: contentWidth, height: messageHeight },
-                  style: {
-                    fontFamily: 'Helvetica',
-                    fontSize: 11,
-                    color: '#000000'
-                  }
-                });
-                yPosition += messageHeight + 20;
-                
-                // Add some spacing between messages
-                yPosition += 15;
-                
-                // Check if we need a new page
-                if (yPosition > 750) { // Near bottom of page
-                  // Add new page logic would go here
-                  yPosition = 100; // Reset for new page
+                  
+                  // Add role header (User/Assistant)
+                  const roleText = message.message.author?.role === 'user' ? 'User:' : 'Assistant:';
+                  
+                  const roleElement = await this.pdfService.addElement(document.id, document.pages[0].id, {
+                    type: 'text',
+                    content: roleText,
+                    bounds: { x: margins.left, y: yPosition, width: contentWidth, height: 20 },
+                    style: {
+                      fontFamily: 'Helvetica',
+                      fontSize: 14,
+                      fontWeight: 'bold',
+                      color: message.message.author?.role === 'user' ? '#2E7D32' : '#1976D2'
+                    }
+                  });
+                  elementsAdded++;
+                  yPosition += 25;
+                  
+                  // Add message content
+                  const messageHeight = Math.max(50, part.length / 80 * 15);
+                  
+                  const contentElement = await this.pdfService.addElement(document.id, document.pages[0].id, {
+                    type: 'text',
+                    content: part.trim(),
+                    bounds: { x: margins.left, y: yPosition, width: contentWidth, height: messageHeight },
+                    style: {
+                      fontFamily: 'Helvetica',
+                      fontSize: 11,
+                      color: '#000000'
+                    }
+                  });
+                  elementsAdded++;
+                  yPosition += messageHeight + 20;
+                  
+                  // Add some spacing between messages
+                  yPosition += 15;
                 }
               }
             }
+          } catch (messageError) {
+            console.error('Enhanced PDF: Error processing message', {
+              messageId: message.id,
+              error: messageError.message
+            });
           }
         }
+        
+        console.log('Enhanced PDF: Finished processing messages', {
+          totalMessages: conversationData.messages.length,
+          elementsAdded: elementsAdded
+        });
       }
       
       // Save document after adding all elements
@@ -732,39 +898,50 @@ class EnhancedPdfController {
         error: error.message
       });
     }
-  };
+  }
 
   /**
    * Utility Endpoints
    */
 
   // GET /api/enhanced-pdf/health
-  getHealth = async (req, res) => {
+  async getHealth(req, res) {
     try {
-      const fontStats = this.fontManager.getStats();
+      let fontStats = null;
+      
+      // Safely get font stats if fontManager is available
+      if (this.fontManager && typeof this.fontManager.getStats === 'function') {
+        try {
+          fontStats = this.fontManager.getStats();
+        } catch (statsError) {
+          console.warn('Failed to get font stats:', statsError.message);
+          fontStats = { error: 'Failed to get font stats' };
+        }
+      }
       
       res.json({
         success: true,
         health: 'OK',
         services: {
-          pdfService: 'running',
-          fontManager: 'running'
+          pdfService: this.pdfService ? 'running' : 'stopped',
+          fontManager: this.fontManager ? 'running' : 'stopped'
         },
         stats: {
-          fonts: fontStats
+          fonts: fontStats || { total: 0, system: 0, web: 0, custom: 0, cacheSize: 0 }
         },
         timestamp: new Date().toISOString()
       });
     } catch (error) {
+      console.error('Health check failed:', error);
       res.status(500).json({
         success: false,
         error: error.message
       });
     }
-  };
+  }
 
   // GET /api/enhanced-pdf/capabilities
-  getCapabilities = async (req, res) => {
+  async getCapabilities(req, res) {
     try {
       res.json({
         success: true,
@@ -807,7 +984,10 @@ class EnhancedPdfController {
         error: error.message
       });
     }
-  };
+  }
 }
 
-module.exports = new EnhancedPdfController();
+console.log('EnhancedPdfController: Creating controller instance...');
+const controllerInstance = new EnhancedPdfController();
+console.log('EnhancedPdfController: Available methods:', Object.getOwnPropertyNames(controllerInstance.__proto__).filter(name => name !== 'constructor'));
+module.exports = controllerInstance;

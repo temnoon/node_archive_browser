@@ -27,23 +27,8 @@ export default function ConversationControls({
 }) {
   const navigate = useNavigate();
   
-  // Safely get selection context with fallbacks
-  let selection;
-  try {
-    selection = useMessageSelection();
-  } catch (error) {
-    // Fallback if context is not available
-    selection = {
-      selectionMode: false,
-      selectedCount: 0,
-      selectedMessages: [],
-      toggleSelectionMode: () => {},
-      clearSelection: () => {},
-      selectAll: () => {},
-      selectUserMessages: () => {},
-      selectAssistantMessages: () => {}
-    };
-  }
+  // Get selection context
+  const selection = useMessageSelection();
 
   // Document builder context
   const documentBuilder = useDocumentBuilder();
@@ -58,7 +43,7 @@ export default function ConversationControls({
     selectAll = () => {},
     selectUserMessages = () => {},
     selectAssistantMessages = () => {}
-  } = selection || {};
+  } = selection;
 
   // Helper to get actual message objects from selected IDs
   const getSelectedMessageObjects = () => {

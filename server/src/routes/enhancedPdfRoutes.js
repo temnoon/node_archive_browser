@@ -49,17 +49,17 @@ const handleAsyncError = (fn) => (req, res, next) => {
 /**
  * Document Management Routes
  */
-router.post('/documents', handleAsyncError(enhancedPdfController.createDocument));
-router.get('/documents/:id', validateDocumentId, handleAsyncError(enhancedPdfController.getDocument));
-router.put('/documents/:id', validateDocumentId, handleAsyncError(enhancedPdfController.updateDocument));
-router.delete('/documents/:id', validateDocumentId, handleAsyncError(enhancedPdfController.deleteDocument));
-router.get('/documents/:id/state', validateDocumentId, handleAsyncError(enhancedPdfController.getDocumentState));
+router.post('/documents', handleAsyncError((req, res) => enhancedPdfController.createDocument(req, res)));
+router.get('/documents/:id', validateDocumentId, handleAsyncError((req, res) => enhancedPdfController.getDocument(req, res)));
+router.put('/documents/:id', validateDocumentId, handleAsyncError((req, res) => enhancedPdfController.updateDocument(req, res)));
+router.delete('/documents/:id', validateDocumentId, handleAsyncError((req, res) => enhancedPdfController.deleteDocument(req, res)));
+router.get('/documents/:id/state', validateDocumentId, handleAsyncError((req, res) => enhancedPdfController.getDocumentState(req, res)));
 
 /**
  * Page Management Routes
  */
-router.post('/documents/:id/pages', validateDocumentId, handleAsyncError(enhancedPdfController.addPage));
-router.delete('/documents/:id/pages/:pageId', validateDocumentId, validatePageId, handleAsyncError(enhancedPdfController.deletePage));
+router.post('/documents/:id/pages', validateDocumentId, handleAsyncError((req, res) => enhancedPdfController.addPage(req, res)));
+router.delete('/documents/:id/pages/:pageId', validateDocumentId, validatePageId, handleAsyncError((req, res) => enhancedPdfController.deletePage(req, res)));
 
 /**
  * Element Management Routes
@@ -67,66 +67,74 @@ router.delete('/documents/:id/pages/:pageId', validateDocumentId, validatePageId
 router.post('/documents/:id/pages/:pageId/elements', 
   validateDocumentId, 
   validatePageId, 
-  handleAsyncError(enhancedPdfController.addElement)
+  handleAsyncError((req, res) => enhancedPdfController.addElement(req, res))
 );
 
 router.put('/documents/:id/pages/:pageId/elements/:elementId',
   validateDocumentId,
   validatePageId,
   validateElementId,
-  handleAsyncError(enhancedPdfController.updateElement)
+  handleAsyncError((req, res) => enhancedPdfController.updateElement(req, res))
 );
 
 router.delete('/documents/:id/pages/:pageId/elements/:elementId',
   validateDocumentId,
   validatePageId,
   validateElementId,
-  handleAsyncError(enhancedPdfController.deleteElement)
+  handleAsyncError((req, res) => enhancedPdfController.deleteElement(req, res))
 );
+
+/**
+ * Image Management Routes
+ */
+router.post('/images/proxy', handleAsyncError((req, res) => enhancedPdfController.proxyImage(req, res)));
+router.get('/images/:imageId', handleAsyncError((req, res) => enhancedPdfController.serveImage(req, res)));
+router.post('/images/process', handleAsyncError((req, res) => enhancedPdfController.processImageElement(req, res)));
+router.get('/images/:imageId/base64', handleAsyncError((req, res) => enhancedPdfController.getImageAsBase64(req, res)));
 
 /**
  * Font Management Routes
  */
-router.get('/fonts', handleAsyncError(enhancedPdfController.getFonts));
-router.get('/fonts/stats', handleAsyncError(enhancedPdfController.getFontStats));
-router.get('/fonts/:fontFamily', handleAsyncError(enhancedPdfController.getFontDetails));
-router.post('/fonts/web', handleAsyncError(enhancedPdfController.loadWebFont));
-router.post('/fonts/custom', handleAsyncError(enhancedPdfController.uploadCustomFont));
-router.delete('/fonts/custom/:fontName', handleAsyncError(enhancedPdfController.deleteCustomFont));
+router.get('/fonts', handleAsyncError((req, res) => enhancedPdfController.getFonts(req, res)));
+router.get('/fonts/stats', handleAsyncError((req, res) => enhancedPdfController.getFontStats(req, res)));
+router.get('/fonts/:fontFamily', handleAsyncError((req, res) => enhancedPdfController.getFontDetails(req, res)));
+router.post('/fonts/web', handleAsyncError((req, res) => enhancedPdfController.loadWebFont(req, res)));
+router.post('/fonts/custom', handleAsyncError((req, res) => enhancedPdfController.uploadCustomFont(req, res)));
+router.delete('/fonts/custom/:fontName', handleAsyncError((req, res) => enhancedPdfController.deleteCustomFont(req, res)));
 
 /**
  * Typography Routes
  */
-router.post('/typography/metrics', handleAsyncError(enhancedPdfController.calculateTextMetrics));
-router.post('/typography/features', handleAsyncError(enhancedPdfController.applyOpenTypeFeatures));
+router.post('/typography/metrics', handleAsyncError((req, res) => enhancedPdfController.calculateTextMetrics(req, res)));
+router.post('/typography/features', handleAsyncError((req, res) => enhancedPdfController.applyOpenTypeFeatures(req, res)));
 
 /**
  * Export Routes
  */
-router.post('/documents/:id/export', validateDocumentId, handleAsyncError(enhancedPdfController.exportDocument));
-router.get('/documents/:id/preview', validateDocumentId, handleAsyncError(enhancedPdfController.generatePreview));
+router.post('/documents/:id/export', validateDocumentId, handleAsyncError((req, res) => enhancedPdfController.exportDocument(req, res)));
+router.get('/documents/:id/preview', validateDocumentId, handleAsyncError((req, res) => enhancedPdfController.generatePreview(req, res)));
 
 /**
  * Template Routes
  */
-router.post('/templates', handleAsyncError(enhancedPdfController.createTemplate));
-router.post('/documents/:id/apply-template', validateDocumentId, handleAsyncError(enhancedPdfController.applyTemplate));
+router.post('/templates', handleAsyncError((req, res) => enhancedPdfController.createTemplate(req, res)));
+router.post('/documents/:id/apply-template', validateDocumentId, handleAsyncError((req, res) => enhancedPdfController.applyTemplate(req, res)));
 
 /**
  * Real-time Editing Routes
  */
-router.post('/documents/:id/operations', validateDocumentId, handleAsyncError(enhancedPdfController.applyOperation));
+router.post('/documents/:id/operations', validateDocumentId, handleAsyncError((req, res) => enhancedPdfController.applyOperation(req, res)));
 
 /**
  * Integration Routes
  */
-router.post('/from-conversation/:conversationId', handleAsyncError(enhancedPdfController.createFromConversation));
+router.post('/from-conversation/:conversationId', handleAsyncError((req, res) => enhancedPdfController.createFromConversation(req, res)));
 
 /**
  * Utility Routes
  */
-router.get('/health', handleAsyncError(enhancedPdfController.getHealth));
-router.get('/capabilities', handleAsyncError(enhancedPdfController.getCapabilities));
+router.get('/health', handleAsyncError((req, res) => enhancedPdfController.getHealth(req, res)));
+router.get('/capabilities', handleAsyncError((req, res) => enhancedPdfController.getCapabilities(req, res)));
 
 /**
  * Error handling middleware

@@ -41,9 +41,26 @@ function MessageItem({
     handleMessageClick = () => {} 
   } = selection || {};
   
-  // Extract message info
-  const role = msg.message?.author?.role || 'unknown';
-  const createTime = msg.message?.create_time;
+  // Extract message info with format-specific role detection
+  const getMessageRole = (message) => {
+    // ChatGPT format: message.author.role
+    if (message.author && message.author.role) {
+      return message.author.role;
+    }
+    // Claude format: message.role (direct field)
+    if (message.role) {
+      return message.role;
+    }
+    // Fallback: try to detect from content structure
+    if (message.content && typeof message.content === 'string') {
+      // Claude messages with string content are usually assistant responses
+      return 'assistant';
+    }
+    return 'unknown';
+  };
+  
+  const role = getMessageRole(msg.message);
+  const createTime = msg.message?.create_time || msg.message?.created_at || msg.message?.timestamp;
   const isSelected = isMessageSelected(msg.id);
   
   // Handle message click for selection
@@ -129,7 +146,7 @@ function MessageItem({
           )}
           
           <Typography variant="subtitle2" color="text.secondary">
-            {role} {createTime ? `– ${new Date(createTime * 1000).toISOString().replace('T', ' ').substring(0, 19)}` : ''}
+            {role} {createTime ? `– ${createTime > 1e10 ? new Date(createTime).toISOString().replace('T', ' ').substring(0, 19) : new Date(createTime * 1000).toISOString().replace('T', ' ').substring(0, 19)}` : ''}
             {msg.message?.metadata?.model_slug ? ` (${msg.message.metadata.model_slug})` : ''}
             {msg.message?.metadata?.gizmo_id && (
             <Box component="span" sx={{ ml: 1 }}>

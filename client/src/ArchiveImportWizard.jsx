@@ -42,7 +42,7 @@ const ExpandButton = ({ expanded, onClick }) => (
 );
 
 const DEFAULT_CONFIG = {
-  archiveType: 'openai',
+  archiveType: 'auto',
   sourceDir: '',
   outputDir: '',
   archiveName: 'exploded_archive',
@@ -51,7 +51,8 @@ const DEFAULT_CONFIG = {
   mediaFolder: 'media',
   useIsoDate: true,
   useMessageReferences: true, // New option to avoid message content duplication
-  skipFailedConversations: true // Skip failures and continue import
+  skipFailedConversations: true, // Skip failures and continue import
+  organizationStrategy: 'flat' // 'flat' or 'subfolder'
 };
 
 export default function ArchiveImportWizard() {
@@ -361,6 +362,42 @@ export default function ArchiveImportWizard() {
         
         <Grid container spacing={3}>
           <Grid item xs={12}>
+            <Divider sx={{ my: 2 }} />
+            <Typography variant="h6" gutterBottom>
+              Archive Organization
+            </Typography>
+          </Grid>
+          
+          <Grid item xs={12}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Choose how to organize your imported conversations:
+            </Typography>
+            
+            <FormControl fullWidth sx={{ mb: 2 }}>
+              <InputLabel>Organization Strategy</InputLabel>
+              <Select
+                name="organizationStrategy"
+                value={config.organizationStrategy || 'flat'}
+                onChange={handleChange}
+                label="Organization Strategy"
+              >
+                <MenuItem value="flat">Flat Structure (All conversations in root)</MenuItem>
+                <MenuItem value="subfolder">Subfolder by Archive Type (chatgpt/, claude/)</MenuItem>
+              </Select>
+            </FormControl>
+            
+            {config.organizationStrategy === 'subfolder' && (
+              <Alert severity="info" sx={{ mb: 2 }}>
+                <Typography variant="body2">
+                  <strong>Subfolder Organization:</strong> Conversations will be organized into subdirectories 
+                  based on their source (e.g., chatgpt/, claude/). This allows you to keep different 
+                  archive types organized while still having unified search across all conversations.
+                </Typography>
+              </Alert>
+            )}
+          </Grid>
+          
+          <Grid item xs={12}>
             <FormControl fullWidth>
               <InputLabel>Archive Type</InputLabel>
               <Select
@@ -369,8 +406,9 @@ export default function ArchiveImportWizard() {
                 onChange={handleChange}
                 label="Archive Type"
               >
+                <MenuItem value="auto">Auto-detect (Recommended)</MenuItem>
                 <MenuItem value="openai">OpenAI / ChatGPT</MenuItem>
-                <MenuItem value="anthropic" disabled>Anthropic / Claude (Coming Soon)</MenuItem>
+                <MenuItem value="claude">Anthropic / Claude</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -382,7 +420,7 @@ export default function ArchiveImportWizard() {
               name="sourceDir"
               value={config.sourceDir}
               onChange={handleChange}
-              helperText="Path to the unzipped export folder (e.g., /Users/you/Downloads/ChatGPT_export)"
+              helperText="Path to the unzipped export folder (e.g., /Users/you/Downloads/ChatGPT_export or /Users/you/Downloads/claude_archive)"
             />
           </Grid>
           
@@ -565,6 +603,30 @@ export default function ArchiveImportWizard() {
         <DialogContent>
           {preview ? (
             <Box sx={{ fontFamily: 'monospace', whiteSpace: 'pre-wrap', overflow: 'auto' }}>
+              {preview.safetyWarning && (
+                <Alert severity="warning" sx={{ mb: 2, fontFamily: 'inherit' }}>
+                  <Box>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                      Archive Safety Warning
+                    </Typography>
+                    <Typography variant="body2" sx={{ mb: 1 }}>
+                      {preview.safetyWarning.message}
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
+                      {preview.safetyWarning.suggestion}
+                    </Typography>
+                  </Box>
+                </Alert>
+              )}
+              {preview.organizationStrategy === 'subfolder' && (
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  <Typography variant="body2">
+                    <strong>Subfolder Organization:</strong> Conversations will be organized under 
+                    archive-type subdirectories (chatgpt/ or claude/), allowing unified search 
+                    across all conversations while keeping them organized by source.
+                  </Typography>
+                </Alert>
+              )}
               {preview.isGeneric && (
                 <Alert severity="info" sx={{ mb: 2 }}>
                   This is a generic preview. The actual structure may vary based on your archive.

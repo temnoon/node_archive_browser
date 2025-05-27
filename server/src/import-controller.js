@@ -5,6 +5,7 @@ const os = require('os');
 const { Transform, pipeline } = require('stream');
 const JSONStream = require('JSONStream');
 const mediaProcessor = require('./media-processor');
+const claudeImportProcessor = require('./claude-import-processor');
 const archiveController = require('./controllers/archiveController');
 const archiveService = require('./services/archiveService');
 
@@ -25,7 +26,7 @@ const CONFIG_PATH = path.join(os.homedir(), '.carchive_config.json');
 
 // Default configuration
 const DEFAULT_CONFIG = {
-  archiveType: 'openai',
+  archiveType: 'auto', // auto-detect, openai, claude
   sourceDir: '',
   outputDir: '',
   archiveName: 'exploded_archive',
@@ -34,7 +35,8 @@ const DEFAULT_CONFIG = {
   mediaFolder: 'media',
   useIsoDate: true,
   useMessageReferences: true, // New option for using message references instead of duplication
-  skipFailedConversations: true // Skip conversations that fail to process rather than stopping the import
+  skipFailedConversations: true, // Skip conversations that fail to process rather than stopping the import
+  organizationStrategy: 'flat' // 'flat' or 'subfolder'
 };
 
 // Load config from file
@@ -110,6 +112,41 @@ function safeExtractMediaReferences(conversation) {
   }
 }
 
+// Detect archive type based on directory contents
+async function detectArchiveType(sourceDir) {
+  try {
+    const conversationsPath = path.join(sourceDir, 'conversations.json');
+    if (!await fs.pathExists(conversationsPath)) {
+      throw new Error('conversations.json not found');
+    }
+    
+    // Sample first conversation to determine format
+    const sampleConvos = await sampleConversations(conversationsPath, 1);
+    if (!sampleConvos || sampleConvos.length === 0) {
+      throw new Error('No conversations found');
+    }
+    
+    const conversation = sampleConvos[0];
+    
+    // Check for OpenAI/ChatGPT specific fields
+    if (conversation.mapping && conversation.create_time && conversation.conversation_id) {
+      return 'openai';
+    }
+    
+    // Check for Claude specific fields
+    if (conversation.id && conversation.name && conversation.created_at && 
+        conversation.messages && Array.isArray(conversation.messages)) {
+      return 'claude';
+    }
+    
+    // Default to openai if structure is unclear
+    return 'openai';
+  } catch (error) {
+    console.error('Error detecting archive type:', error);
+    return 'openai'; // Default fallback
+  }
+}
+
 // Generate a preview of the folder structure (fixed to avoid hanging)
 async function generatePreview(config) {
   try {
@@ -124,6 +161,41 @@ async function generatePreview(config) {
     const conversationsPath = path.join(sourceDir, 'conversations.json');
     if (!await fs.pathExists(conversationsPath)) {
       throw new Error('conversations.json not found in source directory');
+    }
+    
+    // Detect archive type if set to auto
+    let archiveType = config.archiveType;
+    if (archiveType === 'auto') {
+      archiveType = await detectArchiveType(sourceDir);
+      console.log(`Auto-detected archive type: ${archiveType}`);
+    }
+    
+    // Determine output structure based on organization strategy
+    let previewStructure = [];
+    if (config.organizationStrategy === 'subfolder') {
+      const subfolderName = archiveType === 'claude' ? 'claude' : 'chatgpt';
+      previewStructure.push(`${archiveName}/`);
+      previewStructure.push(`  ${subfolderName}/`);
+      // Adjust the archive name for the nested structure
+      config = { ...config, archiveName: subfolderName };
+    }
+    
+    // Use Claude preview if it's a Claude archive
+    if (archiveType === 'claude') {
+      const claudePreview = await claudeImportProcessor.generateClaudePreview(config);
+      if (config.organizationStrategy === 'subfolder') {
+        // Indent the Claude preview structure
+        const indentedStructure = claudePreview.folderStructure
+          .split('\n')
+          .map(line => line ? `  ${line}` : line)
+          .join('\n');
+        return {
+          folderStructure: previewStructure.join('\n') + '\n' + indentedStructure,
+          archiveType: 'claude',
+          organizationStrategy: config.organizationStrategy
+        };
+      }
+      return claudePreview;
     }
     
     // Pre-cache DALL-E generations and new format files for faster preview
@@ -147,7 +219,12 @@ async function generatePreview(config) {
     
     // Build preview structure
     const structure = [];
-    structure.push(`${archiveName}/`);
+    if (config.organizationStrategy === 'subfolder') {
+      // We already have the base structure from earlier, use it
+      structure.push(...previewStructure);
+    } else {
+      structure.push(`${archiveName}/`);
+    }
     
     // For each sample conversation, generate a preview structure
     for (let i = 0; i < Math.min(sampleConvos.length, 5); i++) {
@@ -161,19 +238,20 @@ async function generatePreview(config) {
       };
       const convFolderName = formatFolderName(conversationPattern, conversationObj);
       
-      // Add conversation folder with a number to indicate sequence and make it clear these are separate conversations
-      structure.push(`  ${i+1}. ${convFolderName}/`);
+      // Add conversation folder with proper indentation
+      const indent = config.organizationStrategy === 'subfolder' ? '    ' : '  ';
+      structure.push(`${indent}${i+1}. ${convFolderName}/`);
       
       if (useMessageReferences) {
         // Add conversation.json file with message references
-        structure.push(`    conversation.json  # Conversation with message references`);
+        structure.push(`${indent}  conversation.json  # Conversation with message references`);
       } else {
         // Add conversation.json file
-        structure.push(`    conversation.json  # Complete original conversation JSON`);
+        structure.push(`${indent}  conversation.json  # Complete original conversation JSON`);
       }
       
       // Add messages directory
-      structure.push(`    messages/`);
+      structure.push(`${indent}  messages/`);
       
       // Add sample message folders
       if (conversation.mapping) {
@@ -181,8 +259,8 @@ async function generatePreview(config) {
         for (const id of messageIds) {
           const message = conversation.mapping[id];
           if (message && message.message && message.message.author && message.message.author.role) {
-            structure.push(`      ${id}/`);
-            structure.push(`        message.json  # Message content JSON`);
+            structure.push(`${indent}    ${id}/`);
+            structure.push(`${indent}      message.json  # Message content JSON`);
           }
         }
       }
@@ -191,7 +269,7 @@ async function generatePreview(config) {
       // Use the safe wrapper to prevent errors
       const mediaRefs = safeExtractMediaReferences(conversation);
       if (mediaRefs.length > 0) {
-        structure.push(`    ${mediaFolder}/`);
+        structure.push(`${indent}  ${mediaFolder}/`);
         // Show a couple of example media files
         for (let m = 0; m < Math.min(mediaRefs.length, 2); m++) {
           const fileId = mediaRefs[m];
@@ -199,17 +277,18 @@ async function generatePreview(config) {
           if (!fileId || fileId === 'file-service:' || fileId === 'sediment:') {
             continue;
           }
-          structure.push(`      ${fileId}  # Media file (original filename preserved)`);
+          structure.push(`${indent}    ${fileId}  # Media file (original filename preserved)`);
         }
         if (mediaRefs.length > 2) {
-          structure.push(`      ... (${mediaRefs.length - 2} more media files)`);
+          structure.push(`${indent}    ... (${mediaRefs.length - 2} more media files)`);
         }
       }
     }
     
     // Return preview data
     return {
-      folderStructure: structure.join('\n')
+      folderStructure: structure.join('\n'),
+      organizationStrategy: config.organizationStrategy
     };
   } catch (err) {
     console.error('Error generating preview:', err);
@@ -419,14 +498,129 @@ async function processOpenAIConversation(conversation, config, outputBasePath) {
   });
 }
 
+// Run the full archive import/explode process (supports both OpenAI and Claude)
+async function importArchive(config) {
+  try {
+    const { sourceDir, outputDir, archiveName, skipFailedConversations, organizationStrategy } = config;
+    
+    // Detect archive type if set to auto
+    let archiveType = config.archiveType;
+    if (archiveType === 'auto') {
+      archiveType = await detectArchiveType(sourceDir);
+      console.log(`Auto-detected archive type: ${archiveType}`);
+    }
+    
+    // Determine output path based on organization strategy
+    let outputBasePath = path.join(outputDir, archiveName);
+    if (organizationStrategy === 'subfolder') {
+      const subfolderName = archiveType === 'claude' ? 'claude' : 'chatgpt';
+      outputBasePath = path.join(outputDir, archiveName, subfolderName);
+      console.log(`Using subfolder organization: ${subfolderName}`);
+    }
+    
+    // Use appropriate importer based on archive type
+    if (archiveType === 'claude') {
+      return await importClaudeArchive({ ...config, outputBasePath });
+    } else {
+      return await importOpenAIArchive({ ...config, outputBasePath });
+    }
+  } catch (err) {
+    throw err;
+  }
+}
+
+// Import Claude archive
+async function importClaudeArchive(config) {
+  try {
+    const { sourceDir, outputBasePath, skipFailedConversations } = config;
+    
+    // Use provided outputBasePath or fall back to original logic
+    const finalOutputPath = outputBasePath || path.join(config.outputDir, config.archiveName);
+    
+    // Update status to in_progress
+    importStatus = {
+      status: 'in_progress',
+      progress: 0,
+      totalConversations: 0,
+      processedConversations: 0,
+      error: null,
+      startTime: new Date().toISOString(),
+      endTime: null,
+      failedConversations: []
+    };
+    
+    console.log('Starting Claude archive import...');
+    
+    // Use the Claude import processor with the final output path
+    const result = await claudeImportProcessor.importClaudeArchive({ ...config, outputDir: path.dirname(finalOutputPath), archiveName: path.basename(finalOutputPath) });
+    
+    // Update final status
+    const hasFailures = result.failedConversations > 0;
+    importStatus = {
+      ...importStatus,
+      status: hasFailures ? 'completed_with_errors' : 'completed',
+      progress: 100,
+      totalConversations: result.totalConversations,
+      processedConversations: result.processedConversations,
+      endTime: new Date().toISOString()
+    };
+    
+    // Update archive root and refresh index - use the top-level archive directory
+    const archiveRootForIndexing = config.organizationStrategy === 'subfolder' ? 
+      path.join(config.outputDir, config.archiveName) : finalOutputPath;
+    
+    try {
+      console.log(`Updating archive root to: ${archiveRootForIndexing}`);
+      
+      const dotenv = require('dotenv');
+      const envFilePath = path.resolve(__dirname, '../.env');
+      
+      let envContent = '';
+      if (await fs.pathExists(envFilePath)) {
+        envContent = await fs.readFile(envFilePath, 'utf8');
+      }
+      
+      const envConfig = dotenv.parse(envContent);
+      envConfig.ARCHIVE_ROOT = archiveRootForIndexing;
+      
+      const newEnvContent = Object.entries(envConfig)
+        .map(([key, value]) => `${key}=${value}`)
+        .join('\n');
+      
+      await fs.writeFile(envFilePath, newEnvContent);
+      process.env.ARCHIVE_ROOT = archiveRootForIndexing;
+      
+      console.log('Refreshing archive index with new location...');
+      await archiveService.refreshIndex(archiveRootForIndexing);
+      
+      console.log('Successfully updated archive root and refreshed index');
+    } catch (archiveUpdateError) {
+      console.error('Failed to update archive root automatically:', archiveUpdateError);
+    }
+    
+    return finalOutputPath;
+  } catch (err) {
+    importStatus = {
+      ...importStatus,
+      status: 'failed',
+      error: err.message,
+      endTime: new Date().toISOString()
+    };
+    throw err;
+  }
+}
+
 // Run the full OpenAI archive import/explode process
 async function importOpenAIArchive(config) {
   try {
-    const { sourceDir, outputDir, archiveName, skipFailedConversations } = config;
+    const { sourceDir, outputBasePath, skipFailedConversations } = config;
+    
+    // Use provided outputBasePath or fall back to original logic
+    const finalOutputPath = outputBasePath || path.join(config.outputDir, config.archiveName);
     
     // Validate inputs
-    if (!sourceDir || !outputDir) {
-      throw new Error('Source and output directories must be specified');
+    if (!sourceDir) {
+      throw new Error('Source directory must be specified');
     }
     
     // Check if source directory exists
@@ -441,8 +635,7 @@ async function importOpenAIArchive(config) {
     }
     
     // Create output directory and exploded archive folder
-    const outputBasePath = path.join(outputDir, archiveName);
-    await fs.ensureDir(outputBasePath);
+    await fs.ensureDir(finalOutputPath);
     
     // Initialize DALL-E generation cache for better performance
     await mediaProcessor.initDalleGenerationsCache(sourceDir);
@@ -490,7 +683,7 @@ async function importOpenAIArchive(config) {
             importStatus.totalConversations = totalConversations;
             
             // Process the conversation with timeout protection
-            await processOpenAIConversation(conversation, config, outputBasePath)
+            await processOpenAIConversation(conversation, config, finalOutputPath)
               .then(() => {
                 // Update progress
                 processedConversations++;
@@ -604,7 +797,7 @@ async function importOpenAIArchive(config) {
             // Write a report of failed conversations if any
             if (hasFailures) {
               await fs.writeJson(
-                path.join(outputBasePath, 'import_errors.json'),
+                path.join(finalOutputPath, 'import_errors.json'),
                 {
                   totalConversations,
                   successfulConversations: processedConversations - failedConversations.length,
@@ -617,8 +810,12 @@ async function importOpenAIArchive(config) {
             }
             
             // Automatically update the archive root to point to the newly imported archive
+            // Use the top-level archive directory for indexing if using subfolder organization
+            const archiveRootForIndexing = config.organizationStrategy === 'subfolder' ? 
+              path.join(config.outputDir, config.archiveName) : finalOutputPath;
+            
             try {
-              console.log(`Updating archive root to: ${outputBasePath}`);
+              console.log(`Updating archive root to: ${archiveRootForIndexing}`);
               
               // Update the environment variable and .env file
               const dotenv = require('dotenv');
@@ -634,7 +831,7 @@ async function importOpenAIArchive(config) {
               const envConfig = dotenv.parse(envContent);
               
               // Update ARCHIVE_ROOT
-              envConfig.ARCHIVE_ROOT = outputBasePath;
+              envConfig.ARCHIVE_ROOT = archiveRootForIndexing;
               
               // Convert back to .env format
               const newEnvContent = Object.entries(envConfig)
@@ -645,11 +842,11 @@ async function importOpenAIArchive(config) {
               await fs.writeFile(envFilePath, newEnvContent);
               
               // Update process.env
-              process.env.ARCHIVE_ROOT = outputBasePath;
+              process.env.ARCHIVE_ROOT = archiveRootForIndexing;
               
               // Refresh the archive index with the new location
               console.log('Refreshing archive index with new location...');
-              await archiveService.refreshIndex(outputBasePath);
+              await archiveService.refreshIndex(archiveRootForIndexing);
               
               console.log('Successfully updated archive root and refreshed index');
             } catch (archiveUpdateError) {
@@ -657,7 +854,7 @@ async function importOpenAIArchive(config) {
               // Don't fail the import because of this
             }
             
-            resolve(outputBasePath);
+            resolve(finalOutputPath);
           } catch (finalError) {
             console.error('Error finalizing import:', finalError);
             importStatus = {
@@ -711,7 +908,35 @@ module.exports = {
   generatePreview: async (req, res) => {
     try {
       const config = { ...DEFAULT_CONFIG, ...req.body };
+      
+      // Safety check: warn if output path will overwrite existing archive
+      const outputBasePath = path.join(config.outputDir, config.archiveName);
+      let safetyWarning = null;
+      
+      if (await fs.pathExists(outputBasePath)) {
+        // Check if it looks like an existing archive
+        const items = await fs.readdir(outputBasePath).catch(() => []);
+        const hasConversationFolders = items.some(item => {
+          return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/.test(item) ||
+                 /^\d{4}-\d{2}-\d{2}_/.test(item);
+        });
+        
+        if (hasConversationFolders) {
+          safetyWarning = {
+            type: 'existing_archive',
+            message: `Warning: The output path '${outputBasePath}' contains an existing archive. New conversations will be added, but any conversations with matching UUIDs will be overwritten. Consider using a different archive name for safety.`,
+            suggestion: `Try archive name: '${config.archiveName}_${new Date().getFullYear()}'`
+          };
+        }
+      }
+      
       const preview = await generatePreview(config);
+      
+      // Add safety warning to preview if needed
+      if (safetyWarning) {
+        preview.safetyWarning = safetyWarning;
+      }
+      
       res.json(preview);
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -732,7 +957,7 @@ module.exports = {
       const config = { ...DEFAULT_CONFIG, ...req.body };
       
       // Start the import process asynchronously
-      importOpenAIArchive(config).catch(err => {
+      importArchive(config).catch(err => {
         console.error('Import failed:', err);
         // Status is already updated in the function
       });

@@ -75,13 +75,152 @@ import {
   Lock as LockIcon,
   LockOpen as LockOpenIcon
 } from '@mui/icons-material';
+import LatexMarkdownRenderer from './components/LatexMarkdownRenderer';
 
 // Utility function to add delays between API calls
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Markdown parsing utility
+// Markdown parsing utility with table support
 const parseMarkdown = (text) => {
   if (!text || typeof text !== 'string') return text;
+  
+  // Function to parse markdown tables
+  const parseTable = (tableText) => {
+    console.log('EnhancedPdfEditor: parseTable called with text:', tableText);
+    
+    const lines = tableText.trim().split('\n').filter(line => line.trim());
+    console.log('EnhancedPdfEditor: parseTable lines after filtering:', lines);
+    
+    if (lines.length < 3) {
+      console.log('EnhancedPdfEditor: parseTable - not enough lines:', lines.length);
+      return null;
+    }
+    
+    // Parse header row - remove leading/trailing pipes and split
+    const headerLine = lines[0].trim();
+    console.log('EnhancedPdfEditor: parseTable headerLine:', headerLine);
+    
+    if (!headerLine.includes('|')) {
+      console.log('EnhancedPdfEditor: parseTable - no pipes in header');
+      return null;
+    }
+    
+    const headerCells = headerLine.split('|')
+      .map(cell => cell.trim())
+      .filter((cell, index, array) => {
+        // Remove empty cells only at start/end (leading/trailing pipes)
+        return !(cell === '' && (index === 0 || index === array.length - 1));
+      });
+    
+    console.log('EnhancedPdfEditor: parseTable headerCells:', headerCells);
+    
+    // Check separator row (line 1)
+    const separatorLine = lines[1].trim();
+    console.log('EnhancedPdfEditor: parseTable separatorLine:', separatorLine);
+    
+    if (!separatorLine.includes('-') || !separatorLine.includes('|')) {
+      console.log('EnhancedPdfEditor: parseTable - invalid separator');
+      return null;
+    }
+    
+    // Parse data rows - maintain same structure as headers
+    const dataRows = lines.slice(2).map((line, index) => {
+      const trimmedLine = line.trim();
+      console.log(`EnhancedPdfEditor: parseTable processing data row ${index}:`, trimmedLine);
+      
+      if (!trimmedLine.includes('|')) {
+        console.log(`EnhancedPdfEditor: parseTable - no pipes in data row ${index}`);
+        return null;
+      }
+      
+      const cells = trimmedLine.split('|')
+        .map(cell => cell.trim())
+        .filter((cell, index, array) => {
+          // Remove empty cells only at start/end (leading/trailing pipes)
+          return !(cell === '' && (index === 0 || index === array.length - 1));
+        });
+      
+      console.log(`EnhancedPdfEditor: parseTable data row ${index} cells:`, cells);
+      
+      // Ensure row has same number of cells as headers (pad with empty if needed)
+      while (cells.length < headerCells.length) {
+        cells.push('');
+      }
+      
+      return cells.slice(0, headerCells.length); // Truncate if too many cells
+    }).filter(row => row !== null);
+    
+    console.log('EnhancedPdfEditor: parseTable final dataRows:', dataRows);
+    
+    if (dataRows.length === 0) {
+      console.log('EnhancedPdfEditor: parseTable - no valid data rows');
+      return null;
+    }
+    
+    const result = {
+      headers: headerCells,
+      rows: dataRows
+    };
+    
+    console.log('EnhancedPdfEditor: parseTable final result:', result);
+    
+    return result;
+  };
+  
+  // Function to render table with Material-UI styling
+  const renderTable = (tableData, tableIndex) => {
+    return (
+      <Box key={`table-${tableIndex}`} sx={{ 
+        margin: '16px 0',
+        border: '1px solid #e0e0e0',
+        borderRadius: '8px',
+        overflow: 'hidden',
+        backgroundColor: '#fff'
+      }}>
+        <Box sx={{ 
+          backgroundColor: '#f5f5f5',
+          borderBottom: '2px solid #1976d2',
+          padding: '8px 0'
+        }}>
+          <Box sx={{ display: 'flex' }}>
+            {tableData.headers.map((header, index) => (
+              <Box key={index} sx={{ 
+                flex: 1,
+                padding: '8px 12px',
+                fontWeight: 'bold',
+                fontSize: '14px',
+                color: '#1976d2',
+                borderRight: index < tableData.headers.length - 1 ? '1px solid #e0e0e0' : 'none'
+              }}>
+                {header}
+              </Box>
+            ))}
+          </Box>
+        </Box>
+        <Box>
+          {tableData.rows.map((row, rowIndex) => (
+            <Box key={rowIndex} sx={{ 
+              display: 'flex',
+              backgroundColor: rowIndex % 2 === 0 ? '#fff' : '#f9f9f9',
+              '&:hover': { backgroundColor: '#f0f7ff' },
+              borderBottom: rowIndex < tableData.rows.length - 1 ? '1px solid #e0e0e0' : 'none'
+            }}>
+              {row.map((cell, cellIndex) => (
+                <Box key={cellIndex} sx={{ 
+                  flex: 1,
+                  padding: '12px',
+                  fontSize: '13px',
+                  borderRight: cellIndex < row.length - 1 ? '1px solid #e0e0e0' : 'none'
+                }}>
+                  {parseMarkdownToReact(cell)}
+                </Box>
+              ))}
+            </Box>
+          ))}
+        </Box>
+      </Box>
+    );
+  };
   
   // Simple markdown parsing with React elements
   const parseMarkdownToReact = (str) => {
@@ -142,7 +281,82 @@ const parseMarkdown = (text) => {
     return result;
   };
   
-  // Handle line breaks and paragraphs
+  // Check for tables first (multi-line processing) - improved regex for table detection
+  console.log('EnhancedPdfEditor: parseMarkdown input text:', text.substring(0, 500) + (text.length > 500 ? '...' : ''));
+  
+  const tableRegex = /(\|[^|\n]*\|[^\n]*\n\|[^|\n]*[-:]+[^|\n]*\|[^\n]*(?:\n\|[^|\n]*\|[^\n]*)*)/g;
+  const tables = [];
+  let match;
+  
+  console.log('EnhancedPdfEditor: Starting table detection with regex:', tableRegex);
+  
+  while ((match = tableRegex.exec(text)) !== null) {
+    console.log('EnhancedPdfEditor: Table regex match found:', {
+      index: match.index,
+      matchLength: match[0].length,
+      matchContent: match[1]
+    });
+    
+    const tableData = parseTable(match[1]);
+    console.log('EnhancedPdfEditor: parseTable returned:', tableData);
+    
+    if (tableData) {
+      const tableEntry = {
+        start: match.index,
+        end: match.index + match[0].length,
+        content: match[1],
+        data: tableData
+      };
+      tables.push(tableEntry);
+      console.log('EnhancedPdfEditor: Added table to tables array:', tableEntry);
+    } else {
+      console.log('EnhancedPdfEditor: parseTable returned null, skipping table');
+    }
+  }
+  
+  console.log('EnhancedPdfEditor: Final tables array:', tables);
+  
+  // If we found tables, process the text with table replacements
+  if (tables.length > 0) {
+    const result = [];
+    let lastEnd = 0;
+    
+    tables.forEach((table, tableIndex) => {
+      // Add text before this table
+      if (table.start > lastEnd) {
+        const beforeText = text.substring(lastEnd, table.start);
+        const lines = beforeText.split('\n');
+        lines.forEach((line, index) => {
+          result.push(
+            <div key={`text-${lastEnd}-${index}`} style={{ marginBottom: line.trim() === '' ? '8px' : '0' }}>
+              {parseMarkdownToReact(line)}
+            </div>
+          );
+        });
+      }
+      
+      // Add the table
+      result.push(renderTable(table.data, tableIndex));
+      lastEnd = table.end;
+    });
+    
+    // Add remaining text
+    if (lastEnd < text.length) {
+      const remainingText = text.substring(lastEnd);
+      const lines = remainingText.split('\n');
+      lines.forEach((line, index) => {
+        result.push(
+          <div key={`text-${lastEnd}-${index}`} style={{ marginBottom: line.trim() === '' ? '8px' : '0' }}>
+            {parseMarkdownToReact(line)}
+          </div>
+        );
+      });
+    }
+    
+    return result;
+  }
+  
+  // No tables found, process normally
   const lines = text.split('\n');
   return lines.map((line, index) => (
     <div key={index} style={{ marginBottom: line.trim() === '' ? '8px' : '0' }}>
@@ -163,6 +377,9 @@ const EnhancedPdfEditor = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  
+  // Conversation data for media paths
+  const [conversationData, setConversationData] = useState(null);
 
   // Font management state
   const [availableFonts, setAvailableFonts] = useState([]);
@@ -182,12 +399,488 @@ const EnhancedPdfEditor = () => {
   const [fontDialogOpen, setFontDialogOpen] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
 
+  // Resizing state
+  const [resizingElement, setResizingElement] = useState(null);
+  const [resizeHandle, setResizeHandle] = useState(null);
+  const [resizeStartPos, setResizeStartPos] = useState({ x: 0, y: 0 });
+  const [resizeStartBounds, setResizeStartBounds] = useState({ x: 0, y: 0, width: 0, height: 0 });
+
+  // Drag and drop state
+  const [draggingElement, setDraggingElement] = useState(null);
+  const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
+  const [dragStartBounds, setDragStartBounds] = useState({ x: 0, y: 0, width: 0, height: 0 });
+  const [dropZones, setDropZones] = useState([]);
+
   // Refs
   const canvasRef = useRef(null);
   const fileInputRef = useRef(null);
 
+  // Calculate dynamic height based on content
+  const calculateElementHeight = useCallback((element) => {
+    if (element.type === 'text') {
+      const style = element.style || {};
+      const fontSize = style.fontSize || 12;
+      const lineHeight = style.lineHeight || 1.4;
+      const contentWidth = element.bounds?.width || 400;
+      
+      // Estimate text height based on content and styling
+      const content = element.content || '';
+      const avgCharsPerLine = Math.floor(contentWidth / (fontSize * 0.6)); // Rough character width estimation
+      const estimatedLines = Math.ceil(content.length / avgCharsPerLine);
+      const minLines = content.split('\n').length;
+      const totalLines = Math.max(estimatedLines, minLines);
+      
+      return Math.max(totalLines * fontSize * lineHeight, 20);
+    } else if (element.type === 'image') {
+      // For images, maintain aspect ratio or use specified height
+      return element.bounds?.height || 200;
+    }
+    
+    // Default height for other elements
+    return element.bounds?.height || 50;
+  }, []);
+
+  // Resize handler functions
+  const handleResizeStart = useCallback((element, handle, event) => {
+    event.stopPropagation();
+    setResizingElement(element);
+    setResizeHandle(handle);
+    setResizeStartPos({ x: event.clientX, y: event.clientY });
+    setResizeStartBounds({ ...element.bounds });
+    
+    console.log('EnhancedPdfEditor: Resize started', { elementId: element.id, handle });
+  }, []);
+
+  const handleResizeMove = useCallback((event) => {
+    if (!resizingElement || !resizeHandle) return;
+    
+    const deltaX = event.clientX - resizeStartPos.x;
+    const deltaY = event.clientY - resizeStartPos.y;
+    
+    let newBounds = { ...resizeStartBounds };
+    
+    // Calculate new bounds based on resize handle
+    switch (resizeHandle) {
+      case 'se': // Southeast corner
+        newBounds.width = Math.max(50, resizeStartBounds.width + deltaX);
+        newBounds.height = Math.max(20, resizeStartBounds.height + deltaY);
+        break;
+      case 'e': // East edge
+        newBounds.width = Math.max(50, resizeStartBounds.width + deltaX);
+        break;
+      case 's': // South edge
+        newBounds.height = Math.max(20, resizeStartBounds.height + deltaY);
+        break;
+      case 'sw': // Southwest corner
+        newBounds.width = Math.max(50, resizeStartBounds.width - deltaX);
+        newBounds.height = Math.max(20, resizeStartBounds.height + deltaY);
+        newBounds.x = resizeStartBounds.x + deltaX;
+        break;
+      case 'w': // West edge
+        newBounds.width = Math.max(50, resizeStartBounds.width - deltaX);
+        newBounds.x = resizeStartBounds.x + deltaX;
+        break;
+      case 'nw': // Northwest corner
+        newBounds.width = Math.max(50, resizeStartBounds.width - deltaX);
+        newBounds.height = Math.max(20, resizeStartBounds.height - deltaY);
+        newBounds.x = resizeStartBounds.x + deltaX;
+        newBounds.y = resizeStartBounds.y + deltaY;
+        break;
+      case 'n': // North edge
+        newBounds.height = Math.max(20, resizeStartBounds.height - deltaY);
+        newBounds.y = resizeStartBounds.y + deltaY;
+        break;
+      case 'ne': // Northeast corner
+        newBounds.width = Math.max(50, resizeStartBounds.width + deltaX);
+        newBounds.height = Math.max(20, resizeStartBounds.height - deltaY);
+        newBounds.y = resizeStartBounds.y + deltaY;
+        break;
+    }
+    
+    // Update element bounds
+    updateElement(resizingElement.id, { bounds: newBounds });
+  }, []);
+
+  // Page flow recalculation (moved up to fix reference error)
+  const recalculatePageFlow = useCallback(async () => {
+    if (!document || !document.pages) return;
+    
+    console.log('EnhancedPdfEditor: Recalculating page flow');
+    
+    // Get all elements sorted by their vertical position
+    const allElements = [];
+    document.pages.forEach((page, pageIndex) => {
+      if (page.elements) {
+        page.elements.forEach(element => {
+          allElements.push({
+            ...element,
+            originalPageIndex: pageIndex,
+            absoluteY: pageIndex * 842 + element.bounds.y // A4 height = 842 points
+          });
+        });
+      }
+    });
+    
+    // Sort by absolute Y position
+    allElements.sort((a, b) => a.absoluteY - b.absoluteY);
+    
+    // Redistribute elements across pages
+    const pageHeight = 842; // A4 height
+    const margins = { top: 72, bottom: 72 }; // 1 inch margins
+    const contentHeight = pageHeight - margins.top - margins.bottom;
+    
+    let currentPageIndex = 0;
+    let currentY = margins.top;
+    
+    for (const element of allElements) {
+      const elementHeight = calculateElementHeight(element);
+      
+      // Check if element fits on current page
+      if (currentY + elementHeight > margins.top + contentHeight) {
+        // Move to next page
+        currentPageIndex++;
+        currentY = margins.top;
+        
+        // Create new page if needed
+        if (currentPageIndex >= document.pages.length) {
+          try {
+            await apiCall(`/documents/${document.id}/pages`, {
+              method: 'POST',
+              body: JSON.stringify({
+                size: 'A4',
+                orientation: 'portrait',
+                margins: { top: 72, right: 72, bottom: 72, left: 72 }
+              })
+            });
+          } catch (error) {
+            console.error('Failed to create new page:', error);
+            break;
+          }
+        }
+      }
+      
+      // Update element position if it changed
+      if (element.originalPageIndex !== currentPageIndex || element.bounds.y !== currentY) {
+        const newBounds = { ...element.bounds, y: currentY };
+        
+        try {
+          // Move element to new page/position
+          await apiCall(`/documents/${document.id}/pages/${document.pages[currentPageIndex].id}/elements`, {
+            method: 'POST',
+            body: JSON.stringify({
+              ...element,
+              bounds: newBounds
+            })
+          });
+          
+          // Remove from old page if different
+          if (element.originalPageIndex !== currentPageIndex) {
+            await apiCall(`/documents/${document.id}/pages/${document.pages[element.originalPageIndex].id}/elements/${element.id}`, {
+              method: 'DELETE'
+            });
+          }
+        } catch (error) {
+          console.error('Failed to move element:', error);
+        }
+      }
+      
+      currentY += elementHeight + 10; // Add spacing between elements
+    }
+    
+    // Refresh document state
+    const updatedDoc = await apiCall(`/documents/${document.id}`);
+    setDocument(updatedDoc.document);
+    
+  }, []);
+
+  const handleResizeEnd = useCallback(() => {
+    if (resizingElement) {
+      console.log('EnhancedPdfEditor: Resize ended', { elementId: resizingElement.id });
+      
+      // Trigger page flow recalculation after resize
+      recalculatePageFlow();
+    }
+    
+    setResizingElement(null);
+    setResizeHandle(null);
+  }, []);
+
+  // Drag and drop handlers
+  const handleDragStart = useCallback((element, event) => {
+    if (resizingElement) return; // Don't drag while resizing
+    
+    event.stopPropagation();
+    setDraggingElement(element);
+    setDragStartPos({ x: event.clientX, y: event.clientY });
+    setDragStartBounds({ ...element.bounds });
+    
+    // Calculate drop zones for reordering
+    calculateDropZones(element);
+    
+    console.log('EnhancedPdfEditor: Drag started', { elementId: element.id });
+  }, []);
+
+  const handleDragMove = useCallback((event) => {
+    if (!draggingElement) return;
+    
+    const deltaX = event.clientX - dragStartPos.x;
+    const deltaY = event.clientY - dragStartPos.y;
+    
+    const newBounds = {
+      ...dragStartBounds,
+      x: dragStartBounds.x + deltaX,
+      y: dragStartBounds.y + deltaY
+    };
+    
+    // Update element position during drag
+    updateElement(draggingElement.id, { bounds: newBounds });
+  }, []);
+
+  const handleDragEnd = useCallback(() => {
+    if (draggingElement) {
+      console.log('EnhancedPdfEditor: Drag ended', { elementId: draggingElement.id });
+      
+      // Check if dropped in a reorder zone
+      checkForReorder();
+      
+      // Clear drop zones
+      setDropZones([]);
+      
+      // Trigger page flow recalculation
+      recalculatePageFlow();
+    }
+    
+    setDraggingElement(null);
+  }, []);
+
+  const calculateDropZones = useCallback((draggingEl) => {
+    if (!document || !document.pages[currentPage]) return;
+    
+    const zones = [];
+    const elements = document.pages[currentPage].elements.filter(el => el.id !== draggingEl.id);
+    
+    // Sort elements by Y position
+    elements.sort((a, b) => a.bounds.y - b.bounds.y);
+    
+    // Add drop zone before first element
+    if (elements.length > 0) {
+      zones.push({
+        id: 'before-first',
+        y: elements[0].bounds.y - 20,
+        insertIndex: 0
+      });
+    }
+    
+    // Add drop zones between elements
+    for (let i = 0; i < elements.length - 1; i++) {
+      const currentEl = elements[i];
+      const nextEl = elements[i + 1];
+      const midY = currentEl.bounds.y + currentEl.bounds.height + 
+                   (nextEl.bounds.y - (currentEl.bounds.y + currentEl.bounds.height)) / 2;
+      
+      zones.push({
+        id: `between-${i}-${i + 1}`,
+        y: midY,
+        insertIndex: i + 1
+      });
+    }
+    
+    // Add drop zone after last element
+    if (elements.length > 0) {
+      const lastEl = elements[elements.length - 1];
+      zones.push({
+        id: 'after-last',
+        y: lastEl.bounds.y + lastEl.bounds.height + 20,
+        insertIndex: elements.length
+      });
+    }
+    
+    setDropZones(zones);
+  }, []);
+
+  const checkForReorder = useCallback(() => {
+    if (!draggingElement || dropZones.length === 0) return;
+    
+    const dragY = draggingElement.bounds.y + draggingElement.bounds.height / 2;
+    
+    // Find the closest drop zone
+    let closestZone = null;
+    let minDistance = Infinity;
+    
+    dropZones.forEach(zone => {
+      const distance = Math.abs(zone.y - dragY);
+      if (distance < minDistance && distance < 30) { // 30px tolerance
+        minDistance = distance;
+        closestZone = zone;
+      }
+    });
+    
+    if (closestZone) {
+      console.log('EnhancedPdfEditor: Reordering element', { 
+        elementId: draggingElement.id, 
+        newIndex: closestZone.insertIndex 
+      });
+      
+      // Trigger reorder
+      reorderElements(draggingElement.id, closestZone.insertIndex);
+    }
+  }, []);
+
+  const reorderElements = useCallback(async (elementId, newIndex) => {
+    if (!document || !document.pages[currentPage]) return;
+    
+    try {
+      // Call API to reorder elements
+      await apiCall(`/documents/${document.id}/pages/${document.pages[currentPage].id}/elements/reorder`, {
+        method: 'POST',
+        body: JSON.stringify({
+          elementId,
+          newIndex
+        })
+      });
+      
+      // Refresh document
+      const updatedDoc = await apiCall(`/documents/${document.id}`);
+      setDocument(updatedDoc.document);
+      
+    } catch (error) {
+      console.error('Failed to reorder elements:', error);
+    }
+  }, []);
+
+  // Mouse event handlers for global resize and drag
+  useEffect(() => {
+    if (resizingElement) {
+      window.document.addEventListener('mousemove', handleResizeMove);
+      window.document.addEventListener('mouseup', handleResizeEnd);
+      window.document.body.style.cursor = 'nw-resize';
+      
+      return () => {
+        window.document.removeEventListener('mousemove', handleResizeMove);
+        window.document.removeEventListener('mouseup', handleResizeEnd);
+        window.document.body.style.cursor = 'default';
+      };
+    } else if (draggingElement) {
+      window.document.addEventListener('mousemove', handleDragMove);
+      window.document.addEventListener('mouseup', handleDragEnd);
+      window.document.body.style.cursor = 'move';
+      
+      return () => {
+        window.document.removeEventListener('mousemove', handleDragMove);
+        window.document.removeEventListener('mouseup', handleDragEnd);
+        window.document.body.style.cursor = 'default';
+      };
+    }
+  }, [resizingElement, draggingElement, handleResizeMove, handleResizeEnd, handleDragMove, handleDragEnd]);
+
   // API base URL
   const API_BASE = '/api/enhanced-pdf';
+
+  // API calls (moved up to fix reference error)
+  const apiCall = useCallback(async (endpoint, options = {}) => {
+    try {
+      const response = await fetch(`${API_BASE}${endpoint}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        ...options
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('API call failed:', error);
+      throw error;
+    }
+  }, [API_BASE]);
+
+  // Update element function (moved up to fix reference error)
+  const updateElement = async (elementId, updates) => {
+    if (!document || !document.pages[currentPage]) return;
+    
+    try {
+      const response = await apiCall(`/documents/${document.id}/pages/${document.pages[currentPage].id}/elements/${elementId}`, {
+        method: 'PUT',
+        body: JSON.stringify(updates)
+      });
+      
+      if (response.success) {
+        // Update local state
+        setDocument(prev => {
+          const newDoc = { ...prev };
+          const page = newDoc.pages[currentPage];
+          const elementIndex = page.elements.findIndex(el => el.id === elementId);
+          if (elementIndex !== -1) {
+            page.elements[elementIndex] = { ...page.elements[elementIndex], ...updates };
+          }
+          return newDoc;
+        });
+      }
+    } catch (error) {
+      console.error('Failed to update element:', error);
+      setError('Failed to update element');
+    }
+  };
+
+  // Load conversation data to get folder for media paths
+  const loadConversationData = useCallback(async (convId) => {
+    if (!convId) return;
+    
+    try {
+      console.log('EnhancedPdfEditor: Loading conversation data for:', convId);
+      const response = await fetch(`/api/conversations/${convId}`);
+      if (response.ok) {
+        const data = await response.json();
+        console.log('EnhancedPdfEditor: Conversation data loaded:', {
+          id: data.id,
+          folder: data.folder,
+          title: data.title
+        });
+        setConversationData(data);
+        return data;
+      } else {
+        console.warn('EnhancedPdfEditor: Failed to load conversation data:', response.status);
+        return null;
+      }
+    } catch (error) {
+      console.error('EnhancedPdfEditor: Error loading conversation data:', error);
+      return null;
+    }
+  }, []);
+
+  // Image proxy helper function
+  const proxyImageUrl = async (originalUrl) => {
+    try {
+      console.log('EnhancedPdfEditor: Proxying image URL:', originalUrl);
+      
+      const response = await fetch(`${API_BASE}/images/proxy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url: originalUrl })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Proxy request failed: ${response.status}`);
+      }
+
+      const result = await response.json();
+      if (result.success) {
+        console.log('EnhancedPdfEditor: Image proxied successfully:', result.data.proxyUrl);
+        return result.data.proxyUrl;
+      } else {
+        throw new Error(result.error || 'Failed to proxy image');
+      }
+    } catch (error) {
+      console.error('EnhancedPdfEditor: Image proxy failed:', error);
+      return null;
+    }
+  };
 
   // Initialize editor
   useEffect(() => {
@@ -244,28 +937,7 @@ const EnhancedPdfEditor = () => {
     }
   }, [document, currentPage]);
 
-  // API calls
-  const apiCall = useCallback(async (endpoint, options = {}) => {
-    try {
-      const response = await fetch(`${API_BASE}${endpoint}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers
-        },
-        ...options
-      });
-      
-      if (!response.ok) {
-        throw new Error(`API call failed: ${response.statusText}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('API Error:', error);
-      setError(error.message);
-      throw error;
-    }
-  }, []);
+
 
   const createNewDocument = async () => {
     setLoading(true);
@@ -289,7 +961,13 @@ const EnhancedPdfEditor = () => {
 
   const createFromConversation = async () => {
     setLoading(true);
+    setError(null);
     try {
+      console.log('EnhancedPdfEditor: Creating document from conversation', { conversationId });
+      
+      // Load conversation data for media paths
+      await loadConversationData(conversationId);
+      
       const response = await apiCall(`/from-conversation/${conversationId}`, {
         method: 'POST',
         body: JSON.stringify({
@@ -297,10 +975,37 @@ const EnhancedPdfEditor = () => {
           options: { includeMetadata: true }
         })
       });
-      setDocument(response.document);
-      setSuccess('Document created from conversation');
+      
+      console.log('EnhancedPdfEditor: Conversation import response', {
+        success: response.success,
+        documentId: response.document?.id,
+        pageCount: response.document?.pages?.length,
+        elementsOnFirstPage: response.document?.pages?.[0]?.elements?.length
+      });
+      
+      if (!response.success || !response.document) {
+        throw new Error('Invalid response from conversation import');
+      }
+      
+      // Reload the document from server to ensure it's fresh and complete
+      console.log('EnhancedPdfEditor: Reloading document from server for verification');
+      const reloadedDoc = await apiCall(`/documents/${response.document.id}`);
+      
+      console.log('EnhancedPdfEditor: Reloaded document', {
+        documentId: reloadedDoc.document?.id,
+        pageCount: reloadedDoc.document?.pages?.length,
+        elementsOnFirstPage: reloadedDoc.document?.pages?.[0]?.elements?.length,
+        firstElementContent: reloadedDoc.document?.pages?.[0]?.elements?.[0]?.content?.substring(0, 100)
+      });
+      
+      setDocument(reloadedDoc.document);
+      setCurrentPage(0); // Reset to first page
+      setSelectedElement(null); // Clear any selection
+      
+      setSuccess(`Document created from conversation with ${reloadedDoc.document.pages?.[0]?.elements?.length || 0} elements`);
     } catch (error) {
-      setError('Failed to create document from conversation');
+      console.error('EnhancedPdfEditor: Failed to create document from conversation', error);
+      setError(`Failed to create document from conversation: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -399,6 +1104,9 @@ const EnhancedPdfEditor = () => {
 
       // Add content for each conversation
       for (const [conversationId, convData] of Object.entries(messagesByConversation)) {
+        // Load conversation data for media paths
+        const currentConversationData = await loadConversationData(conversationId);
+        
         // Add conversation title
         try {
           await createNewPageIfNeeded(35); // Check if we need new page for title
@@ -486,37 +1194,37 @@ const EnhancedPdfEditor = () => {
                 fullObject: part && typeof part === 'object' ? JSON.stringify(part, null, 2) : null
               });
               
-              // Handle image content - check multiple possible image formats
+              // Handle image content - check for local file IDs from asset_pointer
               if (part && typeof part === 'object' && 
-                  ((part.content_type === 'image_asset_pointer' && part.asset_pointer) ||
-                   (part.type === 'image' && part.url) ||
-                   (part.image_url) ||
-                   (part.content_type && part.content_type.includes('image')))) {
+                  part.content_type === 'image_asset_pointer' && part.asset_pointer) {
                 
-                console.log('EnhancedPdfEditor: Image detected!', {
+                console.log('EnhancedPdfEditor: Local image detected!', {
                   contentType: part.content_type,
-                  hasAssetPointer: !!part.asset_pointer,
-                  hasUrl: !!part.url,
-                  hasImageUrl: !!part.image_url,
+                  assetPointer: part.asset_pointer,
+                  width: part.width,
+                  height: part.height,
                   imageData: JSON.stringify(part, null, 2)
                 });
                 try {
                   const imageHeight = 200; // Standard image height
                   await createNewPageIfNeeded(imageHeight + 30);
                   
-                  // Extract image URL from various possible formats
-                  const imageUrl = part.asset_pointer?.url || part.url || part.image_url;
-                  const imageWidth = part.asset_pointer?.width || part.width || 400;
-                  const sourceImageHeight = part.asset_pointer?.height || part.height || 300;
+                  // Extract file ID from asset_pointer and create local media path
+                  const fileMatch = part.asset_pointer.match(/([^/\\]+)$/);
+                  const fileId = fileMatch ? fileMatch[1] : part.asset_pointer;
+                  const localImageUrl = `/api/media/${currentConversationData?.folder || conversationId}/${fileId}`;
+                  const imageWidth = part.width || 400;
+                  const sourceImageHeight = part.height || 300;
                   
-                  console.log('EnhancedPdfEditor: Adding image element', {
+                  console.log('EnhancedPdfEditor: Processing local image element', {
                     messageId: message.id,
-                    imageUrl: imageUrl,
+                    fileId: fileId,
+                    localImageUrl: localImageUrl,
                     imageWidth: imageWidth,
                     imageHeight: sourceImageHeight,
                     yPosition,
                     currentPageIndex,
-                    originalPart: JSON.stringify(part, null, 2)
+                    conversationFolder: currentConversationData?.folder || conversationId
                   });
                   
                   const imageResponse = await apiCall(`/documents/${response.document.id}/pages/${response.document.pages[currentPageIndex].id}/elements`, {
@@ -524,9 +1232,11 @@ const EnhancedPdfEditor = () => {
                     body: JSON.stringify({
                       type: 'image',
                       content: {
-                        url: imageUrl,
+                        url: localImageUrl,
+                        fileId: fileId,
                         originalWidth: imageWidth,
-                        originalHeight: sourceImageHeight
+                        originalHeight: sourceImageHeight,
+                        isLocal: true
                       },
                       bounds: { 
                         x: margins.left, 
@@ -553,7 +1263,8 @@ const EnhancedPdfEditor = () => {
                   console.error('EnhancedPdfEditor: Failed to add image element', {
                     error: error.message,
                     messageId: message.id,
-                    imageUrl: imageUrl,
+                    fileId: fileId,
+                    localImageUrl: localImageUrl,
                     partData: JSON.stringify(part, null, 2)
                   });
                 }
@@ -873,18 +1584,136 @@ const EnhancedPdfEditor = () => {
     }
   };
 
+  // Check server connectivity
+  const checkServerConnectivity = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/health`, { 
+        method: 'GET',
+        timeout: 5000 
+      });
+      return response.ok;
+    } catch (error) {
+      console.warn('Server connectivity check failed:', error);
+      return false;
+    }
+  };
+
   const saveDocument = async () => {
-    if (!document) return;
+    if (!document) {
+      setError('No document to save');
+      return;
+    }
     
     setLoading(true);
+    setError(null);
+    
     try {
+      console.log('EnhancedPdfEditor: Starting document save (download)', {
+        documentId: document.id,
+        title: document.metadata.title
+      });
+      
+      // Check server connectivity first
+      const serverAvailable = await checkServerConnectivity();
+      if (!serverAvailable) {
+        throw new Error('Server is not available. Please check your connection and try again.');
+      }
+      
+      // First save to server
+      console.log('EnhancedPdfEditor: Saving document to server...');
       await apiCall(`/documents/${document.id}`, {
         method: 'PUT',
         body: JSON.stringify(document)
       });
-      setSuccess('Document saved successfully');
+      
+      // Debug: Compare frontend vs backend document state
+      console.log('EnhancedPdfEditor: Checking document state before export...');
+      const backendDoc = await apiCall(`/documents/${document.id}`);
+      
+      console.log('EnhancedPdfEditor: Document state comparison', {
+        documentId: document.id,
+        frontend: {
+          pageCount: document.pages?.length || 0,
+          elementsOnPage0: document.pages?.[0]?.elements?.length || 0,
+          firstElementContent: document.pages?.[0]?.elements?.[0]?.content?.substring(0, 100) || 'none'
+        },
+        backend: {
+          pageCount: backendDoc.document?.pages?.length || 0,
+          elementsOnPage0: backendDoc.document?.pages?.[0]?.elements?.length || 0,
+          firstElementContent: backendDoc.document?.pages?.[0]?.elements?.[0]?.content?.substring(0, 100) || 'none'
+        }
+      });
+      
+      // Then trigger download
+      console.log('EnhancedPdfEditor: Requesting PDF export...');
+      const response = await fetch(`${API_BASE}/documents/${document.id}/export`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ format: 'pdf', quality: 'high' })
+      });
+      
+      console.log('EnhancedPdfEditor: Save export response', {
+        status: response.status,
+        statusText: response.statusText,
+        contentType: response.headers.get('content-type'),
+        contentLength: response.headers.get('content-length')
+      });
+      
+      if (!response.ok) {
+        let errorText = `HTTP ${response.status} ${response.statusText}`;
+        try {
+          const responseText = await response.text();
+          if (responseText) errorText = responseText;
+        } catch (e) {
+          console.warn('Could not read error response:', e);
+        }
+        throw new Error(`Save failed: ${errorText}`);
+      }
+      
+      const blob = await response.blob();
+      console.log('EnhancedPdfEditor: Save blob created', {
+        size: blob.size,
+        type: blob.type
+      });
+      
+      if (blob.size === 0) {
+        throw new Error('Export returned empty file. Please try again.');
+      }
+      
+      const url = window.URL.createObjectURL(blob);
+      const a = window.document.createElement('a');
+      a.href = url;
+      a.download = `${document.metadata.title || 'document'}.pdf`;
+      a.style.display = 'none';
+      window.document.body.appendChild(a);
+      
+      console.log('EnhancedPdfEditor: Triggering save download', {
+        filename: a.download,
+        blobSize: blob.size
+      });
+      
+      a.click();
+      
+      // Clean up
+      setTimeout(() => {
+        try {
+          window.URL.revokeObjectURL(url);
+          window.document.body.removeChild(a);
+        } catch (cleanupError) {
+          console.warn('EnhancedPdfEditor: Cleanup error', cleanupError);
+        }
+      }, 100);
+      
+      setSuccess(`Document saved and downloaded as ${a.download}`);
     } catch (error) {
-      setError('Failed to save document');
+      console.error('EnhancedPdfEditor: Save error', error);
+      if (error.message.includes('Server is not available')) {
+        setError('Server connection failed. Please ensure the server is running and try again.');
+      } else if (error.message.includes('Failed to fetch')) {
+        setError('Network error. Please check your internet connection and try again.');
+      } else {
+        setError(`Failed to save document: ${error.message}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -934,33 +1763,6 @@ const EnhancedPdfEditor = () => {
     }
   };
 
-  const updateElement = async (elementId, updates) => {
-    if (!document || !document.pages[currentPage]) return;
-    
-    try {
-      const response = await apiCall(
-        `/documents/${document.id}/pages/${document.pages[currentPage].id}/elements/${elementId}`,
-        {
-          method: 'PUT',
-          body: JSON.stringify(updates)
-        }
-      );
-      
-      // Update local state
-      const updatedDocument = { ...document };
-      const elementIndex = updatedDocument.pages[currentPage].elements.findIndex(el => el.id === elementId);
-      if (elementIndex !== -1) {
-        updatedDocument.pages[currentPage].elements[elementIndex] = response.element;
-        setDocument(updatedDocument);
-        if (selectedElement && selectedElement.id === elementId) {
-          setSelectedElement(response.element);
-        }
-      }
-    } catch (error) {
-      setError('Failed to update element');
-    }
-  };
-
   const deleteElement = async (elementId) => {
     if (!document || !document.pages[currentPage]) return;
     
@@ -985,31 +1787,125 @@ const EnhancedPdfEditor = () => {
   };
 
   const exportDocument = async (format = 'pdf') => {
-    if (!document) return;
+    if (!document) {
+      setError('No document to export');
+      return;
+    }
     
     setLoading(true);
+    setError(null);
+    
     try {
+      console.log('EnhancedPdfEditor: Starting document export', {
+        documentId: document.id,
+        format,
+        title: document.metadata.title
+      });
+      
+      // Check server connectivity first
+      const serverAvailable = await checkServerConnectivity();
+      if (!serverAvailable) {
+        throw new Error('Server is not available. Please check your connection and try again.');
+      }
+      
+      // First ensure document is saved to server
+      console.log('EnhancedPdfEditor: Ensuring document is saved to server...');
+      await apiCall(`/documents/${document.id}`, {
+        method: 'PUT',
+        body: JSON.stringify(document)
+      });
+      
+      // Debug: Compare frontend vs backend document state
+      console.log('EnhancedPdfEditor: Checking document state before export...');
+      const backendDoc = await apiCall(`/documents/${document.id}`);
+      
+      console.log('EnhancedPdfEditor: Export document state comparison', {
+        documentId: document.id,
+        frontend: {
+          pageCount: document.pages?.length || 0,
+          elementsOnPage0: document.pages?.[0]?.elements?.length || 0,
+          firstElementContent: document.pages?.[0]?.elements?.[0]?.content?.substring(0, 100) || 'none'
+        },
+        backend: {
+          pageCount: backendDoc.document?.pages?.length || 0,
+          elementsOnPage0: backendDoc.document?.pages?.[0]?.elements?.length || 0,
+          firstElementContent: backendDoc.document?.pages?.[0]?.elements?.[0]?.content?.substring(0, 100) || 'none'
+        }
+      });
+      
+      console.log('EnhancedPdfEditor: Requesting export...');
       const response = await fetch(`${API_BASE}/documents/${document.id}/export`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ format })
+        body: JSON.stringify({ format, quality: 'high' })
       });
       
-      if (!response.ok) throw new Error('Export failed');
+      console.log('EnhancedPdfEditor: Export response received', {
+        status: response.status,
+        statusText: response.statusText,
+        contentType: response.headers.get('content-type'),
+        contentLength: response.headers.get('content-length')
+      });
+      
+      if (!response.ok) {
+        let errorText = `HTTP ${response.status} ${response.statusText}`;
+        try {
+          const responseText = await response.text();
+          if (responseText) errorText = responseText;
+        } catch (e) {
+          console.warn('Could not read error response:', e);
+        }
+        console.error('EnhancedPdfEditor: Export failed', { 
+          status: response.status, 
+          error: errorText 
+        });
+        throw new Error(`Export failed: ${errorText}`);
+      }
       
       const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${document.metadata.title}.${format}`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      console.log('EnhancedPdfEditor: Export blob created', {
+        size: blob.size,
+        type: blob.type
+      });
       
-      setSuccess('Document exported successfully');
+      if (blob.size === 0) {
+        throw new Error('Export returned empty file. Please try again.');
+      }
+      
+      const url = window.URL.createObjectURL(blob);
+      const a = window.document.createElement('a');
+      a.href = url;
+      a.download = `${document.metadata.title || 'document'}.${format}`;
+      a.style.display = 'none';
+      window.document.body.appendChild(a);
+      
+      console.log('EnhancedPdfEditor: Triggering download', {
+        filename: a.download,
+        blobSize: blob.size
+      });
+      
+      a.click();
+      
+      // Clean up
+      setTimeout(() => {
+        try {
+          window.URL.revokeObjectURL(url);
+          window.document.body.removeChild(a);
+        } catch (cleanupError) {
+          console.warn('EnhancedPdfEditor: Cleanup error', cleanupError);
+        }
+      }, 100);
+      
+      setSuccess(`Document exported successfully as ${a.download}`);
     } catch (error) {
-      setError('Failed to export document');
+      console.error('EnhancedPdfEditor: Export error', error);
+      if (error.message.includes('Server is not available')) {
+        setError('Server connection failed. Please ensure the server is running and try again.');
+      } else if (error.message.includes('Failed to fetch')) {
+        setError('Network error. Please check your internet connection and try again.');
+      } else {
+        setError(`Failed to export document: ${error.message}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -1112,14 +2008,18 @@ const EnhancedPdfEditor = () => {
           <Divider orientation="vertical" flexItem />
         </Grid>
         <Grid item>
-          <IconButton onClick={saveDocument} disabled={loading}>
-            <SaveIcon />
-          </IconButton>
+          <Tooltip title="Save & Download PDF">
+            <IconButton onClick={saveDocument} disabled={loading}>
+              <SaveIcon />
+            </IconButton>
+          </Tooltip>
         </Grid>
         <Grid item>
-          <IconButton onClick={() => setExportDialogOpen(true)}>
-            <DownloadIcon />
-          </IconButton>
+          <Tooltip title="Export Options">
+            <IconButton onClick={() => setExportDialogOpen(true)} disabled={loading}>
+              <DownloadIcon />
+            </IconButton>
+          </Tooltip>
         </Grid>
         <Grid item>
           <Divider orientation="vertical" flexItem />
@@ -1178,6 +2078,24 @@ const EnhancedPdfEditor = () => {
             cursor: selectedTool === 'select' ? 'default' : 'crosshair'
           }}
         >
+          {/* Render drop zones when dragging */}
+          {draggingElement && dropZones.map((zone) => (
+            <Box
+              key={zone.id}
+              sx={{
+                position: 'absolute',
+                left: 72,
+                top: zone.y - 2,
+                width: 451,
+                height: 4,
+                backgroundColor: '#2196f3',
+                borderRadius: '2px',
+                opacity: 0.7,
+                zIndex: 1001
+              }}
+            />
+          ))}
+          
           {document.pages[currentPage].elements.map((element) => (
             <Box
               key={element.id}
@@ -1188,15 +2106,23 @@ const EnhancedPdfEditor = () => {
                 width: element.bounds.width,
                 height: element.bounds.height,
                 border: selectedElement?.id === element.id ? '2px solid #2196f3' : '1px solid transparent',
-                cursor: 'pointer',
+                cursor: draggingElement?.id === element.id ? 'move' : 'pointer',
+                opacity: draggingElement?.id === element.id ? 0.7 : 1,
+                zIndex: draggingElement?.id === element.id ? 1000 : 1,
                 ...getElementStyles(element)
               }}
               onClick={(e) => {
                 e.stopPropagation();
                 setSelectedElement(element);
               }}
+              onMouseDown={(e) => {
+                if (selectedTool === 'select' && !resizingElement) {
+                  handleDragStart(element, e);
+                }
+              }}
             >
-              {renderElement(element)}
+              {renderElementContent(element)}
+              {renderResizeHandles(element)}
             </Box>
           ))}
         </Box>
@@ -1229,22 +2155,23 @@ const EnhancedPdfEditor = () => {
     return styles;
   };
 
-  const renderElement = (element) => {
+  const renderElementContent = (element) => {
     if (element.type === 'text') {
-      const content = element.content || 'Text';
+      const content = element.content || '';
       return (
-        <div style={{ 
-          width: '100%', 
-          height: '100%', 
-          overflow: 'hidden',
-          fontSize: element.style?.fontSize || 12,
-          fontFamily: element.style?.fontFamily || 'Helvetica',
-          color: element.style?.color || '#000000',
-          lineHeight: element.style?.lineHeight || 1.4,
-          whiteSpace: 'pre-wrap'
-        }}>
-          {parseMarkdown(content)}
-        </div>
+        <LatexMarkdownRenderer
+          style={{
+            fontSize: element.style?.fontSize || 12,
+            fontFamily: element.style?.fontFamily || 'Helvetica',
+            color: element.style?.color || '#000000',
+            lineHeight: element.style?.lineHeight || 1.4,
+            whiteSpace: 'pre-wrap',
+            overflow: 'hidden',
+            height: '100%'
+          }}
+        >
+          {content}
+        </LatexMarkdownRenderer>
       );
     } else if (element.type === 'shape') {
       return null; // Shape styling is handled by CSS
@@ -1252,37 +2179,49 @@ const EnhancedPdfEditor = () => {
       console.log('EnhancedPdfEditor: Rendering image element', {
         elementId: element.id,
         imageUrl: element.content?.url,
+        fileId: element.content?.fileId,
+        isLocal: element.content?.isLocal,
         elementContent: element.content,
         hasUrl: !!element.content?.url
       });
+
+      const imageUrl = element.content?.url;
+      const fileId = element.content?.fileId;
+      const isLocal = element.content?.isLocal;
       
       return (
         <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-          <img 
-            src={element.content?.url} 
-            alt="Conversation image"
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain',
-              borderRadius: element.style?.borderRadius || '4px'
-            }}
-            onLoad={() => {
-              console.log('EnhancedPdfEditor: Image loaded successfully', {
-                elementId: element.id,
-                imageUrl: element.content?.url
-              });
-            }}
-            onError={(e) => {
-              console.error('EnhancedPdfEditor: Image failed to load', {
-                elementId: element.id,
-                imageUrl: element.content?.url,
-                error: e.target.error,
-                errorEvent: e
-              });
-            }}
-          />
-          {!element.content?.url && (
+          {imageUrl ? (
+            <img 
+              src={imageUrl} 
+              alt="Conversation image"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'contain',
+                borderRadius: element.style?.borderRadius || '4px'
+              }}
+              onLoad={() => {
+                console.log('EnhancedPdfEditor: Image loaded successfully', {
+                  elementId: element.id,
+                  imageUrl: imageUrl,
+                  fileId: fileId,
+                  isLocal: isLocal
+                });
+              }}
+              onError={async (e) => {
+                console.error('EnhancedPdfEditor: Local image failed to load', {
+                  elementId: element.id,
+                  imageUrl: imageUrl,
+                  fileId: fileId,
+                  isLocal: isLocal,
+                  error: e.target.error,
+                  errorEvent: e
+                });
+              }}
+              crossOrigin="anonymous"
+            />
+          ) : (
             <div style={{
               position: 'absolute',
               top: '50%',
@@ -1290,15 +2229,95 @@ const EnhancedPdfEditor = () => {
               transform: 'translate(-50%, -50%)',
               color: '#666',
               fontSize: '12px',
-              textAlign: 'center'
+              textAlign: 'center',
+              background: '#f5f5f5',
+              padding: '10px',
+              borderRadius: '4px',
+              border: '1px dashed #ccc'
             }}>
-              No Image URL
+              {fileId ? 'Local Image Loading Failed' : 'No Image File'}
+              {fileId && (
+                <div style={{ marginTop: '5px', fontSize: '10px', color: '#999' }}>
+                  File ID: {fileId}
+                </div>
+              )}
             </div>
           )}
         </div>
       );
     }
     return null;
+  };
+
+  // Render resize handles for selected element
+  const renderResizeHandles = (element) => {
+    if (!selectedElement || selectedElement.id !== element.id) return null;
+    
+    const handles = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
+    
+    return handles.map(handle => {
+      let style = {
+        position: 'absolute',
+        width: '8px',
+        height: '8px',
+        backgroundColor: '#1976d2',
+        border: '1px solid #fff',
+        borderRadius: '2px',
+        cursor: getCursorForHandle(handle),
+        zIndex: 1000
+      };
+      
+      // Position handle based on type
+      switch (handle) {
+        case 'nw':
+          style = { ...style, top: '-4px', left: '-4px' };
+          break;
+        case 'n':
+          style = { ...style, top: '-4px', left: '50%', transform: 'translateX(-50%)' };
+          break;
+        case 'ne':
+          style = { ...style, top: '-4px', right: '-4px' };
+          break;
+        case 'e':
+          style = { ...style, right: '-4px', top: '50%', transform: 'translateY(-50%)' };
+          break;
+        case 'se':
+          style = { ...style, bottom: '-4px', right: '-4px' };
+          break;
+        case 's':
+          style = { ...style, bottom: '-4px', left: '50%', transform: 'translateX(-50%)' };
+          break;
+        case 'sw':
+          style = { ...style, bottom: '-4px', left: '-4px' };
+          break;
+        case 'w':
+          style = { ...style, left: '-4px', top: '50%', transform: 'translateY(-50%)' };
+          break;
+      }
+      
+      return (
+        <div
+          key={handle}
+          style={style}
+          onMouseDown={(e) => handleResizeStart(element, handle, e)}
+        />
+      );
+    });
+  };
+
+  // Get cursor style for resize handle
+  const getCursorForHandle = (handle) => {
+    const cursors = {
+      'nw': 'nw-resize',
+      'n': 'n-resize',
+      'ne': 'ne-resize',
+      'e': 'e-resize',
+      'se': 'se-resize',
+      's': 's-resize',
+      'sw': 'sw-resize',
+      'w': 'w-resize'
+    };
+    return cursors[handle] || 'default';
   };
 
   const renderPropertyPanel = () => (
@@ -1322,15 +2341,28 @@ const EnhancedPdfEditor = () => {
                   fullWidth
                   margin="dense"
                   value={selectedElement.content?.url || ''}
-                  onChange={(e) => updateElement(selectedElement.id, {
-                    content: { ...selectedElement.content, url: e.target.value }
-                  })}
+                  onChange={(e) => {
+                    const newUrl = e.target.value;
+                    updateElement(selectedElement.id, {
+                      content: { 
+                        ...selectedElement.content, 
+                        url: newUrl,
+                        isLocal: newUrl.startsWith('/api/media/')
+                      }
+                    });
+                  }}
                 />
+                {selectedElement.content?.fileId && (
+                  <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
+                    File ID: {selectedElement.content.fileId}
+                    {selectedElement.content?.isLocal && ' (Local Media)'}
+                  </Typography>
+                )}
                 <Typography variant="subtitle2" sx={{ mt: 2 }}>Position</Typography>
                 <Grid container spacing={1}>
                   <Grid item xs={6}>
                     <TextField
-                      label="X"
+                      label="X Position"
                       type="number"
                       size="small"
                       value={selectedElement.bounds?.x || 0}
@@ -1341,7 +2373,7 @@ const EnhancedPdfEditor = () => {
                   </Grid>
                   <Grid item xs={6}>
                     <TextField
-                      label="Y"
+                      label="Y Position"
                       type="number"
                       size="small"
                       value={selectedElement.bounds?.y || 0}
@@ -1349,6 +2381,68 @@ const EnhancedPdfEditor = () => {
                         bounds: { ...selectedElement.bounds, y: parseInt(e.target.value) }
                       })}
                     />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      label="Width"
+                      type="number"
+                      size="small"
+                      value={selectedElement.bounds?.width || 0}
+                      onChange={(e) => {
+                        const newWidth = parseInt(e.target.value);
+                        updateElement(selectedElement.id, {
+                          bounds: { ...selectedElement.bounds, width: newWidth }
+                        });
+                        // Trigger page reflow after manual size change
+                        setTimeout(recalculatePageFlow, 100);
+                      }}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      label="Height"
+                      type="number"
+                      size="small"
+                      value={selectedElement.bounds?.height || 0}
+                      onChange={(e) => {
+                        const newHeight = parseInt(e.target.value);
+                        updateElement(selectedElement.id, {
+                          bounds: { ...selectedElement.bounds, height: newHeight }
+                        });
+                        // Trigger page reflow after manual size change
+                        setTimeout(recalculatePageFlow, 100);
+                      }}
+                    />
+                  </Grid>
+                </Grid>
+                <Grid container spacing={1} sx={{ mt: 1 }}>
+                  <Grid item xs={6}>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      fullWidth
+                      onClick={() => {
+                        const autoHeight = calculateElementHeight(selectedElement);
+                        updateElement(selectedElement.id, {
+                          bounds: { ...selectedElement.bounds, height: autoHeight }
+                        });
+                        setTimeout(recalculatePageFlow, 100);
+                      }}
+                    >
+                      Auto-fit Height
+                    </Button>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      fullWidth
+                      onClick={() => {
+                        recalculatePageFlow();
+                      }}
+                    >
+                      Reflow Page
+                    </Button>
                   </Grid>
                 </Grid>
               </Box>
@@ -1617,6 +2711,46 @@ const EnhancedPdfEditor = () => {
         }}
       />
       
+      {/* Export Dialog */}
+      <Dialog
+        open={exportDialogOpen}
+        onClose={() => setExportDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Export Document</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ mb: 2 }}>
+            Choose the format to export your document:
+          </Typography>
+          <FormControl fullWidth>
+            <InputLabel>Format</InputLabel>
+            <Select
+              value="pdf"
+              label="Format"
+              disabled
+            >
+              <MenuItem value="pdf">PDF (Recommended)</MenuItem>
+              <MenuItem value="png" disabled>PNG (Coming Soon)</MenuItem>
+              <MenuItem value="html" disabled>HTML (Coming Soon)</MenuItem>
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setExportDialogOpen(false)}>Cancel</Button>
+          <Button 
+            onClick={() => {
+              setExportDialogOpen(false);
+              exportDocument('pdf');
+            }}
+            variant="contained"
+            disabled={loading}
+          >
+            {loading ? <CircularProgress size={20} /> : 'Export PDF'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {/* Snackbar notifications */}
       <Snackbar
         open={!!error}
@@ -1630,7 +2764,7 @@ const EnhancedPdfEditor = () => {
       
       <Snackbar
         open={!!success}
-        autoHideDuration={3000}
+        autoHideDuration={6000}
         onClose={() => setSuccess(null)}
       >
         <Alert severity="success" onClose={() => setSuccess(null)}>

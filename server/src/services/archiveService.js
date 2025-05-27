@@ -54,9 +54,10 @@ const extractGizmoInfo = async (conversation) => {
 /**
  * Recursively index conversations and messages from the JSON-based structure
  * @param {string} archiveRoot - Root directory of the archive
+ * @param {boolean} recursive - Whether to scan subdirectories recursively
  * @returns {Array} Array of conversation metadata
  */
-async function indexArchive(archiveRoot) {
+async function indexArchive(archiveRoot, recursive = true) {
   const conversations = [];
   try {
     if (!await fs.pathExists(archiveRoot)) {
@@ -64,16 +65,48 @@ async function indexArchive(archiveRoot) {
       return [];
     }
     
-    // Read all conversation directories
-    const allDirs = await fs.readdir(archiveRoot);
+    // Read all items in the archive root
+    const allItems = await fs.readdir(archiveRoot);
     
-    // Only include actual conversation directories with conversation.json
-    const convDirs = allDirs.filter(dir => {
-      const jsonPath = path.join(archiveRoot, dir, 'conversation.json');
-      return fs.existsSync(jsonPath);
-    });
+    // Function to scan a directory for conversation folders
+    const scanDirectory = async (dirPath, relativePath = '') => {
+      const foundConversations = [];
+      const items = await fs.readdir(dirPath);
+      
+      for (const item of items) {
+        const itemPath = path.join(dirPath, item);
+        const stat = await fs.stat(itemPath);
+        
+        if (stat.isDirectory()) {
+          const jsonPath = path.join(itemPath, 'conversation.json');
+          
+          // Check if this directory contains a conversation.json
+          if (await fs.pathExists(jsonPath)) {
+            // This is a conversation folder
+            const relativeConvPath = relativePath ? path.join(relativePath, item) : item;
+            foundConversations.push(relativeConvPath);
+          } else if (recursive) {
+            // This is a subdirectory, scan it recursively
+            const subRelativePath = relativePath ? path.join(relativePath, item) : item;
+            const subConversations = await scanDirectory(itemPath, subRelativePath);
+            foundConversations.push(...subConversations);
+          }
+        }
+      }
+      
+      return foundConversations;
+    };
     
-    console.log(`Found ${convDirs.length} conversation directories`);
+    // Get all conversation directories (supporting nested structure)
+    const convDirs = await scanDirectory(archiveRoot);
+    
+    console.log(`Found ${convDirs.length} conversation directories (recursive: ${recursive})`);
+    if (convDirs.length > 0 && convDirs.some(dir => dir.includes(path.sep))) {
+      console.log('Detected nested archive structure with subdirectories');
+    }
+    
+    let claudeCount = 0;
+    let chatgptCount = 0;
     
     for (const convDir of convDirs) {
       const convPath = path.join(archiveRoot, convDir);
@@ -82,43 +115,61 @@ async function indexArchive(archiveRoot) {
       // Load the full conversation JSON
       const conversation = await fs.readJson(jsonPath);
       
-      // Extract gizmo information
-      const gizmoInfo = await extractGizmoInfo(conversation);
+      // Determine conversation format (ChatGPT vs Claude)
+      const isChatGPT = !!conversation.mapping;
+      const isClaude = !!conversation.messages && Array.isArray(conversation.messages);
       
-      // Extract essential metadata
+      // Extract gizmo information (ChatGPT only)
+      const gizmoInfo = isChatGPT ? await extractGizmoInfo(conversation) : { has_gizmo: false };
+      
+      // Extract essential metadata with format-specific handling
       const metadata = {
-        id: conversation.id || conversation.conversation_id,
-        title: conversation.title || 'Untitled',
-        create_time: conversation.create_time,
-        update_time: conversation.update_time,
+        // ID handling - try multiple field names
+        id: conversation.id || conversation.conversation_id || convDir.split('_')[0] || convDir,
+        // Title handling - try multiple field names  
+        title: conversation.title || conversation.name || 'Untitled',
+        // Time handling - try multiple field names and formats
+        create_time: conversation.create_time || 
+                    (conversation.created_at ? new Date(conversation.created_at).getTime() / 1000 : null),
+        update_time: conversation.update_time || 
+                    (conversation.updated_at ? new Date(conversation.updated_at).getTime() / 1000 : null),
         folder: convDir,
-        message_count: conversation.mapping ? Object.keys(conversation.mapping).length : 0,
-        // Include whether this conversation has gizmo/Custom GPT content
+        // Message count - format-specific
+        message_count: isChatGPT ? Object.keys(conversation.mapping).length :
+                      isClaude ? conversation.messages.length : 0,
+        // ChatGPT-specific features
         has_gizmo: gizmoInfo.has_gizmo,
-        // Include gizmo IDs and names if available
         gizmo_ids: gizmoInfo.gizmo_ids || [],
         gizmo_names: gizmoInfo.gizmo_names || {},
-        // Include whether conversation has canvas content
-        has_canvas: Object.values(conversation.mapping || {}).some(
+        // Canvas content (ChatGPT only for now)
+        has_canvas: isChatGPT ? Object.values(conversation.mapping || {}).some(
           m => canvasProcessor.extractCanvasReferences(m.message).length > 0
-        ),
-        // Include model types used
-        models: [...new Set(
+        ) : false,
+        // Model types - format-specific extraction
+        models: isChatGPT ? [...new Set(
           Object.values(conversation.mapping || {})
             .filter(m => m.message?.metadata?.model_slug)
             .map(m => m.message.metadata.model_slug)
-        )],
-        // Include if conversation has web search results
-        has_web_search: Object.values(conversation.mapping || {}).some(
+        )] : isClaude ? ['claude'] : [], // Claude conversations don't have model info in same format
+        // Web search - ChatGPT only for now
+        has_web_search: isChatGPT ? Object.values(conversation.mapping || {}).some(
           m => m.message?.author?.role === 'tool' && m.message?.author?.name === 'web'
-        ),
-        // Include if conversation has media files
+        ) : false,
+        // Media detection
         has_media: await fs.pathExists(path.join(convPath, 'media')) && 
-                  (await fs.readdir(path.join(convPath, 'media'))).length > 0
+                  (await fs.readdir(path.join(convPath, 'media'))).length > 0,
+        // Add format indicator for debugging
+        format: isChatGPT ? 'chatgpt' : isClaude ? 'claude' : 'unknown'
       };
       
       conversations.push(metadata);
+      
+      // Count conversation types
+      if (metadata.format === 'claude') claudeCount++;
+      if (metadata.format === 'chatgpt') chatgptCount++;
     }
+    
+    console.log(`Indexed ${conversations.length} conversations: ${chatgptCount} ChatGPT, ${claudeCount} Claude`);
     
     // Sort conversations by create_time in descending order (newest first)
     conversations.sort((a, b) => (b.create_time || 0) - (a.create_time || 0));
@@ -145,109 +196,20 @@ async function loadConversationMessages(convFolder, archiveRoot, messageIds = nu
     // Load full conversation JSON
     const conversation = await fs.readJson(jsonPath);
     
-    // If specific message IDs are requested, only load those
-    const targetIds = messageIds || Object.keys(conversation.mapping || {});
+    // Determine conversation format
+    const isChatGPT = !!conversation.mapping;
+    const isClaude = !!conversation.messages && Array.isArray(conversation.messages);
     
-    // Extract message data and organize chronologically
-    const messages = [];
-    // Track canvas IDs in this conversation
-    const canvasIds = new Set();
-    for (const id of targetIds) {
-      const messageObj = conversation.mapping[id];
-      if (messageObj && messageObj.message) {
-        // Check if this is a message reference
-        if (messageObj.message._reference && messageObj.message._reference.startsWith('messages/')) {
-          // Load the referenced message
-          const refPath = path.join(convPath, messageObj.message._reference);
-          if (await fs.pathExists(refPath)) {
-            const refMessage = await fs.readJson(refPath);
-            
-            // Extract markdown content
-            const markdown = mediaProcessor.extractMarkdown(refMessage);
-            
-            // Check for canvas references
-            const messageCanvasIds = canvasProcessor.extractCanvasReferences(refMessage);
-            if (messageCanvasIds.length > 0) {
-              messageCanvasIds.forEach(id => canvasIds.add(id));
-            }
-            
-            // Parse the referenced message
-            const parsedMessage = parseAnyMessage(refMessage);
-            
-            messages.push({
-              id: id,
-              message: refMessage,
-              parent: messageObj.parent,
-              children: messageObj.children,
-              markdown: markdown, // Add extracted markdown
-              canvas_ids: messageCanvasIds,
-              parsed: parsedMessage, // Add parsed message data
-              is_reference: true // Mark this as a referenced message
-            });
-          } else {
-            // If reference file doesn't exist, use the summary
-            // Create a synthetic message for parsing
-            const syntheticMessage = {
-              ...messageObj.message._summary,
-              content: { content_type: 'text', parts: ['[Message content not available]'] },
-              id: id
-            };
-            
-            // Parse the synthetic message
-            const parsedMessage = parseAnyMessage(syntheticMessage);
-            
-            messages.push({
-              id: id,
-              message: syntheticMessage,
-              parent: messageObj.parent,
-              children: messageObj.children,
-              markdown: '[Message content not available]',
-              parsed: parsedMessage,
-              is_reference: true,
-              is_missing_reference: true
-            });
-          }
-        } else {
-          // This is a regular message
-          // Extract markdown content
-          const markdown = mediaProcessor.extractMarkdown(messageObj.message);
-          
-          // Check for canvas references
-          const messageCanvasIds = canvasProcessor.extractCanvasReferences(messageObj.message);
-          if (messageCanvasIds.length > 0) {
-            messageCanvasIds.forEach(id => canvasIds.add(id));
-          }
-          
-          // Parse the message using our specialized parsers
-          const parsedMessage = parseAnyMessage(messageObj.message);
-          
-          messages.push({
-            id: id,
-            message: messageObj.message,
-            parent: messageObj.parent,
-            children: messageObj.children,
-            markdown: markdown, // Add extracted markdown
-            canvas_ids: messageCanvasIds,
-            parsed: parsedMessage // Add parsed message data
-          });
-        }
-      }
+    console.log(`Loading messages for ${convFolder} - Format: ${isChatGPT ? 'ChatGPT' : isClaude ? 'Claude' : 'Unknown'}`);
+    
+    if (isClaude) {
+      return await loadClaudeConversationMessages(conversation, convPath, messageIds);
+    } else if (isChatGPT) {
+      return await loadChatGPTConversationMessages(conversation, convPath, messageIds);
+    } else {
+      console.warn(`Unknown conversation format for ${convFolder}`);
+      return { messages: [], canvas_ids: [] };
     }
-    
-    // Sort by create_time
-    messages.sort((a, b) => {
-      const timeA = a.message.create_time || 0;
-      const timeB = b.message.create_time || 0;
-      return timeA - timeB;
-    });
-    
-    // Create a list of all unique canvas IDs in this conversation
-    const conversationCanvasIds = Array.from(canvasIds);
-    
-    return {
-      messages,
-      canvas_ids: conversationCanvasIds
-    };
   } catch (err) {
     console.error(`Error loading conversation messages for ${convFolder}:`, err);
     return { messages: [], canvas_ids: [] };
@@ -255,11 +217,242 @@ async function loadConversationMessages(convFolder, archiveRoot, messageIds = nu
 }
 
 /**
+ * Load messages for Claude format conversations
+ */
+async function loadClaudeConversationMessages(conversation, convPath, messageIds = null) {
+  const messages = [];
+  const canvasIds = new Set();
+  
+  // Claude conversations have messages as an array
+  const claudeMessages = conversation.messages || [];
+  
+  // Filter messages if specific IDs requested
+  const targetMessages = messageIds ? 
+    claudeMessages.filter(msg => messageIds.includes(msg.id)) : 
+    claudeMessages;
+  
+  for (const message of targetMessages) {
+    // Check if this is a message reference (Claude import with references)
+    if (message._reference && message._reference.startsWith('messages/')) {
+      // Load the referenced message
+      const refPath = path.join(convPath, message._reference);
+      if (await fs.pathExists(refPath)) {
+        const refMessage = await fs.readJson(refPath);
+        
+        // Extract markdown content
+        const markdown = extractClaudeMessageContent(refMessage);
+        
+        // Parse the referenced message
+        const parsedMessage = parseAnyMessage(refMessage);
+        
+        messages.push({
+          id: message.id || `claude_msg_${messages.length}`,
+          message: refMessage,
+          parent: null, // Claude doesn't have parent/child structure like ChatGPT
+          children: [],
+          markdown: markdown,
+          canvas_ids: [], // Claude doesn't have canvas content
+          parsed: parsedMessage,
+          is_reference: true
+        });
+      } else {
+        // Use summary if reference missing
+        const syntheticMessage = {
+          ...message._summary,
+          content: ['[Message content not available]'],
+          id: message.id
+        };
+        
+        const parsedMessage = parseAnyMessage(syntheticMessage);
+        
+        messages.push({
+          id: message.id || `claude_msg_${messages.length}`,
+          message: syntheticMessage,
+          parent: null,
+          children: [],
+          markdown: '[Message content not available]',
+          parsed: parsedMessage,
+          is_reference: true,
+          is_missing_reference: true
+        });
+      }
+    } else {
+      // This is a regular Claude message
+      const markdown = extractClaudeMessageContent(message);
+      const parsedMessage = parseAnyMessage(message);
+      
+      messages.push({
+        id: message.id || `claude_msg_${messages.length}`,
+        message: message,
+        parent: null,
+        children: [],
+        markdown: markdown,
+        canvas_ids: [],
+        parsed: parsedMessage
+      });
+    }
+  }
+  
+  // Sort by timestamp (Claude uses created_at or timestamp)
+  messages.sort((a, b) => {
+    const timeA = new Date(a.message.created_at || a.message.timestamp || 0).getTime();
+    const timeB = new Date(b.message.created_at || b.message.timestamp || 0).getTime();
+    return timeA - timeB;
+  });
+  
+  return {
+    messages,
+    canvas_ids: Array.from(canvasIds)
+  };
+}
+
+/**
+ * Load messages for ChatGPT format conversations
+ */
+async function loadChatGPTConversationMessages(conversation, convPath, messageIds = null) {
+  // If specific message IDs are requested, only load those
+  const targetIds = messageIds || Object.keys(conversation.mapping || {});
+  
+  // Extract message data and organize chronologically
+  const messages = [];
+  // Track canvas IDs in this conversation
+  const canvasIds = new Set();
+  
+  for (const id of targetIds) {
+    const messageObj = conversation.mapping[id];
+    if (messageObj && messageObj.message) {
+      // Check if this is a message reference
+      if (messageObj.message._reference && messageObj.message._reference.startsWith('messages/')) {
+        // Load the referenced message
+        const refPath = path.join(convPath, messageObj.message._reference);
+        if (await fs.pathExists(refPath)) {
+          const refMessage = await fs.readJson(refPath);
+          
+          // Extract markdown content
+          const markdown = mediaProcessor.extractMarkdown(refMessage);
+          
+          // Check for canvas references
+          const messageCanvasIds = canvasProcessor.extractCanvasReferences(refMessage);
+          if (messageCanvasIds.length > 0) {
+            messageCanvasIds.forEach(id => canvasIds.add(id));
+          }
+          
+          // Parse the referenced message
+          const parsedMessage = parseAnyMessage(refMessage);
+          
+          messages.push({
+            id: id,
+            message: refMessage,
+            parent: messageObj.parent,
+            children: messageObj.children,
+            markdown: markdown,
+            canvas_ids: messageCanvasIds,
+            parsed: parsedMessage,
+            is_reference: true
+          });
+        } else {
+          // If reference file doesn't exist, use the summary
+          const syntheticMessage = {
+            ...messageObj.message._summary,
+            content: { content_type: 'text', parts: ['[Message content not available]'] },
+            id: id
+          };
+          
+          const parsedMessage = parseAnyMessage(syntheticMessage);
+          
+          messages.push({
+            id: id,
+            message: syntheticMessage,
+            parent: messageObj.parent,
+            children: messageObj.children,
+            markdown: '[Message content not available]',
+            parsed: parsedMessage,
+            is_reference: true,
+            is_missing_reference: true
+          });
+        }
+      } else {
+        // This is a regular message
+        const markdown = mediaProcessor.extractMarkdown(messageObj.message);
+        
+        // Check for canvas references
+        const messageCanvasIds = canvasProcessor.extractCanvasReferences(messageObj.message);
+        if (messageCanvasIds.length > 0) {
+          messageCanvasIds.forEach(id => canvasIds.add(id));
+        }
+        
+        // Parse the message using our specialized parsers
+        const parsedMessage = parseAnyMessage(messageObj.message);
+        
+        messages.push({
+          id: id,
+          message: messageObj.message,
+          parent: messageObj.parent,
+          children: messageObj.children,
+          markdown: markdown,
+          canvas_ids: messageCanvasIds,
+          parsed: parsedMessage
+        });
+      }
+    }
+  }
+  
+  // Sort by create_time
+  messages.sort((a, b) => {
+    const timeA = a.message.create_time || 0;
+    const timeB = b.message.create_time || 0;
+    return timeA - timeB;
+  });
+  
+  return {
+    messages,
+    canvas_ids: Array.from(canvasIds)
+  };
+}
+
+/**
+ * Extract content from Claude message for markdown display
+ */
+function extractClaudeMessageContent(message) {
+  try {
+    if (!message) return '';
+    
+    // Claude messages can have content as string or array
+    if (typeof message.content === 'string') {
+      return message.content;
+    }
+    
+    if (Array.isArray(message.content)) {
+      return message.content
+        .map(item => {
+          if (typeof item === 'string') {
+            return item;
+          }
+          if (item.type === 'text' && item.text) {
+            return item.text;
+          }
+          if (item.type === 'tool_use') {
+            return `[Tool: ${item.name || 'unknown'}]`;
+          }
+          return JSON.stringify(item);
+        })
+        .join('\n');
+    }
+    
+    return JSON.stringify(message.content);
+  } catch (err) {
+    console.error('Error extracting Claude message content:', err);
+    return '[Error extracting content]';
+  }
+}
+
+/**
  * Refresh the archive index
  * @param {string} archiveRoot - Root directory of the archive
+ * @param {boolean} recursive - Whether to scan subdirectories recursively
  */
-async function refreshIndex(archiveRoot) {
-  archiveIndex = await indexArchive(archiveRoot);
+async function refreshIndex(archiveRoot, recursive = true) {
+  archiveIndex = await indexArchive(archiveRoot, recursive);
   console.log(`Indexed ${archiveIndex.length} conversations`);
   return archiveIndex;
 }

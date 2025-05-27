@@ -212,4 +212,3 @@ export const DocumentBuilderProvider = ({ children }) => {
   );
 };
 
-export default DocumentBuilderContext;

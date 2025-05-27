@@ -1,6 +1,6 @@
 # Node Archive Browser
 
-A flexible browser for AI conversation archives with import/explode functionality. This tool allows you to view and manage ChatGPT/OpenAI conversation exports with a user-friendly web interface.
+A flexible browser for AI conversation archives with import/explode functionality. This tool allows you to view and manage ChatGPT/OpenAI and Claude/Anthropic conversation exports with a user-friendly web interface.
 
 ## Features
 
@@ -9,7 +9,7 @@ A flexible browser for AI conversation archives with import/explode functionalit
 - 🖼️ **Media Support**: Display images, audio, and video attachments inline
 - 🔎 **Search & Filter**: Search across conversations with date filtering and media filtering
 - 📄 **PDF Export**: Export conversations to high-quality PDFs with LaTeX math rendering
-- 📥 **Import Wizard**: Convert ChatGPT/OpenAI exports into browsable archives
+- 📥 **Import Wizard**: Convert ChatGPT/OpenAI and Claude/Anthropic exports into browsable archives with auto-detection
 - 📁 **Archive Management**: Switch between different archive locations easily
 
 ## Quick Start
@@ -17,7 +17,7 @@ A flexible browser for AI conversation archives with import/explode functionalit
 ### Prerequisites
 
 - Node.js 16+ and npm
-- A ChatGPT/OpenAI conversation export (optional, for importing)
+- A ChatGPT/OpenAI or Claude/Anthropic conversation export (optional, for importing)
 
 ### Installation
 
@@ -69,13 +69,21 @@ A flexible browser for AI conversation archives with import/explode functionalit
 
 ## Getting Your First Archive
 
-### Option 1: Import a ChatGPT Export
+### Option 1: Import a Conversation Export
 
+**For ChatGPT/OpenAI:**
 1. Export your ChatGPT conversations from OpenAI
 2. Unzip the export file
+
+**For Claude/Anthropic:**
+1. Export your Claude conversations from Anthropic
+2. Extract the export file
+
+**Import Process:**
 3. In the Archive Browser, click "IMPORT ARCHIVE"
-4. Follow the Import Wizard to process your conversations
-5. The archive location will be automatically set after import
+4. Select "Auto-detect" (recommended) or choose your specific archive type
+5. Follow the Import Wizard to process your conversations
+6. The archive location will be automatically set after import
 
 ### Option 2: Use Existing Archive
 
@@ -268,6 +276,73 @@ The equation \( E = mc^2 \) or $E = mc^2$ represents mass-energy equivalence.
 
 ## Import Wizard Configuration
 
+### Archive Auto-Detection
+
+The Import Wizard automatically detects the archive format, eliminating guesswork:
+
+**Detection Process:**
+1. Analyzes the `conversations.json` structure
+2. Identifies ChatGPT vs Claude format automatically
+3. Applies appropriate processing pipeline
+4. Provides format-specific preview
+
+**Supported Detection:**
+- **ChatGPT/OpenAI**: Detects `mapping`, `create_time`, `conversation_id` fields
+- **Claude/Anthropic**: Detects `id`, `name`, `created_at`, `messages[]` fields
+- **Fallback**: Defaults to ChatGPT format if structure is unclear
+
+**Manual Override:** You can still manually select "ChatGPT" or "Claude" if needed.
+
+### Supported Archive Types
+
+The Import Wizard supports multiple conversation archive formats:
+
+**ChatGPT/OpenAI Archives:**
+- Conversations with mapping structure
+- DALL-E generated images
+- User uploaded files
+- Tool outputs and system messages
+
+**Claude/Anthropic Archives:**
+- Linear message conversations
+- Inline base64 images (extracted to files)
+- File attachments
+- Projects and conversations
+
+**Auto-Detection:** The system automatically identifies the archive type based on structure, making imports seamless regardless of source.
+
+**Unified Search:** When using the "Subfolder by Archive Type" organization strategy, you can search across all conversations from different sources simultaneously while keeping them organized.
+
+### Archive Organization Strategies
+
+The Import Wizard offers two organization strategies for your imported conversations:
+
+**Flat Structure (Default):**
+```
+exploded_archive/
+  chatgpt_conversation_1/
+  claude_conversation_1/
+  ...
+```
+- All conversations in the root directory
+- Simple structure, works well for single archive types
+- Direct compatibility with existing workflows
+
+**Subfolder by Archive Type:**
+```
+exploded_archive/
+  chatgpt/
+    conversation_1/
+    conversation_2/
+  claude/
+    conversation_1/
+    conversation_2/
+```
+- Conversations organized by source (ChatGPT, Claude)
+- **Unified search across all conversation types**
+- Clean organization while maintaining full searchability
+- Recommended for users importing from multiple AI platforms
+
 ### Archive Structure Customization
 
 - **Conversation Folder Pattern**: `{date}_{title}_{uuid}` (default)
@@ -276,7 +351,12 @@ The equation \( E = mc^2 \) or $E = mc^2$ represents mass-energy equivalence.
 
 ### Supported Import Sources
 
-- ChatGPT/OpenAI conversation exports
+**Archive Types:**
+- ChatGPT/OpenAI conversation exports (JSON format)
+- Claude/Anthropic conversation exports (JSON format)
+- Auto-detection between formats
+
+**Media Support:**
 - Various media file formats (images, audio, video)
 - DALL-E generated content
 - User uploaded files
@@ -369,8 +449,8 @@ node-archive-browser/
 
 ## Future Enhancements
 
-- Anthropic/Claude conversation support
 - Batch PDF export for multiple conversations
 - Advanced search capabilities
 - Custom PDF themes and styling
 - Electron desktop app features
+- Multi-archive management tools
