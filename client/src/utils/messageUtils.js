@@ -7,15 +7,85 @@ import { determineMediaType } from './mediaUtils';
 import { processLatexInText } from '../latexUtils';
 
 /**
- * Extract text content and media references from a message
- * @param {Object} message - The message object to process
- * @returns {Object} - Object containing text, mediaRefs, segments, and canvasIds
+ * Detect if a message is Claude format vs ChatGPT format
+ * @param {Object} message - The message object to check
+ * @returns {string} - 'claude' or 'chatgpt'
  */
-export function extractMessageContent(message) {
-  if (!message || !message.content) {
-    return { text: '', mediaRefs: [], segments: [], canvasIds: [] };
+function detectMessageFormat(message) {
+  if (!message || !message.content) return 'unknown';
+  
+  // Claude format: content is string or array, no content_type
+  if (typeof message.content === 'string' || 
+      (Array.isArray(message.content) && !message.content.content_type)) {
+    return 'claude';
   }
   
+  // ChatGPT format: content has content_type and parts
+  if (message.content.content_type && message.content.parts) {
+    return 'chatgpt';
+  }
+  
+  return 'unknown';
+}
+
+/**
+ * Extract text content from Claude format message
+ * @param {Object} message - The Claude message object
+ * @returns {Object} - Object containing text, mediaRefs, segments, and canvasIds
+ */
+function extractClaudeMessageContent(message) {
+  let textContent = '';
+  const mediaRefs = [];
+  const canvasIds = [];
+  
+  if (typeof message.content === 'string') {
+    textContent = message.content;
+  } else if (Array.isArray(message.content)) {
+    textContent = message.content
+      .map(item => {
+        if (typeof item === 'string') {
+          return item;
+        }
+        if (item && typeof item === 'object') {
+          if (item.type === 'text' && item.text) {
+            return item.text;
+          }
+          if (item.type === 'tool_use') {
+            return `[Tool: ${item.name || 'unknown'}]`;
+          }
+          if (item.type === 'tool_result') {
+            return `[Tool Result: ${typeof item.content === 'string' ? item.content : JSON.stringify(item.content)}]`;
+          }
+          // Handle image attachments if any
+          if (item.type === 'image') {
+            // Claude image format might be different - add handling if needed
+            return '[Image]';
+          }
+        }
+        return JSON.stringify(item);
+      })
+      .join('\n\n');
+  } else {
+    textContent = JSON.stringify(message.content);
+  }
+  
+  // Process LaTeX in the text content
+  const processedContent = processLatexInText(textContent);
+  
+  return {
+    text: processedContent.text,
+    mediaRefs,
+    segments: processedContent.segments,
+    canvasIds
+  };
+}
+
+/**
+ * Extract text content from ChatGPT format message  
+ * @param {Object} message - The ChatGPT message object
+ * @returns {Object} - Object containing text, mediaRefs, segments, and canvasIds
+ */
+function extractChatGPTMessageContent(message) {
   const content = message.content;
   const mediaRefs = [];
   let textContent = '';
@@ -206,6 +276,29 @@ export function extractMessageContent(message) {
 }
 
 /**
+ * Extract text content and media references from a message (unified function)
+ * @param {Object} message - The message object to process
+ * @returns {Object} - Object containing text, mediaRefs, segments, and canvasIds
+ */
+export function extractMessageContent(message) {
+  if (!message || !message.content) {
+    return { text: '', mediaRefs: [], segments: [], canvasIds: [] };
+  }
+  
+  const format = detectMessageFormat(message);
+  
+  switch (format) {
+    case 'claude':
+      return extractClaudeMessageContent(message);
+    case 'chatgpt':
+      return extractChatGPTMessageContent(message);
+    default:
+      console.warn('Unknown message format, attempting ChatGPT extraction:', message);
+      return extractChatGPTMessageContent(message);
+  }
+}
+
+/**
  * Checks if a string is likely a JSON tool output
  * @param {string} content - The content to check
  * @returns {boolean} - True if the content looks like a JSON tool output
@@ -233,9 +326,10 @@ export function createHiddenMediaMap(messages) {
   let lastAssistantId = null;
   
   messages.forEach(msg => {
-    if (msg.message?.author?.role === 'assistant') {
+    const role = getMessageRole(msg);
+    if (role === 'assistant') {
       lastAssistantId = msg.id;
-    } else if ((msg.message?.author?.role === 'tool' || msg.message?.author?.role === 'system') && lastAssistantId) {
+    } else if ((role === 'tool' || role === 'system') && lastAssistantId) {
       // Extract any media from tool messages
       const content = extractMessageContent(msg.message);
       if (content.mediaRefs && content.mediaRefs.length > 0) {
@@ -251,6 +345,35 @@ export function createHiddenMediaMap(messages) {
 }
 
 /**
+ * Get the role of a message, handling both ChatGPT and Claude formats
+ * @param {Object} msg - The message object
+ * @returns {string} - The role (user, assistant, tool, system, etc.)
+ */
+function getMessageRole(msg) {
+  if (!msg || !msg.message) return 'unknown';
+  
+  const message = msg.message;
+  
+  // ChatGPT format: message.author.role
+  if (message.author && message.author.role) {
+    return message.author.role;
+  }
+  
+  // Claude format: message.role (direct field)
+  if (message.role) {
+    return message.role;
+  }
+  
+  // Fallback: try to detect from content structure
+  if (message.content && typeof message.content === 'string') {
+    // Claude messages with string content are usually assistant responses
+    return 'assistant';
+  }
+  
+  return 'unknown';
+}
+
+/**
  * Filters out empty system messages and optionally tool/system messages
  * @param {Array} messages - The messages to filter
  * @param {boolean} hideToolMessages - Whether to hide tool/system messages
@@ -262,10 +385,8 @@ export function filterMessages(messages, hideToolMessages, mediaByAssistantMsg =
     return [];
   }
   
-  // Find the first user message
-  let firstUserIdx = messages.findIndex(msg => 
-    msg.message && msg.message.author && msg.message.author.role === 'user'
-  );
+  // Find the first user message using format-agnostic role detection
+  let firstUserIdx = messages.findIndex(msg => getMessageRole(msg) === 'user');
   
   let filteredMessages = [];
   
@@ -276,15 +397,31 @@ export function filterMessages(messages, hideToolMessages, mediaByAssistantMsg =
     if (filteredMessages.length > 0) {
       filteredMessages = [filteredMessages[0]].concat(
         filteredMessages.slice(1).filter(msg => {
+          const role = getMessageRole(msg);
+          
           // Skip empty system messages
-          if (msg.message?.author?.role === 'system' && 
-              (!msg.message.content || !msg.message.content.parts || msg.message.content.parts.length === 0)) {
-            return false;
+          if (role === 'system') {
+            // Check if content is empty (handle both formats)
+            const message = msg.message;
+            if (!message.content) return false;
+            
+            // ChatGPT format: check parts array
+            if (message.content.parts && message.content.parts.length === 0) {
+              return false;
+            }
+            
+            // Claude format: check if content is empty string or empty array
+            if (typeof message.content === 'string' && message.content.trim() === '') {
+              return false;
+            }
+            if (Array.isArray(message.content) && message.content.length === 0) {
+              return false;
+            }
           }
           
           // Hide tool or system messages if enabled
           if (hideToolMessages) {
-            if (msg.message?.author?.role === 'tool' || msg.message?.author?.role === 'system') {
+            if (role === 'tool' || role === 'system') {
               return false;
             }
           }
@@ -299,16 +436,18 @@ export function filterMessages(messages, hideToolMessages, mediaByAssistantMsg =
     
     // If hiding tool/system messages, filter those out
     if (hideToolMessages) {
-      filteredMessages = filteredMessages.filter(msg => 
-        msg.message?.author?.role !== 'tool' && msg.message?.author?.role !== 'system'
-      );
+      filteredMessages = filteredMessages.filter(msg => {
+        const role = getMessageRole(msg);
+        return role !== 'tool' && role !== 'system';
+      });
     }
   }
   
   // Second pass: add tool media to assistant messages if hiding tool messages
   if (hideToolMessages && Object.keys(mediaByAssistantMsg).length > 0) {
     filteredMessages = filteredMessages.map(msg => {
-      if (msg.message?.author?.role === 'assistant' && mediaByAssistantMsg[msg.id]) {
+      const role = getMessageRole(msg);
+      if (role === 'assistant' && mediaByAssistantMsg[msg.id]) {
         // Clone the message to avoid mutating the original
         const msgClone = {...msg};
         
