@@ -65,6 +65,10 @@ chat*.zip
 chat*/
 *.zip
 
+# Claude archive data (large files)
+claude1/
+claude*.zip
+
 # Temporary files
 *.tmp
 *.temp
